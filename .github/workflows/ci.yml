@@ -55,17 +55,9 @@ jobs:
       - run: uv run pip-audit
       - name: Build application image
         run: docker build --tag tennis-engine:${{ github.sha }} .
-
-  image-scan:
-    runs-on: ubuntu-latest
-    needs: verify
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build image for scan
-        run: docker build --tag tennis-engine:scan .
       - uses: aquasecurity/trivy-action@0.33.1
         with:
-          image-ref: tennis-engine:scan
+          image-ref: tennis-engine:${{ github.sha }}
           format: table
           exit-code: "1"
           severity: CRITICAL,HIGH
