@@ -15,6 +15,7 @@ and CI foundation.
 | Compose smoke | PASS | API and worker started; `/health/ready` confirmed both dependencies |
 | Package build | PASS | Source archive and wheel built as version 0.2.0 |
 | Dependency audit | PASS | No known third-party vulnerabilities; local project was not queried on PyPI |
+| Runtime image scan | PASS | Trivy 0.70.0 found zero fixed HIGH/CRITICAL issues |
 
 The service integration cases used loopback-only PostgreSQL and MinIO containers. They
 exercised migration upgrade/downgrade/re-upgrade, append-only mutation rejection, and an
@@ -22,6 +23,11 @@ immutable object round trip. The API reported database revision `0002_governance
 `tennis-raw` bucket ready. CI provisions the same dependency classes for every change.
 Developers without Docker can still run the portable suite; in that mode only the two
 explicit service cases skip and cannot be presented as full SYS-02 evidence.
+
+The runtime image is built in a separate stage, contains only the locked production
+environment, and removes unused `pip`/`ensurepip`. This removed vulnerable build-only
+vendored packages from the runtime image; Trivy then reported zero HIGH or CRITICAL fixed
+vulnerabilities across Debian and Python packages.
 
 ## Covered failure behavior
 

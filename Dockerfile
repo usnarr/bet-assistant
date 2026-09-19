@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 FROM ghcr.io/astral-sh/uv:0.12.15 AS uv
-FROM python:3.13-slim
+FROM python:3.13-slim AS builder
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -13,10 +13,32 @@ COPY pyproject.toml uv.lock README.md ./
 COPY src ./src
 COPY migrations ./migrations
 COPY alembic.ini ./
-RUN uv sync --frozen --no-dev
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev --no-editable
 
-ENV PATH="/app/.venv/bin:$PATH"
-RUN useradd --create-home --uid 10001 tennis && chown -R tennis:tennis /app
+FROM python:3.13-slim AS runtime
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/app/.venv/bin:$PATH"
+
+WORKDIR /app
+COPY --from=builder /app/.venv ./.venv
+COPY --from=builder /app/migrations ./migrations
+COPY --from=builder /app/alembic.ini ./
+
+# Runtime containers do not install packages. Removing pip/ensurepip also removes
+# their vendored build libraries from the attack surface and vulnerability scan.
+RUN rm -rf \
+      /usr/local/lib/python3.13/ensurepip \
+      /usr/local/lib/python3.13/site-packages/pip \
+      /usr/local/lib/python3.13/site-packages/pip-*.dist-info \
+      /usr/local/bin/pip \
+      /usr/local/bin/pip3 \
+      /usr/local/bin/pip3.13 \
+    && useradd --create-home --uid 10001 tennis \
+    && chown -R tennis:tennis /app
+
 USER tennis
 
 EXPOSE 8000

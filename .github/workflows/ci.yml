@@ -62,3 +62,4 @@ jobs:
           exit-code: "1"
           severity: CRITICAL,HIGH
           ignore-unfixed: true
+          scanners: vuln
