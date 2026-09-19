@@ -1,0 +1,1 @@
+Self-authored synthetic fixture for payout:synthetic-book; not real policy.

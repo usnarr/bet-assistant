@@ -1,0 +1,36 @@
+[project]
+name = "tennis-engine"
+version = "0.1.0"
+description = "Auditable tennis engine governance contracts (F01)"
+requires-python = ">=3.13"
+dependencies = ["pydantic>=2.12,<3", "tzdata>=2026.1"]
+
+[project.scripts]
+tennis-governance = "tennis_engine.governance.cli:main"
+
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = ["pytest>=8,<10", "ruff>=0.12", "mypy>=1.15"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+include = ["*.py", "*.pyi", "pyproject.toml"]
+extend-exclude = [".python", ".uv-cache", "var", "dist"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src", "tests", "scripts", "configs", "docs", "README.md", "CLAUDE.md", "pyproject.toml", "uv.lock", ".python-version", "tennis_betting_ai_implementation_plan.md"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+plugins = ["pydantic.mypy"]

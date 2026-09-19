@@ -1,0 +1,34 @@
+{
+  "evaluation": "SYS-01",
+  "engineering_demo": "PASS",
+  "external_approval_gate": "BLOCKED",
+  "synthetic": true,
+  "lock_sha256": "66edb578635ccf26cfc3c8ff8349325beac49fa98fade4e07cad8fcc9649891d",
+  "observations": {
+    "before_revocation": {
+      "allowed": true,
+      "reason": "ALLOWED",
+      "version": "synthetic-v1",
+      "revision": 26,
+      "recommendation": null
+    },
+    "queued_fetch_after_revocation": {
+      "allowed": false,
+      "reason": "SOURCE_DISABLED",
+      "version": "synthetic-v2",
+      "revision": 29,
+      "recommendation": "NO_BET"
+    },
+    "publication_after_revocation": {
+      "allowed": false,
+      "reason": "SOURCE_DISABLED",
+      "version": "synthetic-v2",
+      "revision": 29,
+      "recommendation": "NO_BET"
+    },
+    "retention": {
+      "deleted": 1,
+      "replay_available": false
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "version": "draft-2026-09-19",
+  "owner": "product-policy-reviewer:unassigned",
+  "effective_from": "2026-09-19T00:00:00Z",
+  "effective_until": "2027-09-19T00:00:00Z",
+  "reviewer": null,
+  "reviewed_at": null,
+  "review_due_at": null,
+  "evidence": [],
+  "source_id": "api-tennis",
+  "category": "sports",
+  "access_method": "rest",
+  "terms_reference": "https://api-tennis.com/documentation",
+  "commercial_use": "unknown",
+  "redistribution": "unknown",
+  "allowed_purposes": [],
+  "quota": null,
+  "retention": null,
+  "state": "DRAFT",
+  "kill_switch": true
+}

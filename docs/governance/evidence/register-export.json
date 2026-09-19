@@ -1,0 +1,896 @@
+{
+  "schema_version": 1,
+  "records": [
+    {
+      "revision": 1,
+      "kind": "source",
+      "entity_key": "api-tennis",
+      "recorded_at": "2026-09-19T10:00:00.000000+00:00",
+      "actor": "synthetic-demo-reviewer",
+      "reason": "Disabled draft from the F01 register",
+      "payload": {
+        "access_method": "rest",
+        "allowed_purposes": [],
+        "category": "sports",
+        "commercial_use": "unknown",
+        "effective_from": "2026-09-19T00:00:00Z",
+        "effective_until": "2027-09-19T00:00:00Z",
+        "evidence": [],
+        "kill_switch": true,
+        "owner": "product-policy-reviewer:unassigned",
+        "quota": null,
+        "redistribution": "unknown",
+        "retention": null,
+        "review_due_at": null,
+        "reviewed_at": null,
+        "reviewer": null,
+        "source_id": "api-tennis",
+        "state": "DRAFT",
+        "terms_reference": "https://api-tennis.com/documentation",
+        "version": "draft-2026-09-19"
+      },
+      "sha256": "6af3fb8b379b57b4ee2495044bafb0b2e75ae844e98322bb84f2d4dec4132d40"
+    },
+    {
+      "revision": 2,
+      "kind": "source",
+      "entity_key": "atp-rankings",
+      "recorded_at": "2026-09-19T10:00:00.000000+00:00",
+      "actor": "synthetic-demo-reviewer",
+      "reason": "Disabled draft from the F01 register",
+      "payload": {
+        "access_method": "undecided",
+        "allowed_purposes": [],
+        "category": "rankings",
+        "commercial_use": "unknown",
+        "effective_from": "2026-09-19T00:00:00Z",
+        "effective_until": "2027-09-19T00:00:00Z",
+        "evidence": [],
+        "kill_switch": true,
+        "owner": "product-policy-reviewer:unassigned",
+        "quota": null,
+        "redistribution": "unknown",
+        "retention": null,
+        "review_due_at": null,
+        "reviewed_at": null,
+        "reviewer": null,
+        "source_id": "atp-rankings",
+        "state": "DRAFT",
+        "terms_reference": "https://www.atptour.com/en/rankings/singles",
+        "version": "draft-2026-09-19"
+      },
+      "sha256": "2c9c54d0e1a7de06ac8b5236e5e3db439fec92c3fe764f84462641abbde9a4d5"
+    },
+    {
+      "revision": 3,
+      "kind": "source",
+      "entity_key": "betclic-odds",
+      "recorded_at": "2026-09-19T10:00:00.000000+00:00",
+      "actor": "synthetic-demo-reviewer",
+      "reason": "Disabled draft from the F01 register",
+      "payload": {
+        "access_method": "undecided",
+        "allowed_purposes": [],
+        "category": "odds",
+        "commercial_use": "unknown",
+        "effective_from": "2026-09-19T00:00:00Z",
+        "effective_until": "2027-09-19T00:00:00Z",
+        "evidence": [],
+        "kill_switch": true,
+        "owner": "product-policy-reviewer:unassigned",
+        "quota": null,
+        "redistribution": "unknown",
+        "retention": null,
+        "review_due_at": null,
+        "reviewed_at": null,
+        "reviewer": null,
+        "source_id": "betclic-odds",
+        "state": "DRAFT",
+        "terms_reference": "https://www.betclic.pl/termsandconditions",
+        "version": "draft-2026-09-19"
+      },
+      "sha256": "0651b6b1f78b1b3802607a6b9edf5a4087a767791ec4a4ff574d8e5f7f3fe338"
+    },
+    {
+      "revision": 4,
+      "kind": "source",
+      "entity_key": "betclic-regulations",
+      "recorded_at": "2026-09-19T10:00:00.000000+00:00",
+      "actor": "synthetic-demo-reviewer",
+      "reason": "Disabled draft from the F01 register",
+      "payload": {
+        "access_method": "manual",
+        "allowed_purposes": [],
+        "category": "regulations",
+        "commercial_use": "unknown",
+        "effective_from": "2026-09-19T00:00:00Z",
+        "effective_until": "2027-09-19T00:00:00Z",
+        "evidence": [],
+        "kill_switch": true,
+        "owner": "product-policy-reviewer:unassigned",
+        "quota": null,
+        "redistribution": "unknown",
+        "retention": null,
+        "review_due_at": null,
+        "reviewed_at": null,
+        "reviewer": null,
+        "source_id": "betclic-regulations",
+        "state": "DRAFT",
+        "terms_reference": "https://www.betclic.pl/termsandconditions",
+        "version": "draft-2026-09-19"
+      },
+      "sha256": "f22915f9a53f1918a10cf3ff90cb95c4d0eb6a3d6d55456928cc9bfa0d9b0cbe"
+    },
+    {
+      "revision": 5,
+      "kind": "source",
+      "entity_key": "fortuna-odds",
+      "recorded_at": "2026-09-19T10:00:00.000000+00:00",
+      "actor": "synthetic-demo-reviewer",
+      "reason": "Disabled draft from the F01 register",
+      "payload": {
+        "access_method": "undecided",
+        "allowed_purposes": [],
+        "category": "odds",
+        "commercial_use": "unknown",
+        "effective_from": "2026-09-19T00:00:00Z",
+        "effective_until": "2027-09-19T00:00:00Z",
+        "evidence": [],
+        "kill_switch": true,
+        "owner": "product-policy-reviewer:unassigned",
+        "quota": null,
+        "redistribution": "unknown",
+        "retention": null,
+        "review_due_at": null,
+        "reviewed_at": null,
+        "reviewer": null,
+        "source_id": "fortuna-odds",
+        "state": "DRAFT",
+        "terms_reference": "https://www.efortuna.pl/regulaminy",
+        "version": "draft-2026-09-19"
+      },
+      "sha256": "4bf199310449d87892319e931443b1f16a3d1829ac9923e6c8e73be55d9033b7"
+    },
+    {
+      "revision": 6,
+      "kind": "source",
+      "entity_key": "fortuna-regulations",
+      "recorded_at": "2026-09-19T10:00:00.000000+00:00",
+      "actor": "synthetic-demo-reviewer",
+      "reason": "Disabled draft from the F01 register",
+      "payload": {
+        "access_method": "manual",
+        "allowed_purposes": [],
+        "category": "regulations",
+        "commercial_use": "unknown",
+        "effective_from": "2026-09-19T00:00:00Z",
+        "effective_until": "2027-09-19T00:00:00Z",
+        "evidence": [],
+        "kill_switch": true,
+        "owner": "product-policy-reviewer:unassigned",
+        "quota": null,
+        "redistribution": "unknown",
+        "retention": null,
+        "review_due_at": null,
+        "reviewed_at": null,
+        "reviewer": null,
+        "source_id": "fortuna-regulations",
+        "state": "DRAFT",
+        "terms_reference": "https://www.efortuna.pl/regulaminy",
+        "version": "draft-2026-09-19"
+      },
+      "sha256": "832e0c27b831fc5f925d36ba7d7634c74853cbdbcee05a9b2f84400318ce44fc"
+    },
+    {
+      "revision": 7,
+      "kind": "source",
+      "entity_key": "match-charting-project",
+      "recorded_at": "2026-09-19T10:00:00.000000+00:00",
+      "actor": "synthetic-demo-reviewer",
+      "reason": "Disabled draft from the F01 register",
+      "payload": {
+        "access_method": "file",
+        "allowed_purposes": [],
+        "category": "research",
+        "commercial_use": "unknown",
+        "effective_from": "2026-09-19T00:00:00Z",
+        "effective_until": "2027-09-19T00:00:00Z",
+        "evidence": [],
+        "kill_switch": true,
+        "owner": "product-policy-reviewer:unassigned",
+        "quota": null,
+        "redistribution": "unknown",
+        "retention": null,
+        "review_due_at": null,
+        "reviewed_at": null,
+        "reviewer": null,
+        "source_id": "match-charting-project",
+        "state": "DRAFT",
+        "terms_reference": "https://github.com/JeffSackmann/tennis_MatchChartingProject",
+        "version": "draft-2026-09-19"
+      },
+      "sha256": "f66c8e61069569002ede04785c39230d9e253f63296a7997da9f1c8f7f8f6fff"
+    },
+    {
+      "revision": 8,
+      "kind": "source",
+      "entity_key": "matchstat",
+      "recorded_at": "2026-09-19T10:00:00.000000+00:00",
+      "actor": "synthetic-demo-reviewer",
+      "reason": "Disabled draft from the F01 register",
+      "payload": {
+        "access_method": "rest",
+        "allowed_purposes": [],
+        "category": "sports",
+        "commercial_use": "unknown",
+        "effective_from": "2026-09-19T00:00:00Z",
+        "effective_until": "2027-09-19T00:00:00Z",
+        "evidence": [],
+        "kill_switch": true,
+        "owner": "product-policy-reviewer:unassigned",
+        "quota": null,
+        "redistribution": "unknown",
+        "retention": null,
+        "review_due_at": null,
+        "reviewed_at": null,
+        "reviewer": null,
+        "source_id": "matchstat",
+        "state": "DRAFT",
+        "terms_reference": "https://tennisapidoc.matchstat.com/",
+        "version": "draft-2026-09-19"
+      },
+      "sha256": "0b5232a81fe9758ee2850cd8f1d149323dfde6e4dd1c67e5ef02c59ec0275277"
+    },
+    {
+      "revision": 9,
+      "kind": "source",
+      "entity_key": "meteostat",
+      "recorded_at": "2026-09-19T10:00:00.000000+00:00",
+      "actor": "synthetic-demo-reviewer",
+      "reason": "Disabled draft from the F01 register",
+      "payload": {
+        "access_method": "rest",
+        "allowed_purposes": [],
+        "category": "forecasts",
+        "commercial_use": "unknown",
+        "effective_from": "2026-09-19T00:00:00Z",
+        "effective_until": "2027-09-19T00:00:00Z",
+        "evidence": [],
+        "kill_switch": true,
+        "owner": "product-policy-reviewer:unassigned",
+        "quota": null,
+        "redistribution": "unknown",
+        "retention": null,
+        "review_due_at": null,
+        "reviewed_at": null,
+        "reviewer": null,
+        "source_id": "meteostat",
+        "state": "DRAFT",
+        "terms_reference": "https://dev.meteostat.net/python/api",
+        "version": "draft-2026-09-19"
+      },
+      "sha256": "b2208f3d34f04f23307da5bcb319aeedf4e5cfa3c6b4aebacbc7931a4a7f71fd"
+    },
+    {
+      "revision": 10,
+      "kind": "source",
+      "entity_key": "open-meteo-forecast",
+      "recorded_at": "2026-09-19T10:00:00.000000+00:00",
+      "actor": "synthetic-demo-reviewer",
+      "reason": "Disabled draft from the F01 register",
+      "payload": {
+        "access_method": "rest",
+        "allowed_purposes": [],
+        "category": "forecasts",
+        "commercial_use": "unknown",
+        "effective_from": "2026-09-19T00:00:00Z",
+        "effective_until": "2027-09-19T00:00:00Z",
+        "evidence": [],
+        "kill_switch": true,
+        "owner": "product-policy-reviewer:unassigned",
+        "quota": null,
+        "redistribution": "unknown",
+        "retention": null,
+        "review_due_at": null,
+        "reviewed_at": null,
+        "reviewer": null,
+        "source_id": "open-meteo-forecast",
+        "state": "DRAFT",
+        "terms_reference": "https://open-meteo.com/en/docs/historical-forecast-api",
+        "version": "draft-2026-09-19"
+      },
+      "sha256": "a297afd9e66eb1051e197d5d045f4d4bfd63f78f77885a41bd3988bf782bbec3"
+    },
+    {
+      "revision": 11,
+      "kind": "source",
+      "entity_key": "polish-tax-regulations",
+      "recorded_at": "2026-09-19T10:00:00.000000+00:00",
+      "actor": "synthetic-demo-reviewer",
+      "reason": "Disabled draft from the F01 register",
+      "payload": {
+        "access_method": "manual",
+        "allowed_purposes": [],
+        "category": "regulations",
+        "commercial_use": "unknown",
+        "effective_from": "2026-09-19T00:00:00Z",
+        "effective_until": "2027-09-19T00:00:00Z",
+        "evidence": [],
+        "kill_switch": true,
+        "owner": "product-policy-reviewer:unassigned",
+        "quota": null,
+        "redistribution": "unknown",
+        "retention": null,
+        "review_due_at": null,
+        "reviewed_at": null,
+        "reviewer": null,
+        "source_id": "polish-tax-regulations",
+        "state": "DRAFT",
+        "terms_reference": "https://www.podatki.gov.pl/pozostale/podatek-od-gier/informacje-podstawowe",
+        "version": "draft-2026-09-19"
+      },
+      "sha256": "14356bd8896c2e4e4db48b51ba8ac9c12f4799fc0bf27ee6f795301dde1bebad"
+    },
+    {
+      "revision": 12,
+      "kind": "source",
+      "entity_key": "sportradar",
+      "recorded_at": "2026-09-19T10:00:00.000000+00:00",
+      "actor": "synthetic-demo-reviewer",
+      "reason": "Disabled draft from the F01 register",
+      "payload": {
+        "access_method": "rest",
+        "allowed_purposes": [],
+        "category": "sports",
+        "commercial_use": "unknown",
+        "effective_from": "2026-09-19T00:00:00Z",
+        "effective_until": "2027-09-19T00:00:00Z",
+        "evidence": [],
+        "kill_switch": true,
+        "owner": "product-policy-reviewer:unassigned",
+        "quota": null,
+        "redistribution": "unknown",
+        "retention": null,
+        "review_due_at": null,
+        "reviewed_at": null,
+        "reviewer": null,
+        "source_id": "sportradar",
+        "state": "DRAFT",
+        "terms_reference": "https://developer.sportradar.com/tennis/reference/overview",
+        "version": "draft-2026-09-19"
+      },
+      "sha256": "ee630dd90ca940e9cb32720cc80b7702b8ab58dc2709a83cd205c9b26e58b54b"
+    },
+    {
+      "revision": 13,
+      "kind": "source",
+      "entity_key": "superbet-odds",
+      "recorded_at": "2026-09-19T10:00:00.000000+00:00",
+      "actor": "synthetic-demo-reviewer",
+      "reason": "Disabled draft from the F01 register",
+      "payload": {
+        "access_method": "undecided",
+        "allowed_purposes": [],
+        "category": "odds",
+        "commercial_use": "unknown",
+        "effective_from": "2026-09-19T00:00:00Z",
+        "effective_until": "2027-09-19T00:00:00Z",
+        "evidence": [],
+        "kill_switch": true,
+        "owner": "product-policy-reviewer:unassigned",
+        "quota": null,
+        "redistribution": "unknown",
+        "retention": null,
+        "review_due_at": null,
+        "reviewed_at": null,
+        "reviewer": null,
+        "source_id": "superbet-odds",
+        "state": "DRAFT",
+        "terms_reference": "https://superbet.pl/wiki/regulamin",
+        "version": "draft-2026-09-19"
+      },
+      "sha256": "a5998f2238455a7e7272732ec724044b03b0dc9fb8c5dab48916794e96a4235e"
+    },
+    {
+      "revision": 14,
+      "kind": "source",
+      "entity_key": "superbet-regulations",
+      "recorded_at": "2026-09-19T10:00:00.000000+00:00",
+      "actor": "synthetic-demo-reviewer",
+      "reason": "Disabled draft from the F01 register",
+      "payload": {
+        "access_method": "manual",
+        "allowed_purposes": [],
+        "category": "regulations",
+        "commercial_use": "unknown",
+        "effective_from": "2026-09-19T00:00:00Z",
+        "effective_until": "2027-09-19T00:00:00Z",
+        "evidence": [],
+        "kill_switch": true,
+        "owner": "product-policy-reviewer:unassigned",
+        "quota": null,
+        "redistribution": "unknown",
+        "retention": null,
+        "review_due_at": null,
+        "reviewed_at": null,
+        "reviewer": null,
+        "source_id": "superbet-regulations",
+        "state": "DRAFT",
+        "terms_reference": "https://superbet.pl/wiki/regulamin",
+        "version": "draft-2026-09-19"
+      },
+      "sha256": "d962e92b95d258857c569d537315d5a320a4c60c7f58a03d3a0df5eb1f847498"
+    },
+    {
+      "revision": 15,
+      "kind": "source",
+      "entity_key": "the-odds-api",
+      "recorded_at": "2026-09-19T10:00:00.000000+00:00",
+      "actor": "synthetic-demo-reviewer",
+      "reason": "Disabled draft from the F01 register",
+      "payload": {
+        "access_method": "rest",
+        "allowed_purposes": [],
+        "category": "odds",
+        "commercial_use": "unknown",
+        "effective_from": "2026-09-19T00:00:00Z",
+        "effective_until": "2027-09-19T00:00:00Z",
+        "evidence": [],
+        "kill_switch": true,
+        "owner": "product-policy-reviewer:unassigned",
+        "quota": null,
+        "redistribution": "unknown",
+        "retention": null,
+        "review_due_at": null,
+        "reviewed_at": null,
+        "reviewer": null,
+        "source_id": "the-odds-api",
+        "state": "DRAFT",
+        "terms_reference": "https://the-odds-api.com/sports/tennis-odds.html",
+        "version": "draft-2026-09-19"
+      },
+      "sha256": "b04ab6b3b95213737673a55b6bd0585cfe16bf3a5ce55239447f40fd875aae06"
+    },
+    {
+      "revision": 16,
+      "kind": "source",
+      "entity_key": "wta-rankings",
+      "recorded_at": "2026-09-19T10:00:00.000000+00:00",
+      "actor": "synthetic-demo-reviewer",
+      "reason": "Disabled draft from the F01 register",
+      "payload": {
+        "access_method": "undecided",
+        "allowed_purposes": [],
+        "category": "rankings",
+        "commercial_use": "unknown",
+        "effective_from": "2026-09-19T00:00:00Z",
+        "effective_until": "2027-09-19T00:00:00Z",
+        "evidence": [],
+        "kill_switch": true,
+        "owner": "product-policy-reviewer:unassigned",
+        "quota": null,
+        "redistribution": "unknown",
+        "retention": null,
+        "review_due_at": null,
+        "reviewed_at": null,
+        "reviewer": null,
+        "source_id": "wta-rankings",
+        "state": "DRAFT",
+        "terms_reference": "https://www.wtatennis.com/rankings/singles",
+        "version": "draft-2026-09-19"
+      },
+      "sha256": "b08087cbb8cc81ca8e3ed21bfb2495108c2b173381607e8053e4a50df5467ee1"
+    },
+    {
+      "revision": 17,
+      "kind": "payout",
+      "entity_key": "betclic",
+      "recorded_at": "2026-09-19T10:00:00.000000+00:00",
+      "actor": "synthetic-demo-reviewer",
+      "reason": "Disabled draft from the F01 register",
+      "payload": {
+        "bookmaker": "betclic",
+        "policies": [
+          {
+            "bookmaker": "betclic",
+            "effective_from": "2026-09-19T00:00:00Z",
+            "effective_until": "2027-09-19T00:00:00Z",
+            "evidence": [],
+            "jurisdiction": "PL",
+            "owner": "product-policy-reviewer:unassigned",
+            "payout_rule_version": null,
+            "promotion_handling": "disabled",
+            "promotion_rule_version": null,
+            "review_due_at": null,
+            "reviewed_at": null,
+            "reviewer": null,
+            "settlement_rule_version": null,
+            "state": "PENDING_REVIEW",
+            "version": "draft-2026-09-19"
+          }
+        ]
+      },
+      "sha256": "a0afe234826884528d91404c57a799be61833105f97965bcc222595b13719d50"
+    },
+    {
+      "revision": 18,
+      "kind": "payout",
+      "entity_key": "fortuna",
+      "recorded_at": "2026-09-19T10:00:00.000000+00:00",
+      "actor": "synthetic-demo-reviewer",
+      "reason": "Disabled draft from the F01 register",
+      "payload": {
+        "bookmaker": "fortuna",
+        "policies": [
+          {
+            "bookmaker": "fortuna",
+            "effective_from": "2026-09-19T00:00:00Z",
+            "effective_until": "2027-09-19T00:00:00Z",
+            "evidence": [],
+            "jurisdiction": "PL",
+            "owner": "product-policy-reviewer:unassigned",
+            "payout_rule_version": null,
+            "promotion_handling": "disabled",
+            "promotion_rule_version": null,
+            "review_due_at": null,
+            "reviewed_at": null,
+            "reviewer": null,
+            "settlement_rule_version": null,
+            "state": "PENDING_REVIEW",
+            "version": "draft-2026-09-19"
+          }
+        ]
+      },
+      "sha256": "091de50fd8cadea704ce717e75326f45d5b9ddd0eb0a1d0808a25a4df841ebdb"
+    },
+    {
+      "revision": 19,
+      "kind": "payout",
+      "entity_key": "superbet",
+      "recorded_at": "2026-09-19T10:00:00.000000+00:00",
+      "actor": "synthetic-demo-reviewer",
+      "reason": "Disabled draft from the F01 register",
+      "payload": {
+        "bookmaker": "superbet",
+        "policies": [
+          {
+            "bookmaker": "superbet",
+            "effective_from": "2026-09-19T00:00:00Z",
+            "effective_until": "2027-09-19T00:00:00Z",
+            "evidence": [],
+            "jurisdiction": "PL",
+            "owner": "product-policy-reviewer:unassigned",
+            "payout_rule_version": null,
+            "promotion_handling": "disabled",
+            "promotion_rule_version": null,
+            "review_due_at": null,
+            "reviewed_at": null,
+            "reviewer": null,
+            "settlement_rule_version": null,
+            "state": "PENDING_REVIEW",
+            "version": "draft-2026-09-19"
+          }
+        ]
+      },
+      "sha256": "a35f3734586c23736237df3d3fa44db3dc798d58f02cfbf4790410ebda78d13d"
+    },
+    {
+      "revision": 20,
+      "kind": "responsible_use",
+      "entity_key": "internal-shadow",
+      "recorded_at": "2026-09-19T10:00:00.000000+00:00",
+      "actor": "synthetic-demo-reviewer",
+      "reason": "Disabled draft from the F01 register",
+      "payload": {
+        "account_scope": "internal-shadow",
+        "policies": [
+          {
+            "account_scope": "internal-shadow",
+            "cooling_off_until": null,
+            "currency": "PLN",
+            "daily": {
+              "count": 0,
+              "stake": "0.00"
+            },
+            "disable_recommendations": true,
+            "drawdown_stop": "0",
+            "effective_from": "2026-09-19T00:00:00Z",
+            "effective_until": "2027-09-19T00:00:00Z",
+            "evidence": [],
+            "ledger_scope": "virtual",
+            "loss_chasing_allowed": false,
+            "max_bankroll_fraction": "0",
+            "max_event_exposure": "0.00",
+            "max_open_exposure": "0.00",
+            "monthly": {
+              "count": 0,
+              "stake": "0.00"
+            },
+            "owner": "product-policy-reviewer:unassigned",
+            "reset_timezone": "Europe/Warsaw",
+            "review_due_at": null,
+            "reviewed_at": null,
+            "reviewer": null,
+            "state": "PENDING_REVIEW",
+            "version": "draft-2026-09-19",
+            "weekly": {
+              "count": 0,
+              "stake": "0.00"
+            }
+          }
+        ]
+      },
+      "sha256": "148ccd8cb03245ce209a0b6ed9f61c5a780aa78275f7c8523c90cf7c2d2a1a34"
+    },
+    {
+      "revision": 21,
+      "kind": "document",
+      "entity_key": "synthetic-terms",
+      "recorded_at": "2026-09-19T10:00:00.000000+00:00",
+      "actor": "synthetic-demo-reviewer",
+      "reason": "Synthetic demonstration evidence",
+      "payload": {
+        "content_sha256": "f4bc5ce16d3f787432fa9ce092a4eddbf39cbcf1a13ca4e348edb79490fdd5bb",
+        "reference": "synthetic://F01-demo",
+        "scope": "source:synthetic-sports"
+      },
+      "sha256": "b0253039a9ca1d46f8c6b7f5c141ebd5dae485af75c87190e0c6af2d60a78af9"
+    },
+    {
+      "revision": 22,
+      "kind": "source",
+      "entity_key": "synthetic-sports",
+      "recorded_at": "2026-09-19T10:00:00.000000+00:00",
+      "actor": "synthetic-demo-reviewer",
+      "reason": "Synthetic prototype only",
+      "payload": {
+        "access_method": "file",
+        "allowed_purposes": [
+          "prototype"
+        ],
+        "category": "sports",
+        "commercial_use": "no",
+        "effective_from": "2026-09-19T10:00:00Z",
+        "effective_until": "2027-09-19T10:00:00Z",
+        "evidence": [
+          {
+            "document_id": "synthetic-terms",
+            "sha256": "f4bc5ce16d3f787432fa9ce092a4eddbf39cbcf1a13ca4e348edb79490fdd5bb"
+          }
+        ],
+        "kill_switch": false,
+        "owner": "synthetic-demo-owner",
+        "quota": {
+          "concurrency": 1,
+          "requests": 1,
+          "window_seconds": 1
+        },
+        "redistribution": "unknown",
+        "retention": {
+          "basis": "Synthetic example",
+          "on_expiry": "delete_with_tombstone",
+          "raw_days": 1
+        },
+        "review_due_at": "2027-09-19T10:00:00Z",
+        "reviewed_at": "2026-09-19T10:00:00Z",
+        "reviewer": "synthetic-demo-reviewer",
+        "source_id": "synthetic-sports",
+        "state": "PROTOTYPE_APPROVED",
+        "terms_reference": "synthetic://F01-demo",
+        "version": "synthetic-v1"
+      },
+      "sha256": "15b128a002ddf0d912fc8b85ca65a435986bdd80f829d33cf7f0fd97f5624220"
+    },
+    {
+      "revision": 23,
+      "kind": "document",
+      "entity_key": "synthetic-rules",
+      "recorded_at": "2026-09-19T10:00:00.000000+00:00",
+      "actor": "synthetic-demo-reviewer",
+      "reason": "Synthetic demonstration evidence",
+      "payload": {
+        "content_sha256": "68898eeb50f02204104849e3c69dbf4fbc58ecccd40d3d1140297eb9b0b7027a",
+        "reference": "synthetic://F01-demo",
+        "scope": "payout:synthetic-book"
+      },
+      "sha256": "f3893a1dc45a8019c7b8db3cd4f699e7f651d38cd733f72cbacf7a463f39e39e"
+    },
+    {
+      "revision": 24,
+      "kind": "payout",
+      "entity_key": "synthetic-book",
+      "recorded_at": "2026-09-19T10:00:00.000000+00:00",
+      "actor": "synthetic-demo-reviewer",
+      "reason": "Synthetic policy references only; no money calculated",
+      "payload": {
+        "bookmaker": "synthetic-book",
+        "policies": [
+          {
+            "bookmaker": "synthetic-book",
+            "effective_from": "2026-09-19T10:00:00Z",
+            "effective_until": "2027-09-19T10:00:00Z",
+            "evidence": [
+              {
+                "document_id": "synthetic-rules",
+                "sha256": "68898eeb50f02204104849e3c69dbf4fbc58ecccd40d3d1140297eb9b0b7027a"
+              }
+            ],
+            "jurisdiction": "PL",
+            "owner": "synthetic-demo-owner",
+            "payout_rule_version": "synthetic-rule",
+            "promotion_handling": "disabled",
+            "promotion_rule_version": null,
+            "review_due_at": "2027-09-19T10:00:00Z",
+            "reviewed_at": "2026-09-19T10:00:00Z",
+            "reviewer": "synthetic-demo-reviewer",
+            "settlement_rule_version": "synthetic-rule",
+            "state": "APPROVED",
+            "version": "synthetic-v1"
+          }
+        ]
+      },
+      "sha256": "d51f9b13260eddd7dfb5bdb51161e29a8f547e519a45558de374e31019b420a5"
+    },
+    {
+      "revision": 25,
+      "kind": "document",
+      "entity_key": "synthetic-limits",
+      "recorded_at": "2026-09-19T10:00:00.000000+00:00",
+      "actor": "synthetic-demo-reviewer",
+      "reason": "Synthetic demonstration evidence",
+      "payload": {
+        "content_sha256": "2486b3bcd68d31be348f637f80ba1d55d3b823355400ec25719d72a869c189cf",
+        "reference": "synthetic://F01-demo",
+        "scope": "responsible_use:synthetic-account"
+      },
+      "sha256": "84d27ed59c14ff3049593af775eb47eb2442b6e77c7cb871de6a77cf0f2f191d"
+    },
+    {
+      "revision": 26,
+      "kind": "responsible_use",
+      "entity_key": "synthetic-account",
+      "recorded_at": "2026-09-19T10:00:00.000000+00:00",
+      "actor": "synthetic-demo-reviewer",
+      "reason": "Synthetic virtual limits only",
+      "payload": {
+        "account_scope": "synthetic-account",
+        "policies": [
+          {
+            "account_scope": "synthetic-account",
+            "cooling_off_until": null,
+            "currency": "PLN",
+            "daily": {
+              "count": 1,
+              "stake": "1.00"
+            },
+            "disable_recommendations": false,
+            "drawdown_stop": "0.01",
+            "effective_from": "2026-09-19T10:00:00Z",
+            "effective_until": "2027-09-19T10:00:00Z",
+            "evidence": [
+              {
+                "document_id": "synthetic-limits",
+                "sha256": "2486b3bcd68d31be348f637f80ba1d55d3b823355400ec25719d72a869c189cf"
+              }
+            ],
+            "ledger_scope": "virtual",
+            "loss_chasing_allowed": false,
+            "max_bankroll_fraction": "0.01",
+            "max_event_exposure": "1.00",
+            "max_open_exposure": "1.00",
+            "monthly": {
+              "count": 1,
+              "stake": "1.00"
+            },
+            "owner": "synthetic-demo-owner",
+            "reset_timezone": "Europe/Warsaw",
+            "review_due_at": "2027-09-19T10:00:00Z",
+            "reviewed_at": "2026-09-19T10:00:00Z",
+            "reviewer": "synthetic-demo-reviewer",
+            "state": "APPROVED",
+            "version": "synthetic-v1",
+            "weekly": {
+              "count": 1,
+              "stake": "1.00"
+            }
+          }
+        ]
+      },
+      "sha256": "4955eafc6edd0118a1c731dd1c95e9fbb156abccf655db2a151e6a97fdb1206d"
+    },
+    {
+      "revision": 27,
+      "kind": "global_disable",
+      "entity_key": "all",
+      "recorded_at": "2026-09-19T10:00:00.000000+00:00",
+      "actor": "synthetic-demo-reviewer",
+      "reason": "Synthetic demonstration only",
+      "payload": {
+        "disabled": false
+      },
+      "sha256": "1d11441a60f0c81871548ccecf0b533ae2fff9f3b47aeb8d8d25ff1f2f10f54f"
+    },
+    {
+      "revision": 28,
+      "kind": "raw",
+      "entity_key": "synthetic-sample",
+      "recorded_at": "2026-09-19T10:00:00.000000+00:00",
+      "actor": "synthetic-demo-reviewer",
+      "reason": "Archive under the source-specific retention policy",
+      "payload": {
+        "content_sha256": "5d47dd4e404f528c49a96790c0271655d3916da0879f973245ecaf8d380da868",
+        "expires_at": "2026-09-20T10:00:00.000000+00:00",
+        "retention": {
+          "basis": "Synthetic example",
+          "on_expiry": "delete_with_tombstone",
+          "raw_days": 1
+        },
+        "source_id": "synthetic-sports",
+        "source_revision": 22,
+        "source_version": "synthetic-v1"
+      },
+      "sha256": "c67ebba791b23d6ae1c4d262ecd1227a8368b09549858e3b742f1d324cfb9503"
+    },
+    {
+      "revision": 29,
+      "kind": "source",
+      "entity_key": "synthetic-sports",
+      "recorded_at": "2026-09-19T10:00:01.000000+00:00",
+      "actor": "synthetic-demo-reviewer",
+      "reason": "Revoke after a fetch was queued",
+      "payload": {
+        "access_method": "file",
+        "allowed_purposes": [
+          "prototype"
+        ],
+        "category": "sports",
+        "commercial_use": "no",
+        "effective_from": "2026-09-19T10:00:00Z",
+        "effective_until": "2027-09-19T10:00:00Z",
+        "evidence": [
+          {
+            "document_id": "synthetic-terms",
+            "sha256": "f4bc5ce16d3f787432fa9ce092a4eddbf39cbcf1a13ca4e348edb79490fdd5bb"
+          }
+        ],
+        "kill_switch": true,
+        "owner": "synthetic-demo-owner",
+        "quota": {
+          "concurrency": 1,
+          "requests": 1,
+          "window_seconds": 1
+        },
+        "redistribution": "unknown",
+        "retention": {
+          "basis": "Synthetic example",
+          "on_expiry": "delete_with_tombstone",
+          "raw_days": 1
+        },
+        "review_due_at": "2027-09-19T10:00:00Z",
+        "reviewed_at": "2026-09-19T10:00:00Z",
+        "reviewer": "synthetic-demo-reviewer",
+        "source_id": "synthetic-sports",
+        "state": "SUSPENDED",
+        "terms_reference": "synthetic://F01-demo",
+        "version": "synthetic-v2"
+      },
+      "sha256": "75fedd1879d7aedf2c30dde80ff05f6f0e3fcafeb0de7644f23b4a29d99ce011"
+    },
+    {
+      "revision": 30,
+      "kind": "tombstone",
+      "entity_key": "synthetic-sample",
+      "recorded_at": "2026-09-20T10:00:01.000000+00:00",
+      "actor": "synthetic-demo-reviewer",
+      "reason": "Source retention expired",
+      "payload": {
+        "cause": "retention_expired",
+        "content_sha256": "5d47dd4e404f528c49a96790c0271655d3916da0879f973245ecaf8d380da868",
+        "mandate_reference": null,
+        "raw_revision": 28,
+        "replay_available": false
+      },
+      "sha256": "9dc3466a7e9e5a3ea87418f3e870fd186f27585b5cdd0137bfb13f9b47c2ccb4"
+    }
+  ]
+}

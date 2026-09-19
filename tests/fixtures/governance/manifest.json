@@ -1,0 +1,13 @@
+{
+  "fixture_family": "SYS-01-governance-v1",
+  "provenance": "Self-authored synthetic bytes and manually specified temporal boundaries",
+  "license_status": "Project-authored test data; no third-party bookmaker content",
+  "author": "Codex implementation",
+  "independent_reviewer": null,
+  "review_status": "PENDING_INDEPENDENT_REVIEW",
+  "input_cutoff": "2026-09-19T10:00:00Z",
+  "source_rule_version": "fixture-v1; synthetic only",
+  "last_change_reason": "Initial F01 permission, policy-time, DST, role and retention regression fixtures",
+  "expected_results": "Explicit reason codes and UTC boundary literals in test_governance.py; transactional deletion oracles in test_retention.py",
+  "release_limitations": "The fixture-reviewer identity in tests is synthetic and does not represent a real source, rule or product approval"
+}

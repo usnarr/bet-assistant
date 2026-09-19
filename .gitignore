@@ -1,0 +1,16 @@
+.venv/
+.python/
+.uv-cache/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+__pycache__/
+*.py[cod]
+.env
+var/
+dist/
+*.egg-info/
+
+# Local planning inputs; keep implementation and design documents out of Git.
+docs/implementation/
+tennis_betting_ai_implementation_plan.md
