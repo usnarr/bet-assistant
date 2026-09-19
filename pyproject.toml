@@ -1,19 +1,32 @@
 [project]
 name = "tennis-engine"
-version = "0.1.0"
-description = "Auditable tennis engine governance contracts (F01)"
+version = "0.2.0"
+description = "Auditable tennis prediction and betting-evaluation engine"
 requires-python = ">=3.13"
-dependencies = ["pydantic>=2.12,<3", "tzdata>=2026.1"]
+dependencies = [
+  "alembic>=1.16,<2",
+  "fastapi>=0.116,<1",
+  "httpx>=0.28,<1",
+  "minio>=7.2,<8",
+  "orjson>=3.11,<4",
+  "psycopg[binary]>=3.2,<4",
+  "pydantic>=2.12,<3",
+  "pydantic-settings>=2.10,<3",
+  "sqlalchemy>=2.0,<3",
+  "tzdata>=2026.1",
+  "uvicorn>=0.35,<1",
+]
 
 [project.scripts]
 tennis-governance = "tennis_engine.governance.cli:main"
+tennis-platform = "tennis_engine.infrastructure.cli:main"
 
 [build-system]
 requires = ["hatchling>=1.27,<2"]
 build-backend = "hatchling.build"
 
 [dependency-groups]
-dev = ["pytest>=8,<10", "ruff>=0.12", "mypy>=1.15"]
+dev = ["pip-audit>=2.9,<3", "pytest>=8,<10", "ruff>=0.12", "mypy>=1.15"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -22,10 +35,10 @@ testpaths = ["tests"]
 target-version = "py313"
 line-length = 100
 include = ["*.py", "*.pyi", "pyproject.toml"]
-extend-exclude = [".python", ".uv-cache", "var", "dist"]
+extend-exclude = [".python", ".uv-cache", "var", "dist", "migrations/versions"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src", "tests", "scripts", "configs", "docs", "README.md", "CLAUDE.md", "pyproject.toml", "uv.lock", ".python-version", "tennis_betting_ai_implementation_plan.md"]
+include = ["src", "tests", "scripts", "configs", "docs", "migrations", ".github", "README.md", "CLAUDE.md", "pyproject.toml", "uv.lock", ".python-version", ".env.example", "alembic.ini", "compose.yaml", "Dockerfile", "Makefile"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]

@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17.6-alpine
+        env:
+          POSTGRES_DB: tennis_test
+          POSTGRES_USER: tennis
+          POSTGRES_PASSWORD: test-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U tennis -d tennis_test"
+          --health-interval 3s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      UV_CACHE_DIR: ${{ github.workspace }}/.uv-cache
+      TEST_DATABASE_URL: postgresql+psycopg://tennis:test-only@localhost:5432/tennis_test
+      TEST_OBJECT_STORE_ENDPOINT: localhost:9000
+      TEST_OBJECT_STORE_ACCESS_KEY: test-access
+      TEST_OBJECT_STORE_SECRET_KEY: test-secret-key
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.12.15"
+          enable-cache: true
+      - name: Start isolated object store
+        run: >-
+          docker run --detach --rm --name tennis-minio
+          --publish 9000:9000
+          --env MINIO_ROOT_USER=test-access
+          --env MINIO_ROOT_PASSWORD=test-secret-key
+          quay.io/minio/minio:RELEASE.2025-07-23T15-54-02Z server /data
+      - run: uv sync --frozen
+      - run: uv run ruff format --check .
+      - run: uv run ruff check .
+      - run: uv run mypy src
+      - run: uv run pytest -q
+      - run: uv run pip-audit
+      - name: Build application image
+        run: docker build --tag tennis-engine:${{ github.sha }} .
+
+  image-scan:
+    runs-on: ubuntu-latest
+    needs: verify
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image for scan
+        run: docker build --tag tennis-engine:scan .
+      - uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: tennis-engine:scan
+          format: table
+          exit-code: "1"
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true

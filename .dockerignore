@@ -1,0 +1,15 @@
+.git
+.github
+.venv
+.python
+.uv-cache
+.pytest_cache
+.ruff_cache
+.mypy_cache
+__pycache__
+*.pyc
+.env
+var
+dist
+docs/implementation
+tennis_betting_ai_implementation_plan.md

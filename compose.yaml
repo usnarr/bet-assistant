@@ -1,0 +1,86 @@
+name: tennis-engine
+
+x-app-environment: &app-environment
+  TENNIS_ENVIRONMENT: ${TENNIS_ENVIRONMENT:-development}
+  TENNIS_DATABASE_URL: ${TENNIS_DATABASE_URL:-postgresql+psycopg://tennis:local-only@postgres:5432/tennis}
+  TENNIS_OBJECT_STORE_ENDPOINT: ${TENNIS_OBJECT_STORE_ENDPOINT:-minio:9000}
+  TENNIS_OBJECT_STORE_ACCESS_KEY: ${TENNIS_OBJECT_STORE_ACCESS_KEY:-local-development}
+  TENNIS_OBJECT_STORE_SECRET_KEY: ${TENNIS_OBJECT_STORE_SECRET_KEY:-change-me-before-use}
+  TENNIS_OBJECT_STORE_BUCKET: ${TENNIS_OBJECT_STORE_BUCKET:-tennis-raw}
+  TENNIS_OBJECT_STORE_SECURE: ${TENNIS_OBJECT_STORE_SECURE:-false}
+  TENNIS_ARTIFACT_ROOT: ${TENNIS_ARTIFACT_ROOT:-/app/var/artifacts}
+  TENNIS_LOG_LEVEL: ${TENNIS_LOG_LEVEL:-INFO}
+  TENNIS_WORKER_POLL_SECONDS: ${TENNIS_WORKER_POLL_SECONDS:-5}
+
+services:
+  postgres:
+    image: postgres:17.6-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-tennis}
+      POSTGRES_USER: ${POSTGRES_USER:-tennis}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-only}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  minio:
+    image: quay.io/minio/minio:RELEASE.2025-07-23T15-54-02Z
+    command: server /data --console-address :9001
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-local-development}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change-me-before-use}
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - minio-data:/data
+
+  migrate:
+    build: .
+    command: alembic upgrade head
+    environment: *app-environment
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  object-store-init:
+    build: .
+    command: tennis-platform init-object-store
+    environment: *app-environment
+    depends_on: [minio]
+    restart: on-failure
+
+  api:
+    build: .
+    environment: *app-environment
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      object-store-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready')"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  worker:
+    build: .
+    command: python -m tennis_engine.worker
+    environment: *app-environment
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  minio-data:

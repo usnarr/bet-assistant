@@ -1,1 +1,3 @@
-"""Tennis prediction engine. Only F01 governance is implemented so far."""
+"""Auditable tennis prediction and betting-evaluation engine."""
+
+__version__ = "0.2.0"

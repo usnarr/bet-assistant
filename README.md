@@ -1,13 +1,16 @@
 # Tennis Betting AI Engine
 
-F01 governance is implemented: source approvals, versioned payout/responsible-use
-contracts, immutable document evidence, permission checks and raw retention.
-The prediction, ingestion, pricing and dashboard features remain planned.
+F01 governance and F02 platform foundation are implemented. The project now includes
+source approvals, versioned payout/responsible-use contracts, strict shared domain
+contracts, PostgreSQL migrations, immutable S3-compatible storage, an internal health API,
+a dependency-gated worker, artifact manifests, and CI. Prediction, ingestion, pricing, and
+the dashboard remain future work.
 
 ```powershell
 uv sync --frozen
 uv run tennis-governance init
 uv run tennis-governance check-source betclic-odds production
+uv run tennis-platform show-config
 uv run pytest -q
 uv run ruff check .
 uv run ruff format --check .
@@ -18,10 +21,10 @@ The source check returns exit code **2** and a denial until reviewed configurati
 has been applied. Initializing a database grants no approvals or operator roles.
 
 See the [F01 operator guide](docs/governance/README.md),
+[F02 platform guide](docs/platform/README.md),
 [provider comparison](docs/governance/provider-comparison.md),
-[architecture decisions](docs/adr/0001-f01-governance.md),
-[evaluation evidence](docs/governance/evidence/SYS-01.md), and
-[implementation backlog](docs/implementation/README.md).
+[architecture decisions](docs/adr/0001-f01-governance.md), and
+[evaluation evidence](docs/governance/evidence/SYS-01.md).
 
 On a restricted Windows host, use workspace-local runtime/cache/temp directories:
 
@@ -35,4 +38,5 @@ uv sync --frozen
 uv run pytest -q
 ```
 
-No credentials, paid provider subscriptions or network calls are needed by the tests.
+No paid provider subscriptions or live bookmaker credentials are needed by the tests.
+See the F02 guide for the optional local PostgreSQL/MinIO Compose smoke path.

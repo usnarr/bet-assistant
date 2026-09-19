@@ -17,10 +17,11 @@ Optimize trustworthy calibrated predictions and long-term risk-adjusted net retu
 
 At the time this draft was created, the repository contained a design blueprint and newly added planning documents. There was no application scaffold, dependency lockfile, test suite, live integration or validated model. Do not assume proposed paths, commands or services exist; inspect the workspace first.
 
-Implementation update (2026-09-19): F01 now has a Python package, locked dependencies,
-local SQLite governance journal, CLI, disabled draft source/policy configuration,
-and synthetic SYS-01 tests. See `docs/governance/README.md`. F02 infrastructure and
-subsequent features are not implemented. Current checks are `uv run pytest -q`,
+Implementation update (2026-09-19): F01 and F02 now have a Python package, locked
+dependencies, local SQLite governance journal, PostgreSQL/Alembic foundation,
+S3-compatible immutable storage, versioned shared contracts, health API, worker gate,
+Compose stack, artifact manifests, and CI. See `docs/governance/README.md` and
+`docs/platform/README.md`. F03 and subsequent features are not implemented. Current checks are `uv run pytest -q`,
 `uv run ruff check .`, `uv run ruff format --check .`, and `uv run mypy src`.
 External approvals and independent fixture review remain pending.
 
@@ -31,7 +32,17 @@ Read these documents before implementing affected work:
 3. The matching [feature plan](docs/implementation/README.md) and its dependencies.
 4. The applicable [system/model evaluations](docs/implementation/evaluations/system-and-model-evaluations.md) and [AI agent evaluations](docs/implementation/evaluations/ai-agent-evaluations.md).
 
-The original blueprint is preserved. The feature plans add implementation detail, explicit proposals and evaluation contracts. Do not silently resolve contradictory requirements or treat unaccepted example settings as established policy; document the decision and seek clarification only when it blocks the requested work.
+The original blueprint is preserved locally. The feature plans add implementation detail,
+explicit proposals and evaluation contracts. Both `docs/implementation/` and
+`tennis_betting_ai_implementation_plan.md` are intentionally ignored by Git; never
+force-add them. Do not silently resolve contradictory requirements or treat unaccepted
+example settings as established policy; document the decision and seek clarification only
+when it blocks the requested work.
+
+Commit each completed feature as its own focused Git commit. Include that feature's code,
+migrations, tests, documentation, and lockfile changes together, stage only those files,
+and keep unrelated cleanup in a separate commit. Use the stable Fxx identifier in the
+commit body or subject when it clarifies scope. Run the relevant checks before committing.
 
 ## Supported scope and delivery order
 
@@ -61,7 +72,7 @@ approved sources
 
 Target stack from the blueprint: Python 3.13+, `uv`, Pydantic, `httpx`, PostgreSQL/Alembic, S3-compatible raw storage, FastAPI, a selected orchestration framework, scikit-learn and a selected tabular model library, model registry, metrics/traces and containerized local services. Verify compatibility and lock concrete versions during scaffolding. Optional Redis, TimescaleDB, Bayesian tooling and browser workers should be introduced when their use is justified.
 
-Proposed code locations after scaffolding:
+Code locations after F02 scaffolding:
 
 ```text
 src/tennis_engine/
@@ -168,7 +179,7 @@ Follow the [agent evaluation plan](docs/implementation/evaluations/ai-agent-eval
 4. Run relevant checks and record real outcomes. Do not claim tests passed if they were skipped, unavailable or not implemented.
 5. Link evidence to feature/evaluation IDs and update status/documentation when behavior or accepted decisions change.
 
-Proposed checks after F02 creates the required project/configuration, **not commands verified in the current document-only workspace**:
+Required local checks:
 
 ```text
 uv sync --frozen
