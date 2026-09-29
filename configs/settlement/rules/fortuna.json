@@ -1,0 +1,31 @@
+{
+  "rules": [
+    {
+      "kind": "bookmaker_payout",
+      "version": "fortuna-payout-draft-2026-09-29",
+      "owner": "product-policy-reviewer:unassigned",
+      "effective_from": "2026-09-29T00:00:00Z",
+      "effective_until": "2027-09-29T00:00:00Z",
+      "reviewer": null,
+      "reviewed_at": null,
+      "review_due_at": null,
+      "evidence": [],
+      "state": "DRAFT",
+      "bookmaker": "fortuna"
+    },
+    {
+      "kind": "bookmaker_settlement",
+      "version": "fortuna-settlement-draft-2026-09-29",
+      "owner": "product-policy-reviewer:unassigned",
+      "effective_from": "2026-09-29T00:00:00Z",
+      "effective_until": "2027-09-29T00:00:00Z",
+      "reviewer": null,
+      "reviewed_at": null,
+      "review_due_at": null,
+      "evidence": [],
+      "state": "DRAFT",
+      "bookmaker": "fortuna",
+      "market": "TENNIS_MATCH_WINNER"
+    }
+  ]
+}

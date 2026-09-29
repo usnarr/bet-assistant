@@ -1,0 +1,31 @@
+{
+  "rules": [
+    {
+      "kind": "bookmaker_payout",
+      "version": "betclic-payout-draft-2026-09-29",
+      "owner": "product-policy-reviewer:unassigned",
+      "effective_from": "2026-09-29T00:00:00Z",
+      "effective_until": "2027-09-29T00:00:00Z",
+      "reviewer": null,
+      "reviewed_at": null,
+      "review_due_at": null,
+      "evidence": [],
+      "state": "DRAFT",
+      "bookmaker": "betclic"
+    },
+    {
+      "kind": "bookmaker_settlement",
+      "version": "betclic-settlement-draft-2026-09-29",
+      "owner": "product-policy-reviewer:unassigned",
+      "effective_from": "2026-09-29T00:00:00Z",
+      "effective_until": "2027-09-29T00:00:00Z",
+      "reviewer": null,
+      "reviewed_at": null,
+      "review_due_at": null,
+      "evidence": [],
+      "state": "DRAFT",
+      "bookmaker": "betclic",
+      "market": "TENNIS_MATCH_WINNER"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "rules": [
+    {
+      "kind": "jurisdiction_payout",
+      "version": "pl-payout-draft-2026-09-29",
+      "owner": "product-policy-reviewer:unassigned",
+      "effective_from": "2026-09-29T00:00:00Z",
+      "effective_until": "2027-09-29T00:00:00Z",
+      "reviewer": null,
+      "reviewed_at": null,
+      "review_due_at": null,
+      "evidence": [],
+      "state": "DRAFT",
+      "jurisdiction": "PL",
+      "taxes": null
+    }
+  ]
+}
