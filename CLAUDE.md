@@ -24,7 +24,9 @@ Compose stack, artifact manifests, governance-gated HTTP/file fetching, immutabl
 observations, strict parsing/dead letters, replay/reconciliation, and CI. See
 `docs/governance/README.md`, `docs/platform/README.md`, and `docs/ingestion/README.md`.
 F04 identity/warehouse is implemented on synthetic fixtures (`docs/identity/README.md`);
-its PostgreSQL repository is pending. Later features are not implemented. Current checks are `uv run pytest -q`,
+its PostgreSQL repository is pending. F06 payout rules, match-winner settlement and the
+virtual ledger are implemented on synthetic rules (`docs/settlement/README.md`); real rule
+reviews are pending. Later features are not implemented. Current checks are `uv run pytest -q`,
 `uv run ruff check .`, `uv run ruff format --check .`, and `uv run mypy src`.
 External approvals and independent fixture review remain pending.
 

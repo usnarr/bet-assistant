@@ -80,7 +80,7 @@ agent or operator cannot invent a result to close it.
 - `reconcile` checks sequence continuity, running balance and
   `opening + deltas = closing`, and reports open exposure.
 
-PostgreSQL storage (migration `0004_settlement`) uses append-only triggers, unique
+PostgreSQL storage (migration `0005_settlement`) uses append-only triggers, unique
 idempotency keys, a unique reversal per entry, and a per-ledger advisory lock.
 
 ## Rollback
