@@ -94,13 +94,11 @@ class RejectedRecord(Contract):
     reason: Annotated[str, Field(min_length=1, max_length=512)]
 
 
-class Snapshot(Contract):
-    """One successful poll. Observation time comes from F03, never from the payload."""
+class Listing(Contract):
+    """Everything a parser reads from one response body, in source form."""
 
     bookmaker: Identifier
     parser_version: Identifier
-    observed_at: Timestamp
-    raw_content_sha256: Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
     events: tuple[SourceEvent, ...]
     quotes: tuple[RawQuote, ...]
     rejected: tuple[RejectedRecord, ...] = ()
@@ -109,16 +107,31 @@ class Snapshot(Contract):
     def consistent(self) -> Self:
         event_ids = [event.source_event_id for event in self.events]
         if len(set(event_ids)) != len(event_ids):
-            raise ValueError("Duplicate source event IDs in one snapshot")
+            raise ValueError("Duplicate source event IDs in one listing")
         known = set(event_ids)
         if any(quote.source_event_id not in known for quote in self.quotes):
-            raise ValueError("A quote references an event not in the snapshot")
+            raise ValueError("A quote references an event not in the listing")
         books = {self.bookmaker}
         if {event.bookmaker for event in self.events} - books or {
             quote.bookmaker for quote in self.quotes
         } - books:
-            raise ValueError("A snapshot contains one bookmaker only")
+            raise ValueError("A listing contains one bookmaker only")
         return self
+
+
+class Snapshot(Listing):
+    """One successful poll. Observation time comes from F03, never from the payload."""
+
+    observed_at: Timestamp
+    raw_content_sha256: Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
+
+    @classmethod
+    def observe(cls, listing: Listing, *, observed_at: datetime, raw_content_sha256: str) -> Self:
+        return cls(
+            **dict(listing),
+            observed_at=observed_at,
+            raw_content_sha256=raw_content_sha256,
+        )
 
 
 class BookmakerParser(Protocol):
@@ -130,9 +143,7 @@ class BookmakerParser(Protocol):
     @property
     def version(self) -> str: ...
 
-    def parse_snapshot(
-        self, body: bytes, *, observed_at: datetime, raw_content_sha256: str
-    ) -> Snapshot: ...
+    def parse_listing(self, body: bytes) -> Listing: ...
 
 
 class MappingReason(StrEnum):
