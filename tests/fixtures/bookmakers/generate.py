@@ -8,6 +8,7 @@ Run: uv run python tests/fixtures/bookmakers/generate.py
 """
 
 import json
+import re
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -202,18 +203,88 @@ def betclic(events):
     return {"format": "betclic-synthetic-v1", "matches": matches}
 
 
+# --- Superbet synthetic shape: epoch-ms UTC starts, one "A - B" name, numeric statuses,
+# JSON-number prices. A malformed price appears as a string and must be rejected.
+SUPERBET_STATUS = {"OPEN": 1, "SUSPENDED": 2, "CLOSED": 3}
+SUPERBET_EVENT = {"PRE_MATCH": 0, "STARTED": 1, "CANCELLED": 9}
+SUPERBET_MARKET = {"MW": "Zwycięzca", "TOTAL": "Liczba gemów"}
+
+
+class Number(str):
+    """Marks odds text that must be written as a bare JSON number."""
+
+
+def superbet(events):
+    data = []
+    for item in events:
+        names = [p[1] for p in item["players"]]
+        entry = {
+            "matchId": item["id"],
+            "matchName": f"{names[0]} - {names[1]}",
+            "tournamentName": item["competition"],
+            "sportCategory": f"{item['tour']} {'Doubles' if item['doubles'] else 'Singles'}",
+            "bestOfSets": item["best_of"],
+            "status": SUPERBET_EVENT[item["state"]],
+            "odds": [],
+        }
+        if item["reject_event"] == "unknown-timezone":
+            entry["matchTimestamp"] = item["start"].replace(tzinfo=None).isoformat()
+        elif item["start"] is not None:
+            entry["matchTimestamp"] = int(item["start"].timestamp() * 1000)
+        for market in item["markets"]:
+            for sel in market["selections"]:
+                odds = sel["odds"]
+                entry["odds"].append(
+                    {
+                        "marketId": market["id"],
+                        "marketName": SUPERBET_MARKET[market["kind"]],
+                        "marketStatus": SUPERBET_STATUS[market["status"]],
+                        "outcomeId": sel["id"],
+                        "outcomeName": sel["label"] or str(sel["side"] + 1),
+                        "price": Number(odds) if valid_number(odds) else odds,
+                        "status": SUPERBET_STATUS[sel["status"]],
+                        "boost": sel["promo"],
+                    }
+                )
+        data.append(entry)
+    return {"schema": "superbet-synthetic-v1", "data": data}
+
+
+def valid_number(text):
+    try:
+        float(text)
+    except ValueError:
+        return False
+    return True
+
+
 def write(name, payloads, comma_decimal=False):
     folder = ROOT / name
     folder.mkdir(exist_ok=True)
     for poll in (1, 2):
         events = scenarios(poll)
-        (folder / f"payload-{poll}.json").write_text(
-            json.dumps(payloads(events), ensure_ascii=False, indent=1) + "\n", "utf-8"
-        )
+        (folder / f"payload-{poll}.json").write_text(encode(payloads(events)) + "\n", "utf-8")
         (folder / f"expected-{poll}.json").write_text(
             json.dumps(expected(events, comma_decimal=comma_decimal), indent=1) + "\n", "utf-8"
         )
 
 
+def encode(value):
+    """JSON text in which `Number` strings are written as bare numbers, keeping their text."""
+
+    def mark(item):
+        if isinstance(item, Number):
+            return f"__NUMBER__{item}__"
+        if isinstance(item, dict):
+            return {key: mark(inner) for key, inner in item.items()}
+        if isinstance(item, list):
+            return [mark(inner) for inner in item]
+        return item
+
+    text = json.dumps(mark(value), ensure_ascii=False, indent=1)
+    return re.sub(r'"__NUMBER__([0-9.]+)__"', lambda found: found.group(1), text)
+
+
 if __name__ == "__main__":
     write("betclic", betclic)
+    write("superbet", superbet)

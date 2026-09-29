@@ -1,0 +1,706 @@
+{
+ "schema": "superbet-synthetic-v1",
+ "data": [
+  {
+   "matchId": "ev-01",
+   "matchName": "Jan Kowalski - Lukasz Wojcik",
+   "tournamentName": "Synthetic Open",
+   "sportCategory": "ATP Singles",
+   "bestOfSets": 3,
+   "status": 0,
+   "odds": [
+    {
+     "marketId": "ev-01-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-01-s1",
+     "outcomeName": "1",
+     "price": 1.62,
+     "status": 1,
+     "boost": false
+    },
+    {
+     "marketId": "ev-01-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-01-s2",
+     "outcomeName": "2",
+     "price": 2.30,
+     "status": 1,
+     "boost": false
+    }
+   ],
+   "matchTimestamp": 1789988400000
+  },
+  {
+   "matchId": "ev-02",
+   "matchName": "Anna Nowak - Maria Zielinska",
+   "tournamentName": "Synthetic Open",
+   "sportCategory": "WTA Singles",
+   "bestOfSets": 3,
+   "status": 0,
+   "odds": [
+    {
+     "marketId": "ev-02-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-02-s1",
+     "outcomeName": "1",
+     "price": 2.05,
+     "status": 1,
+     "boost": false
+    },
+    {
+     "marketId": "ev-02-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-02-s2",
+     "outcomeName": "2",
+     "price": 1.75,
+     "status": 1,
+     "boost": false
+    }
+   ],
+   "matchTimestamp": 1789992000000
+  },
+  {
+   "matchId": "ev-03",
+   "matchName": "Piotr Lewandowski - Tomasz Kaminski",
+   "tournamentName": "Synthetic Open",
+   "sportCategory": "ATP Singles",
+   "bestOfSets": 3,
+   "status": 0,
+   "odds": [
+    {
+     "marketId": "ev-03-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-03-s1",
+     "outcomeName": "1",
+     "price": 1.85,
+     "status": 1,
+     "boost": false
+    },
+    {
+     "marketId": "ev-03-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-03-s2",
+     "outcomeName": "2",
+     "price": 1.95,
+     "status": 1,
+     "boost": false
+    }
+   ],
+   "matchTimestamp": 1789995600000
+  },
+  {
+   "matchId": "ev-04",
+   "matchName": "Ewa Wisniewska - Karolina Dabrowska",
+   "tournamentName": "Synthetic Open",
+   "sportCategory": "WTA Singles",
+   "bestOfSets": 3,
+   "status": 0,
+   "odds": [
+    {
+     "marketId": "ev-04-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-04-s1",
+     "outcomeName": "1",
+     "price": 1.40,
+     "status": 1,
+     "boost": false
+    },
+    {
+     "marketId": "ev-04-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-04-s2",
+     "outcomeName": "2",
+     "price": 2.90,
+     "status": 1,
+     "boost": false
+    }
+   ],
+   "matchTimestamp": 1789999200000
+  },
+  {
+   "matchId": "ev-05",
+   "matchName": "Jan Kowalski - Anna Nowak",
+   "tournamentName": "Synthetic Open",
+   "sportCategory": "ATP Singles",
+   "bestOfSets": 3,
+   "status": 0,
+   "odds": [
+    {
+     "marketId": "ev-05-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-05-s1",
+     "outcomeName": "1",
+     "price": 1.85,
+     "status": 1,
+     "boost": false
+    },
+    {
+     "marketId": "ev-05-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-05-s2",
+     "outcomeName": "2",
+     "price": 1.95,
+     "status": 1,
+     "boost": false
+    }
+   ],
+   "matchTimestamp": 1790002800000
+  },
+  {
+   "matchId": "ev-06",
+   "matchName": "Lukasz Wojcik - Maria Zielinska",
+   "tournamentName": "Synthetic Open",
+   "sportCategory": "WTA Singles",
+   "bestOfSets": 3,
+   "status": 0,
+   "odds": [
+    {
+     "marketId": "ev-06-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-06-s1",
+     "outcomeName": "1",
+     "price": 1.85,
+     "status": 1,
+     "boost": false
+    },
+    {
+     "marketId": "ev-06-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-06-s2",
+     "outcomeName": "2",
+     "price": 1.95,
+     "status": 1,
+     "boost": false
+    }
+   ],
+   "matchTimestamp": 1790006400000
+  },
+  {
+   "matchId": "ev-07",
+   "matchName": "Piotr Lewandowski - Ewa Wisniewska",
+   "tournamentName": "Synthetic Open",
+   "sportCategory": "ATP Singles",
+   "bestOfSets": 3,
+   "status": 0,
+   "odds": [
+    {
+     "marketId": "ev-07-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-07-s1",
+     "outcomeName": "1",
+     "price": 1.85,
+     "status": 1,
+     "boost": false
+    },
+    {
+     "marketId": "ev-07-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-07-s2",
+     "outcomeName": "2",
+     "price": 1.95,
+     "status": 1,
+     "boost": false
+    }
+   ],
+   "matchTimestamp": 1790010000000
+  },
+  {
+   "matchId": "ev-08",
+   "matchName": "Tomasz Kaminski - Karolina Dabrowska",
+   "tournamentName": "Synthetic Open",
+   "sportCategory": "WTA Singles",
+   "bestOfSets": 3,
+   "status": 0,
+   "odds": [
+    {
+     "marketId": "ev-08-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-08-s1",
+     "outcomeName": "1",
+     "price": 1.85,
+     "status": 1,
+     "boost": false
+    },
+    {
+     "marketId": "ev-08-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-08-s2",
+     "outcomeName": "2",
+     "price": 1.95,
+     "status": 1,
+     "boost": false
+    }
+   ],
+   "matchTimestamp": 1790013600000
+  },
+  {
+   "matchId": "ev-09",
+   "matchName": "Lukasz Wojcik - Jan Kowalski",
+   "tournamentName": "Synthetic Open",
+   "sportCategory": "ATP Singles",
+   "bestOfSets": 3,
+   "status": 0,
+   "odds": [
+    {
+     "marketId": "ev-09-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-09-s1",
+     "outcomeName": "1",
+     "price": 2.30,
+     "status": 1,
+     "boost": false
+    },
+    {
+     "marketId": "ev-09-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-09-s2",
+     "outcomeName": "2",
+     "price": 1.62,
+     "status": 1,
+     "boost": false
+    }
+   ],
+   "matchTimestamp": 1790017200000
+  },
+  {
+   "matchId": "ev-10",
+   "matchName": "Anna Nowak - Piotr Lewandowski",
+   "tournamentName": "Synthetic Open",
+   "sportCategory": "ATP Singles",
+   "bestOfSets": 3,
+   "status": 0,
+   "odds": [
+    {
+     "marketId": "ev-10-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-10-s1",
+     "outcomeName": "1",
+     "price": 1.85,
+     "status": 2,
+     "boost": false
+    },
+    {
+     "marketId": "ev-10-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-10-s2",
+     "outcomeName": "2",
+     "price": 1.95,
+     "status": 1,
+     "boost": false
+    }
+   ],
+   "matchTimestamp": 1790020800000
+  },
+  {
+   "matchId": "ev-11",
+   "matchName": "Maria Zielinska - Tomasz Kaminski",
+   "tournamentName": "Synthetic Open",
+   "sportCategory": "WTA Singles",
+   "bestOfSets": 3,
+   "status": 0,
+   "odds": [
+    {
+     "marketId": "ev-11-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 2,
+     "outcomeId": "ev-11-s1",
+     "outcomeName": "1",
+     "price": 1.85,
+     "status": 1,
+     "boost": false
+    },
+    {
+     "marketId": "ev-11-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 2,
+     "outcomeId": "ev-11-s2",
+     "outcomeName": "2",
+     "price": 1.95,
+     "status": 1,
+     "boost": false
+    }
+   ],
+   "matchTimestamp": 1790024400000
+  },
+  {
+   "matchId": "ev-12",
+   "matchName": "Ewa Wisniewska - Jan Kowalski",
+   "tournamentName": "Synthetic Open",
+   "sportCategory": "ATP Singles",
+   "bestOfSets": 3,
+   "status": 0,
+   "odds": [
+    {
+     "marketId": "ev-12-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-12-s1",
+     "outcomeName": "1",
+     "price": "1,85",
+     "status": 1,
+     "boost": false
+    },
+    {
+     "marketId": "ev-12-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-12-s2",
+     "outcomeName": "2",
+     "price": 1.95,
+     "status": 1,
+     "boost": false
+    }
+   ],
+   "matchTimestamp": 1790028000000
+  },
+  {
+   "matchId": "ev-13",
+   "matchName": "Karolina Dabrowska - Lukasz Wojcik",
+   "tournamentName": "Synthetic Open",
+   "sportCategory": "WTA Singles",
+   "bestOfSets": 3,
+   "status": 0,
+   "odds": [
+    {
+     "marketId": "ev-13-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-13-s1",
+     "outcomeName": "1",
+     "price": 1.00,
+     "status": 1,
+     "boost": false
+    },
+    {
+     "marketId": "ev-13-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-13-s2",
+     "outcomeName": "2",
+     "price": 7.50,
+     "status": 1,
+     "boost": false
+    }
+   ],
+   "matchTimestamp": 1790031600000
+  },
+  {
+   "matchId": "ev-14",
+   "matchName": "Jan Kowalski - Maria Zielinska",
+   "tournamentName": "Synthetic Open",
+   "sportCategory": "ATP Singles",
+   "bestOfSets": 3,
+   "status": 0,
+   "odds": [
+    {
+     "marketId": "ev-14-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-14-s1",
+     "outcomeName": "1",
+     "price": 1.85,
+     "status": 1,
+     "boost": false
+    },
+    {
+     "marketId": "ev-14-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-14-s2",
+     "outcomeName": "2",
+     "price": 1.95,
+     "status": 1,
+     "boost": false
+    }
+   ]
+  },
+  {
+   "matchId": "ev-15",
+   "matchName": "Anna Nowak - Tomasz Kaminski",
+   "tournamentName": "Synthetic Open",
+   "sportCategory": "ATP Singles",
+   "bestOfSets": 3,
+   "status": 0,
+   "odds": [
+    {
+     "marketId": "ev-15-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-15-s1",
+     "outcomeName": "1",
+     "price": 1.85,
+     "status": 1,
+     "boost": false
+    },
+    {
+     "marketId": "ev-15-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-15-s2",
+     "outcomeName": "2",
+     "price": 1.95,
+     "status": 1,
+     "boost": false
+    },
+    {
+     "marketId": "ev-15-tg",
+     "marketName": "Liczba gemów",
+     "marketStatus": 1,
+     "outcomeId": "ev-15-o",
+     "outcomeName": "Over 22.5",
+     "price": 1.90,
+     "status": 1,
+     "boost": false
+    },
+    {
+     "marketId": "ev-15-tg",
+     "marketName": "Liczba gemów",
+     "marketStatus": 1,
+     "outcomeId": "ev-15-u",
+     "outcomeName": "Under 22.5",
+     "price": 1.90,
+     "status": 1,
+     "boost": false
+    }
+   ],
+   "matchTimestamp": 1790038800000
+  },
+  {
+   "matchId": "ev-16",
+   "matchName": "Piotr Lewandowski - Karolina Dabrowska",
+   "tournamentName": "Synthetic Open",
+   "sportCategory": "ATP Doubles",
+   "bestOfSets": 3,
+   "status": 0,
+   "odds": [
+    {
+     "marketId": "ev-16-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-16-s1",
+     "outcomeName": "1",
+     "price": 1.85,
+     "status": 1,
+     "boost": false
+    },
+    {
+     "marketId": "ev-16-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-16-s2",
+     "outcomeName": "2",
+     "price": 1.95,
+     "status": 1,
+     "boost": false
+    }
+   ],
+   "matchTimestamp": 1790042400000
+  },
+  {
+   "matchId": "ev-17",
+   "matchName": "Lukasz Wojcik - Ewa Wisniewska",
+   "tournamentName": "Synthetic Open",
+   "sportCategory": "ATP Singles",
+   "bestOfSets": 5,
+   "status": 0,
+   "odds": [
+    {
+     "marketId": "ev-17-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-17-s1",
+     "outcomeName": "1",
+     "price": 1.85,
+     "status": 1,
+     "boost": false
+    },
+    {
+     "marketId": "ev-17-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-17-s2",
+     "outcomeName": "2",
+     "price": 1.95,
+     "status": 1,
+     "boost": false
+    }
+   ],
+   "matchTimestamp": 1790046000000
+  },
+  {
+   "matchId": "ev-18",
+   "matchName": "Maria Zielinska - Karolina Dabrowska",
+   "tournamentName": "Synthetic Open",
+   "sportCategory": "WTA Singles",
+   "bestOfSets": 3,
+   "status": 1,
+   "odds": [
+    {
+     "marketId": "ev-18-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-18-s1",
+     "outcomeName": "1",
+     "price": 1.85,
+     "status": 1,
+     "boost": false
+    },
+    {
+     "marketId": "ev-18-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-18-s2",
+     "outcomeName": "2",
+     "price": 1.95,
+     "status": 1,
+     "boost": false
+    }
+   ],
+   "matchTimestamp": 1790049600000
+  },
+  {
+   "matchId": "ev-19",
+   "matchName": "Jan Kowalski - Tomasz Kaminski",
+   "tournamentName": "Synthetic Open",
+   "sportCategory": "ATP Singles",
+   "bestOfSets": 3,
+   "status": 9,
+   "odds": [
+    {
+     "marketId": "ev-19-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-19-s1",
+     "outcomeName": "1",
+     "price": 1.85,
+     "status": 1,
+     "boost": false
+    },
+    {
+     "marketId": "ev-19-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-19-s2",
+     "outcomeName": "2",
+     "price": 1.95,
+     "status": 1,
+     "boost": false
+    }
+   ],
+   "matchTimestamp": 1790053200000
+  },
+  {
+   "matchId": "ev-20",
+   "matchName": "Anna Nowak - Ewa Wisniewska",
+   "tournamentName": "Synthetic Open",
+   "sportCategory": "WTA Singles",
+   "bestOfSets": 3,
+   "status": 0,
+   "odds": [
+    {
+     "marketId": "ev-20-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 3,
+     "outcomeId": "ev-20-s1",
+     "outcomeName": "1",
+     "price": 1.85,
+     "status": 1,
+     "boost": false
+    },
+    {
+     "marketId": "ev-20-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 3,
+     "outcomeId": "ev-20-s2",
+     "outcomeName": "2",
+     "price": 1.95,
+     "status": 1,
+     "boost": false
+    }
+   ],
+   "matchTimestamp": 1790056800000
+  },
+  {
+   "matchId": "ev-21",
+   "matchName": "Tomasz Kaminski - Lukasz Wojcik",
+   "tournamentName": "Synthetic Open",
+   "sportCategory": "ATP Singles",
+   "bestOfSets": 3,
+   "status": 0,
+   "odds": [
+    {
+     "marketId": "ev-21-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-21-s1",
+     "outcomeName": "1",
+     "price": 2.10,
+     "status": 1,
+     "boost": true
+    },
+    {
+     "marketId": "ev-21-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-21-s2",
+     "outcomeName": "2",
+     "price": 1.72,
+     "status": 1,
+     "boost": false
+    }
+   ],
+   "matchTimestamp": 1790060400000
+  },
+  {
+   "matchId": "ev-22",
+   "matchName": "Ewa Wisniewska - Maria Zielinska",
+   "tournamentName": "Synthetic Open",
+   "sportCategory": "WTA Singles",
+   "bestOfSets": 3,
+   "status": 0,
+   "odds": [
+    {
+     "marketId": "ev-22-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-22-s1",
+     "outcomeName": "1",
+     "price": 1.85,
+     "status": 1,
+     "boost": false
+    },
+    {
+     "marketId": "ev-22-mw",
+     "marketName": "Zwycięzca",
+     "marketStatus": 1,
+     "outcomeId": "ev-22-s2",
+     "outcomeName": "2",
+     "price": 1.95,
+     "status": 1,
+     "boost": false
+    }
+   ],
+   "matchTimestamp": "2026-09-22T08:00:00"
+  }
+ ]
+}

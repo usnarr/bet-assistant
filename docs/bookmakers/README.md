@@ -10,10 +10,10 @@ adapter can collect real data yet.
 | Bookmaker | Parser version | Source policy | State |
 |---|---|---|---|
 | Betclic | `betclic-synthetic-v1` | `betclic-odds` (DRAFT, killed) | Parser, fixtures and end-to-end tests on a synthetic shape |
-| Superbet | — | `superbet-odds` (DRAFT, killed) | Not started |
+| Superbet | `superbet-synthetic-v1` | `superbet-odds` (DRAFT, killed) | Parser, fixtures and end-to-end tests on a synthetic shape |
 | Fortuna | — | `fortuna-odds` (DRAFT, killed) | Not started |
 
-The Betclic payload shape is invented. F05.1 requires an approved access path, quotas and a
+The Betclic and Superbet payload shapes are invented. F05.1 requires an approved access path, quotas and a
 one-event comparison with the source presentation. Then the parser gets a new version for
 the real shape. Do not approve a source only to exercise an adapter.
 

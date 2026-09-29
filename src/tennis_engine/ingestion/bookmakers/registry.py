@@ -2,6 +2,7 @@
 
 from .adapter import BookmakerAdapter
 from .betclic import BetclicParser
+from .superbet import SuperbetParser
 
 BETCLIC = BookmakerAdapter(
     bookmaker="betclic",
@@ -11,4 +12,14 @@ BETCLIC = BookmakerAdapter(
     settlement_rule_version="betclic-settlement-draft-2026-09-29",
 )
 
-ADAPTERS: dict[str, BookmakerAdapter] = {adapter.bookmaker: adapter for adapter in (BETCLIC,)}
+SUPERBET = BookmakerAdapter(
+    bookmaker="superbet",
+    source_id="superbet-odds",
+    parser=SuperbetParser(),
+    payout_rule_version="superbet-payout-draft-2026-09-29",
+    settlement_rule_version="superbet-settlement-draft-2026-09-29",
+)
+
+ADAPTERS: dict[str, BookmakerAdapter] = {
+    adapter.bookmaker: adapter for adapter in (BETCLIC, SUPERBET)
+}
