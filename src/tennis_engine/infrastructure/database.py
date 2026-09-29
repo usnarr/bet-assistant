@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.engine import Connection
 
-EXPECTED_ALEMBIC_REVISION = "0005_settlement"
+EXPECTED_ALEMBIC_REVISION = "0006_features"
 
 
 def build_engine(database_url: str, *, pool_pre_ping: bool = True) -> Engine:
