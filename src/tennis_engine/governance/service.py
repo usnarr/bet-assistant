@@ -80,6 +80,19 @@ class GovernanceService:
             raise PermissionDenied(decision)
         return fetch()
 
+    def get_source_policy(
+        self, source_id: str, purpose: Purpose, now: datetime | None = None
+    ) -> PolicyLookup[SourcePolicy]:
+        """Return only the exact policy revision that passed the execution-time gate."""
+        checked_at = utc(now if now is not None else self.store.clock())
+        decision = self.can_fetch(source_id, purpose, checked_at)
+        if not decision.allowed:
+            return PolicyLookup(decision)
+        row = self.store.latest("source", source_id, checked_at)
+        if row is None or row["revision"] != decision.revision:
+            return PolicyLookup(Decision.deny("SOURCE_UNKNOWN"))
+        return PolicyLookup(decision, SourcePolicy.model_validate_json(row["payload"]))
+
     def get_payout_policy(
         self, bookmaker: str, effective_at: datetime, known_at: datetime
     ) -> PolicyLookup[PayoutPolicy]:

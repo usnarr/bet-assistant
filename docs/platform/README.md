@@ -22,7 +22,7 @@ Invoke-RestMethod http://127.0.0.1:8000/health/ready
 ```
 
 `/health/live` confirms only that the API process runs. `/health/ready` returns HTTP 503
-until PostgreSQL is reachable at migration `0002_governance` and the MinIO bucket exists.
+until PostgreSQL is reachable at migration `0003_ingestion` and the MinIO bucket exists.
 The worker waits at the same gate. `migrate` and `object-store-init` complete before Compose
 starts the API.
 

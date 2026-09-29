@@ -17,11 +17,13 @@ Optimize trustworthy calibrated predictions and long-term risk-adjusted net retu
 
 At the time this draft was created, the repository contained a design blueprint and newly added planning documents. There was no application scaffold, dependency lockfile, test suite, live integration or validated model. Do not assume proposed paths, commands or services exist; inspect the workspace first.
 
-Implementation update (2026-09-19): F01 and F02 now have a Python package, locked
+Implementation update (2026-09-19): F01 through F03 now have a Python package, locked
 dependencies, local SQLite governance journal, PostgreSQL/Alembic foundation,
 S3-compatible immutable storage, versioned shared contracts, health API, worker gate,
-Compose stack, artifact manifests, and CI. See `docs/governance/README.md` and
-`docs/platform/README.md`. F03 and subsequent features are not implemented. Current checks are `uv run pytest -q`,
+Compose stack, artifact manifests, governance-gated HTTP/file fetching, immutable response
+observations, strict parsing/dead letters, replay/reconciliation, and CI. See
+`docs/governance/README.md`, `docs/platform/README.md`, and `docs/ingestion/README.md`.
+F04 and subsequent features are not implemented. Current checks are `uv run pytest -q`,
 `uv run ruff check .`, `uv run ruff format --check .`, and `uv run mypy src`.
 External approvals and independent fixture review remain pending.
 

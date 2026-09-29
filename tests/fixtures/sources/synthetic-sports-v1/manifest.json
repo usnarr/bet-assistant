@@ -1,0 +1,11 @@
+{
+  "fixture_id": "sys-03-synthetic-sports-v1",
+  "provenance": "Synthetic fixture authored for SYS-03; no real provider or bookmaker data.",
+  "license_status": "repository-test-fixture",
+  "source_id": "synthetic-sports",
+  "parser_version": "synthetic-sports-v1",
+  "captured_at": "2026-09-19T10:00:00Z",
+  "author": "implementation",
+  "independent_reviewer": "pending",
+  "last_change_reason": "Initial F03 replay and schema-drift coverage"
+}

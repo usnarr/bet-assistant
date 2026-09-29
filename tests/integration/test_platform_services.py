@@ -35,6 +35,15 @@ def test_postgres_upgrade_downgrade_and_append_only_history(monkeypatch):
         with pytest.raises(Exception, match="append-only history"):
             with engine.begin() as opened:
                 opened.execute(text("DELETE FROM tennis.audit_event"))
+        with engine.connect() as opened:
+            assert (
+                opened.execute(
+                    text(
+                        "SELECT version FROM tennis.platform_component WHERE component='ingestion'"
+                    )
+                ).scalar_one()
+                == "F03-v1"
+            )
     finally:
         command.downgrade(config, "base")
         command.upgrade(config, "head")

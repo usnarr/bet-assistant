@@ -21,6 +21,7 @@ class ImmutableObjectStore(Protocol):
     def put(self, key: str, content: bytes) -> ObjectMetadata: ...
     def get(self, key: str) -> bytes: ...
     def exists(self, key: str) -> bool: ...
+    def list_keys(self, prefix: str = "") -> tuple[str, ...]: ...
 
 
 def validate_key(key: str) -> PurePosixPath:
@@ -74,6 +75,19 @@ class LocalObjectStore:
     def exists(self, key: str) -> bool:
         return self._path(key).is_file()
 
+    def list_keys(self, prefix: str = "") -> tuple[str, ...]:
+        if prefix:
+            validate_key(prefix)
+        return tuple(
+            sorted(
+                path.relative_to(self.root).as_posix()
+                for path in self.root.rglob("*")
+                if path.is_file()
+                and not path.name.startswith(".")
+                and path.relative_to(self.root).as_posix().startswith(prefix)
+            )
+        )
+
 
 class S3ObjectStore:
     def __init__(self, client: Minio, bucket: str):
@@ -124,3 +138,11 @@ class S3ObjectStore:
                 return False
             raise
         return True
+
+    def list_keys(self, prefix: str = "") -> tuple[str, ...]:
+        if prefix:
+            validate_key(prefix)
+        return tuple(
+            item.object_name
+            for item in self.client.list_objects(self.bucket, prefix=prefix, recursive=True)
+        )

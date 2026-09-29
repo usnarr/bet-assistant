@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0",
+  "fixture_id": "sys-03-synthetic-sports-v1",
+  "captured_at": "2026-09-19T10:00:00Z",
+  "events": [
+    {
+      "source_event_id": "synthetic-event-1",
+      "scheduled_start": "2026-09-20T12:00:00Z",
+      "player_names": ["Fixture Player A", "Fixture Player B"]
+    }
+  ]
+}

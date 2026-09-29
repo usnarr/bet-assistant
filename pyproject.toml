@@ -19,6 +19,7 @@ dependencies = [
 
 [project.scripts]
 tennis-governance = "tennis_engine.governance.cli:main"
+tennis-ingestion = "tennis_engine.ingestion.cli:main"
 tennis-platform = "tennis_engine.infrastructure.cli:main"
 
 [build-system]
@@ -38,7 +39,7 @@ include = ["*.py", "*.pyi", "pyproject.toml"]
 extend-exclude = [".python", ".uv-cache", "var", "dist", "migrations/versions"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src", "tests", "scripts", "configs", "docs", "migrations", ".github", "README.md", "CLAUDE.md", "pyproject.toml", "uv.lock", ".python-version", ".env.example", "alembic.ini", "compose.yaml", "Dockerfile", "Makefile"]
+include = ["src", "tests", "scripts", "configs", "docs", "migrations", ".github", "AGENTS.md", "README.md", "CLAUDE.md", "pyproject.toml", "uv.lock", ".python-version", ".env.example", "alembic.ini", "compose.yaml", "Dockerfile", "Makefile"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]

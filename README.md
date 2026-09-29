@@ -1,16 +1,20 @@
 # Tennis Betting AI Engine
 
-F01 governance and F02 platform foundation are implemented. The project now includes
+F01 governance, F02 platform foundation, and F03 immutable ingestion/replay are implemented.
+The project now includes
 source approvals, versioned payout/responsible-use contracts, strict shared domain
 contracts, PostgreSQL migrations, immutable S3-compatible storage, an internal health API,
-a dependency-gated worker, artifact manifests, and CI. Prediction, ingestion, pricing, and
-the dashboard remain future work.
+a dependency-gated worker, artifact manifests, governance-gated HTTP/file fetching,
+archive-before-parse validation, dead letters, replay/reconciliation, and CI. Canonical
+sports/identity data, bookmaker adapters, prediction, pricing, and the dashboard remain
+future work.
 
 ```powershell
 uv sync --frozen
 uv run tennis-governance init
 uv run tennis-governance check-source betclic-odds production
 uv run tennis-platform show-config
+uv run tennis-ingestion replay --parser-version synthetic-sports-v1 --dry-run
 uv run pytest -q
 uv run ruff check .
 uv run ruff format --check .
@@ -22,6 +26,7 @@ has been applied. Initializing a database grants no approvals or operator roles.
 
 See the [F01 operator guide](docs/governance/README.md),
 [F02 platform guide](docs/platform/README.md),
+[F03 ingestion guide](docs/ingestion/README.md),
 [provider comparison](docs/governance/provider-comparison.md),
 [architecture decisions](docs/adr/0001-f01-governance.md), and
 [evaluation evidence](docs/governance/evidence/SYS-01.md).
