@@ -259,3 +259,16 @@ def test_statuses_include_walkover_without_score(tmp_path):
     (result,) = state.store.results(m1)
     assert result.sets == () and result.winner_id == state.player_id("p-kowalski-j")
     assert state.store.match(m1).best_of == BestOf.THREE
+
+
+def test_two_source_ids_with_the_same_pairing_stay_two_matches():
+    from datetime import UTC, datetime
+
+    from pit_support import history
+
+    state = history()
+    start = datetime(2026, 6, 1, tzinfo=UTC)
+    first = state.match("rr-1", "alpha", "bravo", start=start, observed=start, winner="alpha")
+    second = state.match("rr-2", "alpha", "bravo", start=start, observed=start)
+    assert first != second
+    assert len(state.store.matches()) == 2

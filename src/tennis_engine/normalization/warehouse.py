@@ -25,6 +25,7 @@ from .contracts import (
     ResolutionDecision,
     ResultVersion,
     ReviewState,
+    Round,
     ScheduleVersion,
     SetScore,
     SourceMatchRecord,
@@ -459,11 +460,15 @@ class SportsWarehouse:
         self, record: SourceMatchRecord, edition_id: UUID, pair: tuple[UUID, UUID]
     ) -> Match:
         for match in self.store.matches():
+            # Link only across sources. Two IDs from one source are two matches, and a
+            # round-robin can repeat a pairing, so neither case may merge.
             if (
                 match.edition_id == edition_id
                 and match.player_ids == pair
                 and match.round == record.round
+                and record.round not in {Round.RR, Round.UNKNOWN}
                 and match.draw_stage == record.draw_stage
+                and record.source_id not in self.store.match_alias_sources(match.match_id)
             ):
                 return match
         assert record.tour is not None
