@@ -15,4 +15,6 @@ def test_migrations_have_one_expected_head_and_compile_offline(capsys):
     assert "CREATE TABLE tennis.governance_revision" in sql
     assert "CREATE TABLE tennis.raw_content" in sql
     assert "CREATE TABLE tennis.source_observation" in sql
+    assert "CREATE TABLE tennis.canonical_match" in sql
+    assert "CREATE TABLE tennis.identity_review_revision" in sql
     assert "INSERT INTO alembic_version" in sql
