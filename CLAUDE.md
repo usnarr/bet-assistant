@@ -26,8 +26,8 @@ observations, strict parsing/dead letters, replay/reconciliation, and CI. See
 F04 identity/warehouse is implemented on synthetic fixtures (`docs/identity/README.md`);
 its PostgreSQL repository is pending. F06 payout rules, match-winner settlement and the
 virtual ledger are implemented on synthetic rules (`docs/settlement/README.md`); real rule
-reviews are pending. F07 as-of access, snapshots and dataset manifests are implemented
-(`docs/features/README.md`). Later features are not implemented. Current checks are `uv run pytest -q`,
+reviews are pending. F07 as-of access, snapshots and dataset manifests, and F08 core features
+(Elo, form, serve/return, workload, quality gates) are implemented (`docs/features/README.md`). Later features are not implemented. Current checks are `uv run pytest -q`,
 `uv run ruff check .`, `uv run ruff format --check .`, and `uv run mypy src`.
 External approvals and independent fixture review remain pending.
 
