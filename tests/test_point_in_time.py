@@ -309,3 +309,30 @@ def test_prospective_dataset_cannot_hide_research_rows(state):
     data["research_only"] = False
     with pytest.raises(ValidationError, match="research_only"):
         DatasetManifest.model_validate(data)
+
+
+def test_core_feature_set_ignores_future_rows_and_target_result(state):
+    from tennis_engine.features.core import CORE_SET
+
+    before = build_features(state.store, state.target, CUTOFF, CORE_SET)
+    state.match(
+        "target",
+        "alpha",
+        "bravo",
+        start=TARGET_START,
+        observed=TARGET_START + timedelta(hours=3),
+        winner="bravo",
+        stats=(
+            {"serve_points": 60, "serve_points_won": 30},
+            {"serve_points": 60, "serve_points_won": 50},
+        ),
+    )
+    state.match(
+        "after-cutoff",
+        "alpha",
+        "charlie",
+        start=CUTOFF + timedelta(days=2),
+        observed=CUTOFF + timedelta(days=2, hours=3),
+        winner="charlie",
+    )
+    assert build_features(state.store, state.target, CUTOFF, CORE_SET) == before

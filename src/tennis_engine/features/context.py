@@ -6,13 +6,14 @@ Missing inputs produce ``None`` and an explicit missing flag, never a filled def
 
 from datetime import datetime, timedelta
 from decimal import Decimal
+from uuid import UUID
 
 from tennis_engine.contracts.domain import FeatureValue
 
 from .contracts import FeatureDefinition
 from .snapshots import FeatureContext, FeatureSet, fixed
 
-WORKLOAD_WINDOWS = (7, 14, 28)
+WORKLOAD_WINDOWS = (3, 7, 14, 28)
 DAYS_PER_YEAR = Decimal("365.2425")
 SECONDS_PER_DAY = Decimal(86400)
 
@@ -89,6 +90,33 @@ CONTEXT_DEFINITIONS: tuple[FeatureDefinition, ...] = (
     ),
     *(
         _definition(
+            f"{side}.{kind}_{days}d",
+            unit,
+            "PLAYER_ONE" if side == "p1" else "PLAYER_TWO",
+            f"{description} in the {days} days before the cutoff",
+            window=f"{days}d",
+            missing_behavior=missing,
+        )
+        for side in ("p1", "p2")
+        for days in WORKLOAD_WINDOWS
+        for kind, unit, description, missing in (
+            ("sets", "sets", "Sets played in completed matches", "0 is a real count"),
+            (
+                "minutes",
+                "minutes",
+                "Minutes played where start and end are known",
+                "Partial sum; see duration_incomplete",
+            ),
+            (
+                "duration_incomplete",
+                "flag",
+                "True if any match lacks recorded start and end times",
+                "never None",
+            ),
+        )
+    ),
+    *(
+        _definition(
             f"{side}.history_matches",
             "matches",
             "PLAYER_ONE" if side == "p1" else "PLAYER_TWO",
@@ -149,9 +177,24 @@ def context_group(context: FeatureContext) -> dict[str, FeatureValue]:
         values[f"{side}.days_since_last_match"] = (
             days_between(history[-1].ended_at, context.as_of) if history else None
         )
+        durations: dict[UUID, tuple[datetime, datetime] | None] = {}
+        for item in history:
+            status = view.status(item.match.match_id)
+            start_end = None
+            if status is not None and status[0].actual_start and status[0].actual_end:
+                context.use(status[1])
+                start_end = (status[0].actual_start, status[0].actual_end)
+            durations[item.match.match_id] = start_end
         for days in WORKLOAD_WINDOWS:
             since = context.as_of - timedelta(days=days)
-            values[f"{side}.matches_{days}d"] = sum(1 for item in history if item.ended_at >= since)
+            recent = [item for item in history if item.ended_at >= since]
+            values[f"{side}.matches_{days}d"] = len(recent)
+            values[f"{side}.sets_{days}d"] = sum(len(item.result.sets) for item in recent)
+            spans = [durations[item.match.match_id] for item in recent]
+            values[f"{side}.minutes_{days}d"] = sum(
+                int((span[1] - span[0]).total_seconds()) // 60 for span in spans if span
+            )
+            values[f"{side}.duration_incomplete_{days}d"] = any(span is None for span in spans)
 
     if ranks[0] is not None and ranks[1] is not None:
         values["diff.log_rank"] = fixed(Decimal(ranks[0]).ln() - Decimal(ranks[1]).ln())

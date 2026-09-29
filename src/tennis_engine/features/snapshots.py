@@ -43,6 +43,7 @@ class FeatureContext:
     edition: TournamentEdition
     players: tuple[Player, Player]
     inputs: list[InputRef] = field(default_factory=list)
+    memo: dict[str, object] = field(default_factory=dict)
 
     @property
     def as_of(self) -> datetime:
