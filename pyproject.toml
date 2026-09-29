@@ -27,7 +27,13 @@ requires = ["hatchling>=1.27,<2"]
 build-backend = "hatchling.build"
 
 [dependency-groups]
-dev = ["pip-audit>=2.9,<3", "pytest>=8,<10", "ruff>=0.12", "mypy>=1.15"]
+dev = [
+    "pip-audit>=2.9,<3",
+    "pytest>=8,<10",
+    "ruff>=0.12",
+    "mypy>=1.15",
+    "hypothesis>=6.130,<7",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
