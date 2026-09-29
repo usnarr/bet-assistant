@@ -23,7 +23,8 @@ S3-compatible immutable storage, versioned shared contracts, health API, worker 
 Compose stack, artifact manifests, governance-gated HTTP/file fetching, immutable response
 observations, strict parsing/dead letters, replay/reconciliation, and CI. See
 `docs/governance/README.md`, `docs/platform/README.md`, and `docs/ingestion/README.md`.
-F04 and subsequent features are not implemented. Current checks are `uv run pytest -q`,
+F04 identity/warehouse is implemented on synthetic fixtures (`docs/identity/README.md`);
+its PostgreSQL repository is pending. Later features are not implemented. Current checks are `uv run pytest -q`,
 `uv run ruff check .`, `uv run ruff format --check .`, and `uv run mypy src`.
 External approvals and independent fixture review remain pending.
 

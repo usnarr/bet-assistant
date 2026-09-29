@@ -15,8 +15,9 @@ adapter; those begin in F04/F05 after source approval.
 - Redis and vector storage are not runtime requirements. Any future cache or semantic index
   is derived and rebuildable, never the source of financial or safety truth.
 
-The database schema revision is `0003_ingestion`. API/worker readiness remains false until
-PostgreSQL is on that exact revision and the configured object-store bucket exists.
+F03 tables arrive in revision `0003_ingestion`. API/worker readiness remains false until
+PostgreSQL is on the head revision (`EXPECTED_ALEMBIC_REVISION`) and the configured
+object-store bucket exists.
 
 ## Commands
 
