@@ -1,5 +1,6 @@
 """Stable transport-independent contracts for the planned feature boundaries."""
 
+from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Literal, Self
@@ -33,6 +34,52 @@ class RecommendationStatus(StrEnum):
     BET = "BET"
     WATCH = "WATCH"
     NO_BET = "NO_BET"
+
+
+class AvailabilityClass(StrEnum):
+    """How a fact's availability at a prediction cutoff is demonstrated (F07)."""
+
+    PROSPECTIVE = "PROSPECTIVE"
+    ARCHIVED = "ARCHIVED"
+    RESEARCH_ONLY = "RESEARCH_ONLY"
+
+
+class Availability(Contract):
+    """Separate time axes for one stored fact; none of them may be backdated.
+
+    ``observed_at`` is when this system observed the fact. ``ingested_at`` is when it was
+    written. ``effective_at`` is when the fact applies in the world. ``source_available_at``
+    is a historical publication time and requires a reviewed evidence reference.
+    """
+
+    schema_version: Literal["1.0"] = "1.0"
+    observed_at: Timestamp
+    ingested_at: Timestamp
+    effective_at: Timestamp | None = None
+    source_available_at: Timestamp | None = None
+    availability_evidence_id: Identifier | None = None
+
+    @model_validator(mode="after")
+    def times_are_consistent(self) -> Self:
+        if self.ingested_at < self.observed_at:
+            raise ValueError("A fact cannot be ingested before it was observed")
+        if (self.source_available_at is None) != (self.availability_evidence_id is None):
+            raise ValueError("Historical availability requires an evidence reference")
+        if self.source_available_at is not None and self.source_available_at > self.observed_at:
+            raise ValueError("Verified source availability cannot follow our own observation")
+        return self
+
+    def available_by(self, as_of: datetime, *, allow_archived: bool) -> AvailabilityClass | None:
+        """Return the class that proves availability at ``as_of``, or ``None``."""
+        if self.observed_at <= as_of:
+            return AvailabilityClass.PROSPECTIVE
+        if (
+            allow_archived
+            and self.source_available_at is not None
+            and self.source_available_at <= as_of
+        ):
+            return AvailabilityClass.ARCHIVED
+        return None
 
 
 class RawIngestionRecord(Contract):

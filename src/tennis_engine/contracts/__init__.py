@@ -2,6 +2,8 @@
 
 from .domain import (
     AuditLineage,
+    Availability,
+    AvailabilityClass,
     CanonicalMatch,
     FeatureVector,
     GateResult,
@@ -14,6 +16,8 @@ from .domain import (
 
 __all__ = [
     "AuditLineage",
+    "Availability",
+    "AvailabilityClass",
     "CanonicalMatch",
     "FeatureVector",
     "GateResult",

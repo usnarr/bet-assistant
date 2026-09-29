@@ -109,3 +109,33 @@ def test_recommendation_enforces_gate_and_stake_invariants():
             status="NO_BET",
             **(base | {"gates": (GateResult(gate="identity", passed=True),)}),
         )
+
+
+def test_availability_separates_observation_from_verified_archive_time():
+    from tennis_engine.contracts.domain import Availability, AvailabilityClass
+
+    observed = Availability(observed_at=NOW, ingested_at=NOW + timedelta(seconds=1))
+    assert observed.available_by(NOW, allow_archived=True) == AvailabilityClass.PROSPECTIVE
+    assert observed.available_by(NOW - timedelta(seconds=1), allow_archived=True) is None
+
+    archived = Availability(
+        observed_at=NOW,
+        ingested_at=NOW,
+        source_available_at=NOW - timedelta(days=30),
+        availability_evidence_id="archive-review-1",
+    )
+    early = NOW - timedelta(days=1)
+    assert archived.available_by(early, allow_archived=True) == AvailabilityClass.ARCHIVED
+    assert archived.available_by(early, allow_archived=False) is None
+
+    with pytest.raises(ValidationError, match="evidence"):
+        Availability(observed_at=NOW, ingested_at=NOW, source_available_at=early)
+    with pytest.raises(ValidationError, match="ingested before"):
+        Availability(observed_at=NOW, ingested_at=NOW - timedelta(seconds=1))
+    with pytest.raises(ValidationError, match="cannot follow"):
+        Availability(
+            observed_at=early,
+            ingested_at=NOW,
+            source_available_at=NOW,
+            availability_evidence_id="archive-review-1",
+        )
