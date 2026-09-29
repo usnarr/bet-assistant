@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "fixture_id": "sys-04-synthetic-warehouse-v1-b",
+  "players": [
+    {"source_id": "synthetic-sports", "source_player_id": "p-djuric", "full_name": "Zoran Đurić", "tour": "ATP", "birth_date": "1995-03-14", "nationality": "SRB", "handedness": "RIGHT"}
+  ],
+  "matches": [
+    {"source_id": "synthetic-sports", "source_match_id": "m-2", "source_tournament_id": "t-atp", "season": 2026, "tour": "ATP", "draw_type": "SINGLES", "draw_stage": "MAIN", "round": "R32", "best_of": "BEST_OF_3", "participant_ids": ["p-djuric", "p-ruiz"], "scheduled_start": "2026-09-15T12:00:00Z", "actual_start": "2026-09-15T12:05:00Z", "actual_end": "2026-09-15T14:30:00Z", "status": "COMPLETED", "winner_id": "p-djuric",
+      "sets": [{"games": [6, 4]}, {"games": [3, 6]}, {"games": [7, 6], "tiebreak_points": [8, 6]}],
+      "stats": [
+        {"serve_points": 90, "serve_points_won": 60, "first_serves_in": 55, "first_serve_points_won": 42, "second_serve_points_won": 18, "aces": 8, "double_faults": 3, "service_games": 15, "break_points_faced": 6, "break_points_saved": 4, "return_points": 85, "return_points_won": 30},
+        {"serve_points": 85, "serve_points_won": 55, "first_serves_in": 50, "first_serve_points_won": 38, "second_serve_points_won": 17, "aces": 5, "double_faults": 4, "service_games": 15, "break_points_faced": 5, "break_points_saved": 3, "return_points": 90, "return_points_won": 30}
+      ]},
+    {"source_id": "synthetic-sports", "source_match_id": "m-3", "source_tournament_id": "t-atp", "season": 2026, "tour": "ATP", "draw_type": "SINGLES", "draw_stage": "MAIN", "round": "R16", "best_of": "BEST_OF_3", "participant_ids": ["p-kowalski-j", "p-wojcik"], "scheduled_start": "2026-09-21T14:00:00Z", "status": "SCHEDULED"}
+  ]
+}

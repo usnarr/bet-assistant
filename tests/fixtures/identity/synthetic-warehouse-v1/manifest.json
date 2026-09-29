@@ -1,0 +1,15 @@
+{
+  "fixture_id": "sys-04-synthetic-warehouse-v1",
+  "provenance": "Synthetic fixture authored for SYS-04. All people, events and tournaments are fictional; no real provider, ranking or bookmaker data.",
+  "license_status": "repository-test-fixture",
+  "source_ids": ["synthetic-sports", "synthetic-stats", "synthetic-book"],
+  "parser_version": "synthetic-warehouse-v1",
+  "observations": {
+    "payload-1.json": "2026-09-19T10:00:01Z",
+    "payload-2.json": "2026-09-20T10:00:01Z"
+  },
+  "labels": "labels.json",
+  "author": "implementation",
+  "independent_reviewer": "pending",
+  "last_change_reason": "Initial F04 identity, correction and rescheduling coverage"
+}

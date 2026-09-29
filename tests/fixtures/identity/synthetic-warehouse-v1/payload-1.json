@@ -1,0 +1,39 @@
+{
+  "schema_version": "1.0",
+  "fixture_id": "sys-04-synthetic-warehouse-v1-a",
+  "players": [
+    {"source_id": "synthetic-sports", "source_player_id": "p-djuric", "full_name": "Zoran Đurić", "tour": "ATP", "birth_date": "1995-03-14", "nationality": "SRB", "handedness": "RIGHT"},
+    {"source_id": "synthetic-sports", "source_player_id": "p-ruiz", "full_name": "Carlos Ruiz Peña", "tour": "ATP", "birth_date": "2001-07-02", "nationality": "ESP"},
+    {"source_id": "synthetic-sports", "source_player_id": "p-kowalski-j", "full_name": "Jan Kowalski", "tour": "ATP", "birth_date": "1998-01-10", "nationality": "POL"},
+    {"source_id": "synthetic-sports", "source_player_id": "p-kowalski-p", "full_name": "Piotr Kowalski", "tour": "ATP", "birth_date": "1996-11-30", "nationality": "POL"},
+    {"source_id": "synthetic-sports", "source_player_id": "p-wojcik", "full_name": "Łukasz Wójcik", "tour": "ATP", "birth_date": "1999-09-09", "nationality": "POL", "handedness": "LEFT"},
+    {"source_id": "synthetic-sports", "source_player_id": "p-novak", "full_name": "Anna Novák", "tour": "WTA", "birth_date": "2000-04-04", "nationality": "CZE"},
+    {"source_id": "synthetic-sports", "source_player_id": "p-nunez", "full_name": "María José Núñez", "tour": "WTA", "birth_date": "1997-12-12"}
+  ],
+  "tournaments": [
+    {"source_id": "synthetic-sports", "source_tournament_id": "t-atp", "name": "Synthetic Open", "season": 2026, "tour": "ATP", "level": "TOUR", "surface": "HARD", "environment": "OUTDOOR", "timezone": "Europe/Warsaw", "start_date": "2026-09-12", "end_date": "2026-09-22"},
+    {"source_id": "synthetic-sports", "source_tournament_id": "t-wta", "name": "Synthetic Ladies Open", "season": 2026, "tour": "WTA", "level": "TOUR", "surface": "CLAY", "environment": "OUTDOOR", "timezone": "Europe/Madrid", "start_date": "2026-09-12", "end_date": "2026-09-20"}
+  ],
+  "matches": [
+    {"source_id": "synthetic-sports", "source_match_id": "m-1", "source_tournament_id": "t-atp", "season": 2026, "tour": "ATP", "draw_type": "SINGLES", "draw_stage": "QUALIFYING", "round": "Q2", "best_of": "BEST_OF_3", "participant_ids": ["p-kowalski-j", "p-kowalski-p"], "scheduled_start": "2026-09-13T09:00:00Z", "status": "WALKOVER", "winner_id": "p-kowalski-j"},
+    {"source_id": "synthetic-sports", "source_match_id": "m-2", "source_tournament_id": "t-atp", "season": 2026, "tour": "ATP", "draw_type": "SINGLES", "draw_stage": "MAIN", "round": "R32", "best_of": "BEST_OF_3", "participant_ids": ["p-djuric", "p-ruiz"], "scheduled_start": "2026-09-15T12:00:00Z", "actual_start": "2026-09-15T12:05:00Z", "actual_end": "2026-09-15T14:30:00Z", "status": "COMPLETED", "winner_id": "p-djuric",
+      "sets": [{"games": [6, 4]}, {"games": [3, 6]}, {"games": [7, 6], "tiebreak_points": [7, 5]}],
+      "stats": [
+        {"serve_points": 90, "serve_points_won": 60, "first_serves_in": 55, "first_serve_points_won": 42, "second_serve_points_won": 18, "aces": 8, "double_faults": 3, "service_games": 15, "break_points_faced": 6, "break_points_saved": 4, "return_points": 85, "return_points_won": 30},
+        {"serve_points": 85, "serve_points_won": 55, "first_serves_in": 50, "first_serve_points_won": 38, "second_serve_points_won": 17, "aces": 5, "double_faults": 4, "service_games": 15, "break_points_faced": 5, "break_points_saved": 3, "return_points": 90, "return_points_won": 30}
+      ]},
+    {"source_id": "synthetic-sports", "source_match_id": "m-3", "source_tournament_id": "t-atp", "season": 2026, "tour": "ATP", "draw_type": "SINGLES", "draw_stage": "MAIN", "round": "R16", "best_of": "BEST_OF_3", "participant_ids": ["p-wojcik", "p-kowalski-j"], "scheduled_start": "2026-09-21T10:00:00Z", "status": "SCHEDULED"},
+    {"source_id": "synthetic-sports", "source_match_id": "m-4", "source_tournament_id": "t-wta", "season": 2026, "tour": "WTA", "draw_type": "SINGLES", "draw_stage": "MAIN", "round": "R16", "best_of": "BEST_OF_3", "participant_ids": ["p-novak", "p-nunez"], "scheduled_start": "2026-09-16T11:00:00Z", "status": "RETIRED", "winner_id": "p-novak",
+      "sets": [{"games": [6, 3]}, {"games": [2, 1]}],
+      "stats": [{"serve_points": 40, "serve_points_won": 28}, null]},
+    {"source_id": "synthetic-sports", "source_match_id": "m-5", "source_tournament_id": "t-atp", "season": 2026, "tour": "ATP", "draw_type": "SINGLES", "draw_stage": "MAIN", "round": "QF", "best_of": "BEST_OF_3", "participant_ids": ["p-djuric", "p-wojcik"], "scheduled_start": "2026-09-18T12:00:00Z", "status": "COMPLETED", "winner_id": "p-djuric",
+      "sets": [{"games": [6, 4]}]}
+  ],
+  "rankings": [
+    {"source_id": "synthetic-sports", "source_player_id": "p-djuric", "tour": "ATP", "ranking_date": "2026-09-14", "rank": 12, "points": 2900},
+    {"source_id": "synthetic-sports", "source_player_id": "p-ruiz", "tour": "ATP", "ranking_date": "2026-09-14", "rank": 30, "points": 1500}
+  ],
+  "archive_evidence": {
+    "ranking:p-djuric:2026-09-14": {"source_available_at": "2026-09-14T08:00:00Z", "evidence_id": "archive-review-fixture-1"}
+  }
+}
