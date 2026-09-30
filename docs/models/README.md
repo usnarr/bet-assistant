@@ -93,7 +93,7 @@ implemented. They need the F13 harness and a selected tabular library.
 | Module | Purpose |
 |---|---|
 | `contracts.py` | `CalibratorArtifact`, `CalibrationTrial` and `CalibratedPrediction` |
-| `calibrate.py` | `fit_calibrator`, `apply` and `calibrate` |
+| `calibrate.py` | `fit_calibrator`, `fit_calibrator_set`, `apply`, `calibrate` and `calibrate_with_set` |
 | `storage.py` | Immutable `calibrator.json` with a manifest; `read_bundle` checks the base hash |
 
 Rules:
@@ -119,8 +119,22 @@ Rules:
   not a confidence interval for the true probability. Its `model_ref` names the
   calibrator version and hash, which include the base artifact hash.
 
+- Calibrator bootstrap (F11.6): with `bootstrap_draws > 0`, the selected method is
+  refitted on week-block resamples of the window (ISO week of the prediction cutoff).
+  The draws, the failed count, the block count, the seed and the level are stored in the
+  artifact and its hash. `calibrate` maps the base bounds through every draw and takes
+  the `(1 - level) / 2` quantiles. Without a base spread, the raw probability is mapped.
+  The result then includes calibrator fit uncertainty. It is still not a confidence
+  interval for the true probability. One week or fewer than two converged draws give
+  `BLOCKED`.
+- Tour calibrators (F11.5): `fit_calibrator_set` fits a pooled calibrator on all rows and
+  one calibrator per tour with the same row minimums. A tour below them, or whose fit
+  fails, is recorded in `skipped` with its reason and uses the pooled calibrator.
+  `calibrate_with_set` picks the tour calibrator when one exists. The tour must be known
+  before the match. The prediction names the calibrator that was used.
+
 F12 reads a `CalibratedPrediction` through `pricing/model_input.py`, so the calibration
-gate can pass. Tour-specific calibrators, calibrator bootstrap, a promotion registry and
-the MOD-03/MOD-04 comparisons on real data are not implemented.
+gate can pass. A promotion registry and the MOD-03/MOD-04 comparisons on real data are
+not implemented.
 
 See [MOD-03 calibration evidence](evidence/MOD-03-calibration.md).

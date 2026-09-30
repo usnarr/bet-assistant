@@ -1,8 +1,10 @@
 """F11 calibrator artifacts and calibrated predictions (F11.5, F11.7).
 
-A calibrated prediction keeps the reference to its raw base prediction. Its spread is the
-base bootstrap spread mapped through the calibrator. It is not a confidence interval for
-the unknown true win probability, and it excludes calibrator fit uncertainty.
+A calibrated prediction keeps the reference to its raw base prediction. Without a
+calibrator bootstrap, its spread is the base bootstrap spread mapped through the
+calibrator and excludes calibrator fit uncertainty. With a calibrator bootstrap, the base
+bounds are mapped through every calibrator draw. Neither is a confidence interval for the
+unknown true win probability.
 """
 
 from decimal import Decimal
@@ -51,6 +53,28 @@ class CalibrationTrial(Contract):
     brier: Decimal
 
 
+class CalibratorDraw(Contract):
+    """One calibrator refitted on a week-block resample of the calibration window."""
+
+    slope: Decimal | None
+    knots: tuple[Knot, ...] = ()
+
+
+class CalibratorBootstrap(Contract):
+    draws: tuple[CalibratorDraw, ...] = Field(min_length=2)
+    requested: Annotated[int, Field(ge=2, strict=True)]
+    failed: Count
+    blocks: Annotated[int, Field(ge=2, strict=True)]
+    seed: int
+    level: Probability
+
+    @model_validator(mode="after")
+    def counted(self) -> Self:
+        if len(self.draws) + self.failed != self.requested:
+            raise ValueError("Every requested draw is either kept or counted as failed")
+        return self
+
+
 class CalibratorArtifact(Contract):
     schema_version: Literal["1.0"] = "1.0"
     calibrator_id: UUID
@@ -69,6 +93,9 @@ class CalibratorArtifact(Contract):
     knots: tuple[Knot, ...]
     min_probability: Probability
     trials: tuple[CalibrationTrial, ...]
+    # The rows the calibrator was fitted on: "all", or one tour such as "atp".
+    segment: Identifier = "all"
+    bootstrap: CalibratorBootstrap | None = None
     selection_rule: Literal["lowest-validation-log-loss;tie:platt"] = (
         "lowest-validation-log-loss;tie:platt"
     )
@@ -99,7 +126,44 @@ class CalibratorArtifact(Contract):
             raise ValueError("The probability floor must be below one half")
         if not self.trials:
             raise ValueError("A calibrator records its method comparison")
+        platt = self.method == CalibrationMethod.PLATT_SYMMETRIC
+        for draw in self.bootstrap.draws if self.bootstrap is not None else ():
+            if platt != (draw.slope is not None) or platt == bool(draw.knots):
+                raise ValueError("A bootstrap draw must use the calibrator's method")
         return self
+
+
+class CalibratorSet(Contract):
+    """A pooled calibrator plus tour calibrators for the tours with enough rows (F11.5).
+
+    A tour without its own calibrator uses the pooled one. ``skipped`` records why a tour
+    has no calibrator of its own.
+    """
+
+    schema_version: Literal["1.0"] = "1.0"
+    name: Identifier
+    version: Identifier
+    pooled: CalibratorArtifact
+    segments: dict[Identifier, CalibratorArtifact]
+    skipped: dict[Identifier, str]
+    artifact_sha256: Digest
+
+    @model_validator(mode="after")
+    def one_base(self) -> Self:
+        base = (self.pooled.base_model, self.pooled.base_artifact_sha256)
+        for segment, artifact in self.segments.items():
+            if artifact.segment != segment or segment == "all":
+                raise ValueError("A tour calibrator must be stored under its own tour")
+            if (artifact.base_model, artifact.base_artifact_sha256) != base:
+                raise ValueError("Every calibrator in a set must share one base artifact")
+        if self.pooled.segment != "all":
+            raise ValueError("The pooled calibrator is fitted on all rows")
+        if set(self.segments) & set(self.skipped):
+            raise ValueError("A tour is either calibrated or skipped")
+        return self
+
+    def for_segment(self, segment: str) -> CalibratorArtifact:
+        return self.segments.get(segment, self.pooled)
 
 
 class CalibratedPrediction(Contract):

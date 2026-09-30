@@ -11,12 +11,18 @@ Time rules:
 
 Missing samples, a hash mismatch or an in-window prediction raise ``ValueError``. The
 caller must then abstain; it must not fall back to the raw probability silently.
+
+An optional week-block bootstrap refits the selected method on resampled weeks of the
+window. ``calibrate`` then maps the base bounds through every draw, so the spread also
+reflects calibrator fit uncertainty (F11.6).
 """
 
-from collections.abc import Sequence
+import random
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal, localcontext
+from math import ceil, floor
 
 from tennis_engine.common.contracts import VersionRef
 from tennis_engine.common.ids import stable_id
@@ -35,6 +41,9 @@ from .contracts import (
     CalibrationMethod,
     CalibrationTrial,
     CalibratorArtifact,
+    CalibratorBootstrap,
+    CalibratorDraw,
+    CalibratorSet,
     Knot,
 )
 
@@ -47,6 +56,11 @@ PLATT_L2 = Decimal("1e-6")
 CALIBRATED_LIMITATIONS = (
     "Base bootstrap spread mapped through the calibrator",
     "Excludes calibrator fit uncertainty",
+    "Not a confidence interval for the true win probability",
+)
+BOOTSTRAPPED_LIMITATIONS = (
+    "Base bootstrap bounds mapped through each calibrator week-block draw",
+    "The level is the calibrator bootstrap level; the base spread has its own level",
     "Not a confidence interval for the true win probability",
 )
 
@@ -209,6 +223,51 @@ def _fit(
     return None, fit_isotonic(rows, floor)
 
 
+def _quantile(values: Sequence[Decimal], level: Decimal) -> Decimal:
+    ordered = sorted(values)
+    position = level * (len(ordered) - 1)
+    return ordered[floor(position)] if level < Decimal("0.5") else ordered[ceil(position)]
+
+
+def _bootstrap(
+    method: CalibrationMethod,
+    rows: Sequence[tuple[datetime, Row]],
+    floor_probability: Decimal,
+    *,
+    draws: int,
+    seed: int,
+    level: Decimal,
+) -> CalibratorBootstrap:
+    """Refit ``method`` on resampled ISO weeks of the prediction cutoffs."""
+    blocks: dict[tuple[int, int], list[Row]] = {}
+    for at, row in rows:
+        year, week, _ = at.isocalendar()
+        blocks.setdefault((year, week), []).append(row)
+    keys = sorted(blocks)
+    if len(keys) < 2 or draws < 2:
+        raise ValueError("A calibrator bootstrap needs two weeks and two draws; BLOCKED")
+    generator = random.Random(seed)
+    kept: list[CalibratorDraw] = []
+    for _ in range(draws):
+        chosen = [keys[generator.randrange(len(keys))] for _ in keys]
+        sample = [row for key in chosen for row in blocks[key]]
+        try:
+            slope, knots = _fit(method, sample, floor_probability)
+        except ValueError:
+            continue  # Counted below as a failed draw.
+        kept.append(CalibratorDraw(slope=slope, knots=knots))
+    if len(kept) < 2:
+        raise ValueError("Fewer than two calibrator bootstrap draws converged; BLOCKED")
+    return CalibratorBootstrap(
+        draws=tuple(kept),
+        requested=draws,
+        failed=draws - len(kept),
+        blocks=len(keys),
+        seed=seed,
+        level=level,
+    )
+
+
 def fit_calibrator(
     pairs: Sequence[tuple[BaselinePrediction, MatchLabel]],
     *,
@@ -220,8 +279,15 @@ def fit_calibrator(
     min_validation_rows: int = 30,
     min_probability: Decimal = Decimal("0.01"),
     methods: Sequence[CalibrationMethod] = tuple(CalibrationMethod),
+    segment: str = "all",
+    bootstrap_draws: int = 0,
+    bootstrap_seed: int = 20261001,
+    bootstrap_level: Decimal = Decimal("0.8"),
 ) -> CalibratorArtifact:
-    """Compare the methods on the validation part, then refit the best on the window."""
+    """Compare the methods on the validation part, then refit the best on the window.
+
+    ``bootstrap_draws`` above zero adds a week-block bootstrap of the selected method.
+    """
     if not window_start < validation_start < window_end:
         raise ValueError("The validation part must lie inside the window, after the fit part")
     ordered, reference = _rows(pairs, window_start=window_start, window_end=window_end)
@@ -260,9 +326,22 @@ def fit_calibrator(
             )
         )
     best = min(trials, key=lambda trial: trial.log_loss)
-    final_rows = [row for _, row in ordered if row.label_observed_at <= window_end]
+    final = [(at, row) for at, row in ordered if row.label_observed_at <= window_end]
+    final_rows = [row for _, row in final]
     slope, knots = _fit(best.method, final_rows, min_probability)
-    body = {
+    bootstrap = (
+        _bootstrap(
+            best.method,
+            final,
+            min_probability,
+            draws=bootstrap_draws,
+            seed=bootstrap_seed,
+            level=bootstrap_level,
+        )
+        if bootstrap_draws
+        else None
+    )
+    body: dict[str, object] = {
         "version": version,
         "method": best.method.value,
         "base": reference.artifact_sha256,
@@ -273,10 +352,16 @@ def fit_calibrator(
         "trials": [trial.model_dump(mode="json") for trial in trials],
         "rows": len(final_rows),
     }
+    # Optional parts enter the hash only when used, so older artifacts keep their hash.
+    if segment != "all":
+        body["segment"] = segment
+    if bootstrap is not None:
+        body["bootstrap"] = bootstrap.model_dump(mode="json")
     sha = digest(body)
+    suffix = "" if segment == "all" else f"-{segment}"
     return CalibratorArtifact(
         calibrator_id=stable_id("calibrator", sha),
-        name=f"{reference.model}-calibrator",
+        name=f"{reference.model}-calibrator{suffix}",
         version=version,
         method=best.method,
         base_model=reference.model,
@@ -291,8 +376,92 @@ def fit_calibrator(
         knots=knots,
         min_probability=min_probability,
         trials=tuple(trials),
+        segment=segment,
+        bootstrap=bootstrap,
         artifact_sha256=sha,
     )
+
+
+def fit_calibrator_set(
+    pairs: Sequence[tuple[BaselinePrediction, MatchLabel]],
+    *,
+    segment_of: Callable[[BaselinePrediction], str],
+    window_start: datetime,
+    validation_start: datetime,
+    window_end: datetime,
+    version: str,
+    min_fit_rows: int = 50,
+    min_validation_rows: int = 30,
+    min_probability: Decimal = Decimal("0.01"),
+    methods: Sequence[CalibrationMethod] = tuple(CalibrationMethod),
+    bootstrap_draws: int = 0,
+    bootstrap_seed: int = 20261001,
+    bootstrap_level: Decimal = Decimal("0.8"),
+) -> CalibratorSet:
+    """Fit a pooled calibrator and a calibrator per tour that has enough rows (F11.5).
+
+    ``segment_of`` gives the tour of a prediction, known before the match. A tour below
+    the row minimums, or whose fit fails, is skipped with its reason and uses the pooled
+    calibrator. The pooled calibrator must fit, or the set is BLOCKED.
+    """
+
+    def fit_one(
+        rows: Sequence[tuple[BaselinePrediction, MatchLabel]], segment: str
+    ) -> CalibratorArtifact:
+        return fit_calibrator(
+            rows,
+            window_start=window_start,
+            validation_start=validation_start,
+            window_end=window_end,
+            version=version,
+            min_fit_rows=min_fit_rows,
+            min_validation_rows=min_validation_rows,
+            min_probability=min_probability,
+            methods=methods,
+            segment=segment,
+            bootstrap_draws=bootstrap_draws,
+            bootstrap_seed=bootstrap_seed,
+            bootstrap_level=bootstrap_level,
+        )
+
+    pooled = fit_one(pairs, "all")
+    by_segment: dict[str, list[tuple[BaselinePrediction, MatchLabel]]] = {}
+    for pair in pairs:
+        by_segment.setdefault(segment_of(pair[0]), []).append(pair)
+    segments: dict[str, CalibratorArtifact] = {}
+    skipped: dict[str, str] = {}
+    for segment in sorted(by_segment):
+        if segment == "all":
+            raise ValueError('"all" is reserved for the pooled calibrator')
+        try:
+            segments[segment] = fit_one(by_segment[segment], segment)
+        except ValueError as error:
+            skipped[segment] = str(error)
+    body = {
+        "version": version,
+        "pooled": pooled.artifact_sha256,
+        "segments": {key: value.artifact_sha256 for key, value in segments.items()},
+        "skipped": skipped,
+    }
+    return CalibratorSet(
+        name=f"{pooled.base_model}-calibrator-set",
+        version=version,
+        pooled=pooled,
+        segments=segments,
+        skipped=skipped,
+        artifact_sha256=digest(body),
+    )
+
+
+def calibrate_with_set(
+    prediction: BaselinePrediction,
+    calibrators: CalibratorSet,
+    *,
+    segment: str,
+    predicted_at: datetime,
+) -> CalibratedPrediction:
+    """Use the tour calibrator when the set has one, otherwise the pooled calibrator."""
+    return calibrate(prediction, calibrators.for_segment(segment), predicted_at=predicted_at)
 
 
 def calibrate(
@@ -311,7 +480,32 @@ def calibrate(
     central = None if raw is None else apply(artifact, raw)
     spread = prediction.uncertainty
     uncertainty = Uncertainty(method=UncertaintyMethod.NONE, limitations=CALIBRATED_LIMITATIONS)
-    if central is not None and spread.method != UncertaintyMethod.NONE:
+    bootstrap = artifact.bootstrap
+    if central is not None and raw is not None and bootstrap is not None:
+        low, high = raw, raw
+        if spread.method != UncertaintyMethod.NONE:
+            if spread.lower is None or spread.upper is None:
+                raise ValueError("A bootstrap spread lacks its bounds")
+            low, high = spread.lower, spread.upper
+        floor_probability = artifact.min_probability
+        lows = [
+            _map(artifact.method, draw.slope, draw.knots, floor_probability, low)
+            for draw in bootstrap.draws
+        ]
+        highs = [
+            _map(artifact.method, draw.slope, draw.knots, floor_probability, high)
+            for draw in bootstrap.draws
+        ]
+        tail = (ONE - bootstrap.level) / 2
+        uncertainty = Uncertainty(
+            method=UncertaintyMethod.WEEK_BLOCK_BOOTSTRAP,
+            level=bootstrap.level,
+            lower=_quantile(lows, tail),
+            upper=_quantile(highs, ONE - tail),
+            draws=len(bootstrap.draws),
+            limitations=BOOTSTRAPPED_LIMITATIONS,
+        )
+    elif central is not None and spread.method != UncertaintyMethod.NONE:
         if spread.lower is None or spread.upper is None:
             raise ValueError("A bootstrap spread lacks its bounds")
         uncertainty = Uncertainty(

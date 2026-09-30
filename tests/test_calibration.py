@@ -21,16 +21,20 @@ from tennis_engine.models.calibration.calibrate import (
     Row,
     apply,
     calibrate,
+    calibrate_with_set,
     fit_calibrator,
+    fit_calibrator_set,
     fit_isotonic,
     is_symmetric,
 )
 from tennis_engine.models.calibration.contracts import (
     CalibrationMethod,
     CalibratorArtifact,
+    CalibratorSet,
 )
 from tennis_engine.models.calibration.storage import read_bundle, write_calibrator
 from tennis_engine.normalization.contracts import MatchStatus
+from tennis_engine.pricing.model_input import assessment_from_baselines
 
 D = Decimal
 SHA = "a" * 64
@@ -279,3 +283,111 @@ def test_contract_rejects_invalid_calibrators():
 
 
 CALIBRATORS = {method: fitted(methods=(method,)) for method in CalibrationMethod}
+
+
+# F11.6 calibrator bootstrap and F11.5 tour calibrators.
+
+BOOTSTRAPPED = fitted(methods=(CalibrationMethod.PLATT_SYMMETRIC,), bootstrap_draws=60)
+
+
+def test_calibrator_bootstrap_is_seeded_and_adds_fit_uncertainty():
+    boot = BOOTSTRAPPED.bootstrap
+    assert boot is not None and boot.requested == 60
+    assert len(boot.draws) + boot.failed == 60 and len(boot.draws) >= 50
+    assert boot.blocks >= 12
+    slopes = sorted(draw.slope for draw in boot.draws)
+    assert slopes[0] < BOOTSTRAPPED.slope < slopes[-1]
+    again = fitted(methods=(CalibrationMethod.PLATT_SYMMETRIC,), bootstrap_draws=60)
+    assert again == BOOTSTRAPPED
+    other = fitted(
+        methods=(CalibrationMethod.PLATT_SYMMETRIC,), bootstrap_draws=60, bootstrap_seed=5
+    )
+    assert other.artifact_sha256 != BOOTSTRAPPED.artifact_sha256
+    plain = CALIBRATORS[CalibrationMethod.PLATT_SYMMETRIC]
+    assert plain.bootstrap is None and plain.artifact_sha256 != BOOTSTRAPPED.artifact_sha256
+
+    later = WINDOW_END + timedelta(days=2)
+    spread = raw_prediction(1, "0.80", later, spread=("0.74", "0.85"))
+    wide = calibrate(spread, BOOTSTRAPPED, predicted_at=later)
+    narrow = calibrate(spread, plain, predicted_at=later)
+    assert wide.uncertainty.method == UncertaintyMethod.WEEK_BLOCK_BOOTSTRAP
+    assert wide.uncertainty.level == D("0.8") and wide.uncertainty.draws == len(boot.draws)
+    assert wide.uncertainty.lower < narrow.uncertainty.lower
+    assert wide.uncertainty.upper > narrow.uncertainty.upper
+    assert "calibrator week-block draw" in wide.uncertainty.limitations[0]
+    # Without a base spread, the spread comes from the calibrator draws only.
+    alone = calibrate(raw_prediction(2, "0.80", later), BOOTSTRAPPED, predicted_at=later)
+    assert alone.uncertainty.lower < alone.probability_player_one < alone.uncertainty.upper
+    assessment = assessment_from_baselines(
+        wide, [narrow], match_id=wide.match_id, selection_player_id=wide.player_ids[1]
+    )
+    assert assessment is not None
+    assert assessment.conservative_probability == 1 - wide.uncertainty.upper
+
+
+def test_calibrator_bootstrap_needs_two_draws_and_rejects_foreign_draws():
+    with pytest.raises(ValueError, match="two weeks and two draws"):
+        fitted(bootstrap_draws=1)
+    body = BOOTSTRAPPED.model_dump()
+    draws = body["bootstrap"]["draws"]
+    draws = (draws[0] | {"slope": None, "knots": ({"raw": "0.2", "calibrated": "0.3"},)},)
+    broken = body | {"bootstrap": body["bootstrap"] | {"draws": draws * 2, "failed": 58}}
+    with pytest.raises(ValueError, match="calibrator's method"):
+        CalibratorArtifact.model_validate(broken)
+
+
+def tour(prediction):
+    index = prediction.match_id.int
+    return "challenger" if index % 25 == 0 else "wta" if index % 4 == 0 else "atp"
+
+
+def test_tour_calibrators_need_enough_rows_and_fall_back_to_the_pooled_one():
+    pairs = overconfident(count=900)
+    calibrators = fit_calibrator_set(
+        pairs,
+        segment_of=tour,
+        window_start=WINDOW_START,
+        validation_start=VALIDATION_START,
+        window_end=WINDOW_END,
+        version="calibrator-set-v1",
+    )
+    assert set(calibrators.segments) == {"atp", "wta"}
+    assert set(calibrators.skipped) == {"challenger"}
+    assert "BLOCKED" in calibrators.skipped["challenger"]
+    atp = calibrators.segments["atp"]
+    assert atp.segment == "atp" and atp.name == "baseline-surface-elo-calibrator-atp"
+    assert atp.rows < calibrators.pooled.rows
+    assert atp.artifact_sha256 != calibrators.pooled.artifact_sha256
+    assert calibrators.for_segment("challenger") == calibrators.pooled
+    later = WINDOW_END + timedelta(days=1)
+    prediction = raw_prediction(3, "0.7", later)
+    used = calibrate_with_set(prediction, calibrators, segment="wta", predicted_at=later)
+    assert used.calibrator.sha256 == calibrators.segments["wta"].artifact_sha256
+    fallback = calibrate_with_set(prediction, calibrators, segment="itf", predicted_at=later)
+    assert fallback.calibrator.sha256 == calibrators.pooled.artifact_sha256
+    assert (
+        fit_calibrator_set(
+            pairs,
+            segment_of=tour,
+            window_start=WINDOW_START,
+            validation_start=VALIDATION_START,
+            window_end=WINDOW_END,
+            version="calibrator-set-v1",
+        )
+        == calibrators
+    )
+
+    body = calibrators.model_dump()
+    with pytest.raises(ValueError, match="its own tour"):
+        CalibratorSet.model_validate(body | {"segments": {"wta": body["segments"]["atp"]}})
+    with pytest.raises(ValueError, match="calibrated or skipped"):
+        CalibratorSet.model_validate(body | {"skipped": {"atp": "x"}})
+    with pytest.raises(ValueError, match="reserved"):
+        fit_calibrator_set(
+            pairs,
+            segment_of=lambda _: "all",
+            window_start=WINDOW_START,
+            validation_start=VALIDATION_START,
+            window_end=WINDOW_END,
+            version="calibrator-set-v1",
+        )
