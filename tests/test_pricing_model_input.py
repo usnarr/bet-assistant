@@ -8,6 +8,7 @@ from settlement_support import MATCH_ID, PLAYER_A, PLAYER_B
 from test_pricing_decision import AT, SHA, failed, inputs
 
 from tennis_engine.contracts.domain import RecommendationStatus
+from tennis_engine.features.contracts import digest
 from tennis_engine.models.baselines.contracts import (
     BaselinePrediction,
     SupportStatus,
@@ -15,6 +16,12 @@ from tennis_engine.models.baselines.contracts import (
     UncertaintyMethod,
 )
 from tennis_engine.models.baselines.market import ConsensusOutput
+from tennis_engine.models.calibration.calibrate import calibrate
+from tennis_engine.models.calibration.contracts import (
+    CalibrationMethod,
+    CalibrationTrial,
+    CalibratorArtifact,
+)
 from tennis_engine.pricing.decision import Gate, decide
 from tennis_engine.pricing.model_input import assessment_from_baselines, consensus_for_selection
 
@@ -94,6 +101,71 @@ def test_raw_f09_baselines_can_never_produce_a_bet():
     assert Gate.MODEL_DOMAIN not in failed(record)
     assert Gate.MODEL_DISAGREEMENT not in failed(record)
     assert record.stake.amount == 0
+
+
+def calibrator(slope="1"):
+    body = {
+        "version": "cal-v1",
+        "method": CalibrationMethod.PLATT_SYMMETRIC.value,
+        "slope": slope,
+    }
+    return CalibratorArtifact(
+        calibrator_id=UUID(int=55),
+        name="baseline-surface-elo-calibrator",
+        version="cal-v1",
+        method=CalibrationMethod.PLATT_SYMMETRIC,
+        base_model="baseline-surface-elo",
+        base_model_version="baseline-surface-elo-v1",
+        base_artifact_sha256=SHA,
+        base_training_cutoff=AT - timedelta(days=30),
+        window_start=AT - timedelta(days=29),
+        validation_start=AT - timedelta(days=10),
+        window_end=AT - timedelta(days=1),
+        rows=100,
+        slope=D(slope),
+        knots=(),
+        min_probability=D("0.01"),
+        trials=(
+            CalibrationTrial(
+                method=CalibrationMethod.PLATT_SYMMETRIC,
+                fit_rows=60,
+                validation_rows=40,
+                raw_log_loss=D("0.66"),
+                raw_brier=D("0.23"),
+                log_loss=D("0.65"),
+                brier=D("0.23"),
+            ),
+        ),
+        artifact_sha256=digest(body),
+    )
+
+
+def calibrated(raw, artifact=None):
+    return calibrate(raw, artifact or calibrator(), predicted_at=raw.predicted_at)
+
+
+def test_calibrated_f11_output_passes_the_calibration_gate_and_can_bet():
+    stressed = decision_policy(void_stress_probability="0.02")
+    artifact = calibrator()
+    model = assess(
+        calibrated(prediction(training_cutoff=AT - timedelta(days=30)), artifact),
+        [prediction("0.59", model="baseline-global-elo")],
+    )
+    assert model.calibrated is True
+    assert model.model.sha256 == artifact.artifact_sha256
+    record = decide(inputs(model=model, decision_policy=stressed))
+    assert not failed(record)
+    assert record.status == RecommendationStatus.BET and record.stake.amount > 0
+
+
+def test_a_shrinking_calibrator_can_remove_the_edge():
+    stressed = decision_policy(void_stress_probability="0.02")
+    shrunk = calibrated(prediction(training_cutoff=AT - timedelta(days=30)), calibrator("0.2"))
+    model = assess(shrunk, [prediction("0.59", model="baseline-global-elo")])
+    assert model.probability < D("0.60")
+    record = decide(inputs(model=model, decision_policy=stressed))
+    assert Gate.MODEL_CALIBRATED not in failed(record)
+    assert record.status != RecommendationStatus.BET and record.stake.amount == 0
 
 
 def consensus(p1="0.58", support=SupportStatus.SUPPORTED):

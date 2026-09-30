@@ -7,7 +7,8 @@ Conservative mapping choices:
   that player. It is a model-spread proxy, not a confidence bound on the true probability.
   A prediction without a spread gives no assessment.
 - `calibrated` is copied from the prediction. F09 baselines are raw, so the calibration
-  gate fails until F11 supplies calibrated output.
+  gate fails for them. F11 `CalibratedPrediction` output passes it. Its spread is the base
+  spread mapped through the calibrator, and its model reference names the calibrator.
 - Disagreement is the largest gap between the primary and the other supported baselines.
   Without another supported baseline it is unknown, and the gate fails.
 - Baselines are trained on sporting match results, so the semantics are `SPORTING_WIN`.
@@ -25,12 +26,15 @@ from tennis_engine.models.baselines.contracts import (
     UncertaintyMethod,
 )
 from tennis_engine.models.baselines.market import ConsensusOutput
+from tennis_engine.models.calibration.contracts import CalibratedPrediction
 
 from .decision import ModelAssessment
 
+Prediction = BaselinePrediction | CalibratedPrediction
+
 
 def _for_selection(
-    prediction: BaselinePrediction, selection_player_id: UUID
+    prediction: Prediction, selection_player_id: UUID
 ) -> tuple[Decimal, Decimal | None] | None:
     """Central probability and spread lower edge for the selected player."""
     if prediction.probability_player_one is None:
@@ -49,8 +53,8 @@ def _for_selection(
 
 
 def assessment_from_baselines(
-    primary: BaselinePrediction,
-    others: Sequence[BaselinePrediction],
+    primary: Prediction,
+    others: Sequence[Prediction],
     *,
     match_id: UUID,
     selection_player_id: UUID,
@@ -73,8 +77,14 @@ def assessment_from_baselines(
     ]
     disagreement = max((abs(central - value) for value in alternatives), default=None)
     return ModelAssessment(
-        model=VersionRef(
-            component=primary.model, version=primary.model_version, sha256=primary.artifact_sha256
+        model=(
+            primary.model_ref
+            if isinstance(primary, CalibratedPrediction)
+            else VersionRef(
+                component=primary.model,
+                version=primary.model_version,
+                sha256=primary.artifact_sha256,
+            )
         ),
         probability=central,
         conservative_probability=conservative,
