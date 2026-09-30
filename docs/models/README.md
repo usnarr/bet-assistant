@@ -40,8 +40,10 @@ Rules:
 
 Limitations: parameters, weights and windows are candidate values. The baselines have
 only synthetic results. They are shadow candidates, not evidence that any model beats the
-market. F13 runs the baselines through `backtesting.runner.BaselineCandidate`. F09.8 (with/without
-market inputs) still needs a market-consensus candidate from F05 quote history.
+market. F13 runs the baselines through `backtesting.runner.BaselineCandidate` and the
+consensus through `backtesting.market.ConsensusCandidate`, which reads F05 quote history
+known at each cutoff. F09.8 compares a model with and without the consensus as an input;
+see the F11 stacker.
 
 See [MOD-01/SYS-09 evidence](evidence/F09.md).
 

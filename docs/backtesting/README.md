@@ -12,6 +12,7 @@ synthetic quote history, rules and results. No real quote history exists yet.
 | `metrics.py` | Log loss, Brier, calibration, accuracy, AUC, segments, matched pairs |
 | `bootstrap.py` | Paired tournament-week block bootstrap (F13.8) |
 | `economics.py` | Profit, ROI, drawdown, losing streak, CLV and coverage of settled bets |
+| `market.py` | Market consensus as a harness candidate from F05 quote history |
 | `replay.py` | Execution replay with F05 quotes, F12 decisions and F06 settlement |
 | `promotion.py` | Machine-readable release decision with every gate (F13.9) |
 | `bundle.py` | Immutable run directory with hashed files and a manifest |
@@ -68,6 +69,19 @@ synthetic quote history, rules and results. No real quote history exists yet.
 - CLV: this is `odds / closing_odds - 1` and exists only with a comparable closing quote and
   a named comparability policy. Missing closing data is counted as missing, not as zero.
 - Assumptions: a replay that is not execution-grade must name its assumptions.
+
+## Market consensus candidate
+
+`ConsensusCandidate(history_quotes(history, keys))` in `market.py` runs the F09 consensus
+in the harness. `keys(match_id)` lists the F05 quote keys of a match.
+
+- At each snapshot cutoff, each key gives its latest observation by the cutoff, mapped with
+  the latest event mapping known by the cutoff. A key without a mapping gives nothing.
+- The candidate has no fitted parameters. Its artifact hash is the hash of its
+  `ConsensusConfig`.
+- Pass `consensus="market-consensus"` to `decide_promotion`. The
+  `consensus_calibration_noninferior` gate then compares calibration on matched rows.
+  Without a consensus model in the run, the gate stays `BLOCKED`.
 
 ## Execution replay
 
@@ -149,8 +163,6 @@ is `BLOCKED` until the thresholds are frozen on development data.
 - An execution-grade replay on real data. It needs approved sources, recorded quote
   history, observed stake caps and reviewed rules. Until then, `net_economics_positive`
   is `BLOCKED` for every real candidate.
-- Market consensus as a harness candidate. It needs F05 quote history at each cutoff.
-  Until then, `consensus_calibration_noninferior` is `BLOCKED`.
 - Segments by tournament level, odds bucket, bookmaker, market and data quality. They need
   those tags on the snapshots or quotes.
 - Opening, 6-hour and 15-minute cutoffs. `pre_match_cutoffs` accepts any offset, but no

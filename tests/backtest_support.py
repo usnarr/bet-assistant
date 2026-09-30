@@ -9,6 +9,7 @@ import math
 import random
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
+from decimal import Decimal
 
 from pit_support import History, history
 
@@ -93,3 +94,95 @@ def world(seed: int = 11, count: int = 180, *, stats: bool = True) -> World:
 
 def boundaries(folds: int = 3, *, first_day: int = 40, days: int = 16) -> list[datetime]:
     return [START + timedelta(days=first_day + days * index) for index in range(folds + 1)]
+
+
+BOOK = "synthetic-book"
+QUOTE_OFFSETS = (timedelta(minutes=70), timedelta(minutes=40), timedelta(minutes=10))
+
+
+def quote_history(state: World):
+    """Synthetic F05 history: two-way prices at 70, 40 and 10 minutes before each start.
+
+    The price moves at every observation, so a cutoff that sees a later price differs
+    from one that does not. Nothing is observed before the 24-hour cutoff.
+    """
+    from tennis_engine.common.ids import stable_id
+    from tennis_engine.ingestion.bookmakers.contracts import EventState, QuoteState, RawQuote
+    from tennis_engine.ingestion.bookmakers.history import MemoryHistoryStore, QuoteHistory
+    from tennis_engine.ingestion.bookmakers.quotes import QuoteObservation
+    from tennis_engine.normalization.contracts import (
+        MatchResolution,
+        PlayerResolution,
+        ResolutionAction,
+        ResolutionDecision,
+    )
+
+    store = MemoryHistoryStore()
+    keys = {}
+    for index, (match_id, start) in enumerate(state.matches):
+        players = state.h.store.match(match_id).player_ids
+        event = f"ev-{index:03d}"
+        mapped = start - timedelta(hours=2)
+        participants = tuple(
+            PlayerResolution(
+                source_id=BOOK,
+                source_player_id=str(player_id),
+                source_name="name",
+                decision=ResolutionDecision.AUTO_ACCEPT,
+                action=ResolutionAction.LINK_EXISTING,
+                player_id=player_id,
+                candidates=(),
+                reasons=(),
+                policy_version="fixture-policy",
+                resolved_at=mapped,
+            )
+            for player_id in players
+        )
+        store.add_mapping(
+            stable_id("test-mapping", event),
+            BOOK,
+            MatchResolution(
+                source_id=BOOK,
+                source_event_id=event,
+                decision=ResolutionDecision.AUTO_ACCEPT,
+                action=ResolutionAction.LINK_EXISTING,
+                match_id=match_id,
+                swapped=False,
+                participants=(participants[0], participants[1]),
+                candidates=(),
+                reasons=(),
+                policy_version="fixture-policy",
+                resolved_at=mapped,
+            ),
+        )
+        keys[match_id] = [(BOOK, event, "mw", f"s{side}") for side in (0, 1)]
+        for step, offset in enumerate(QUOTE_OFFSETS):
+            p = 0.5 + 0.3 * math.sin(index + step)
+            at = start - offset
+            sha = f"{index:04d}{step:02d}".ljust(64, "0")
+            for side, probability in ((0, p), (1, 1 - p)):
+                odds = Decimal(str(round(1 / (probability * 1.05), 2)))
+                store.add_observation(
+                    stable_id("test-quote", f"{event}:{side}:{step}"),
+                    QuoteObservation(
+                        quote=RawQuote(
+                            bookmaker=BOOK,
+                            source_event_id=event,
+                            source_market_id="mw",
+                            source_selection_id=f"s{side}",
+                            market_label="Winner",
+                            market="TENNIS_MATCH_WINNER",
+                            selection_label=f"Player {side}",
+                            participant_index=side,
+                            line=None,
+                            decimal_odds=max(odds, Decimal("1.01")),
+                            state=QuoteState.OPEN,
+                        ),
+                        observed_at=at,
+                        parser_version="synthetic-book-v1",
+                        raw_content_sha256=sha,
+                        scheduled_start=start,
+                        event_state=EventState.PRE_MATCH,
+                    ),
+                )
+    return QuoteHistory(store), (lambda match_id: keys.get(match_id, []))

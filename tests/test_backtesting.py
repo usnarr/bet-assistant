@@ -10,7 +10,7 @@ from pathlib import Path
 from uuid import uuid4
 
 import pytest
-from backtest_support import START, boundaries, world
+from backtest_support import QUOTE_OFFSETS, START, boundaries, quote_history, world
 
 from tennis_engine.backtesting.bootstrap import block_bootstrap
 from tennis_engine.backtesting.bundle import FILES, write_bundle
@@ -22,6 +22,7 @@ from tennis_engine.backtesting.contracts import (
     load_config,
 )
 from tennis_engine.backtesting.economics import ReplayBet, summarize
+from tennis_engine.backtesting.market import ConsensusCandidate, history_quotes
 from tennis_engine.backtesting.metrics import (
     auc,
     forecast_metrics,
@@ -563,3 +564,58 @@ def test_f08_8_ablation_negative_control_for_environment_features(study):
     assert result.difference is not None and result.difference.estimate == 0
     env = runs["core-env-v1"].predictions
     assert {item.feature_set for item in env} == {"core-env-v1"}
+
+
+def test_market_consensus_candidate_reads_quotes_known_at_each_cutoff(study):
+    state, _, snapshots, split, _ = study
+    history, keys = quote_history(state)
+    source = history_quotes(history, keys)
+
+    def evaluate():
+        return run_walk_forward(
+            state.h.store,
+            snapshots,
+            split,
+            [
+                BaselineCandidate(BaselineKind.RANKING, bootstrap_draws=20),
+                BaselineCandidate(BaselineKind.SURFACE_ELO, bootstrap_draws=20),
+                ConsensusCandidate(source),
+            ],
+            name="consensus-synthetic",
+            tagger=state.tagger,
+        )
+
+    run = evaluate()
+    by_cutoff = {"1h": [], "24h": []}
+    for row in run.for_model("market-consensus"):
+        by_cutoff[row.tags["cutoff"]].append(row)
+    # Nothing is quoted 24 hours before the start.
+    assert all(row.support == SupportStatus.UNSUPPORTED for row in by_cutoff["24h"])
+    assert {row.reasons for row in by_cutoff["24h"]} == {("no_valid_pair",)}
+    # One bookmaker gives SPARSE. The 1-hour cutoff sees the 70-minute price only.
+    assert by_cutoff["1h"]
+    assert all(row.support == SupportStatus.SPARSE for row in by_cutoff["1h"])
+    row = by_cutoff["1h"][0]
+    start = state.starts[row.match_id]
+    seen = {quote.observed_at for quote in source(row.match_id, row.as_of)}
+    assert seen == {start - QUOTE_OFFSETS[0]}
+    assert {quote.observed_at for quote in source(row.match_id, start)} == {
+        start - QUOTE_OFFSETS[2]
+    }
+    assert evaluate() == run
+
+    decision = decide_promotion(
+        run,
+        candidate="baseline-ranking",
+        consensus="market-consensus",
+        config=full_config(min_test_rows=20),
+        author="modeller",
+        evaluated_at=START,
+        decided_at=START,
+        leakage_passed=True,
+        rerun_sha256=run.content_sha256,
+        rollback_target="baseline-surface-elo:v1",
+    )
+    gate = next(item for item in decision.gates if item.gate == PromotionGate.CONSENSUS_CALIBRATION)
+    assert gate.status in (GateStatus.PASS, GateStatus.FAIL)
+    assert "vs consensus" in gate.detail
