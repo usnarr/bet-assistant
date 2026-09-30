@@ -14,3 +14,6 @@ dist/
 # Local planning inputs; keep implementation and design documents out of Git.
 docs/implementation/
 tennis_betting_ai_implementation_plan.md
+
+# Local Compose secrets (scripts/init_local_secrets.py). Never commit them.
+secrets/

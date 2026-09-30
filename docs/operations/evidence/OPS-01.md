@@ -107,9 +107,54 @@ Stack on alternate host ports with a Compose override file, project `f15-smoke`:
 The smoke test ran at the F14 wiring commit, before migration `0011_operations`. The
 stack was brought down with its volumes.
 
+## Scheduler and monitoring stack (2026-09-30)
+
+Compose stack on alternate host ports, project `f15x-smoke`, synthetic data and local
+random secrets from `scripts/init_local_secrets.py`. The stack was brought down with its
+volumes after each run.
+
+| Check | Result |
+|---|---|
+| `scheduler` healthy; first tick: `sync_source_registry` `SUCCEEDED`, other jobs `NOT_CONFIGURED`, `evaluate_alerts` `SUCCEEDED` | pass |
+| Scheduler restart in the same window: `ALREADY_SUCCEEDED`; database has 1 job run and 1 success | pass |
+| Prometheus targets `tennis-api` (bearer token from the secret file), `tennis-scheduler`, `prometheus`, `alertmanager` all `up` | pass |
+| Missing global telemetry (stale publication, leakage, payout, identity queue, missingness, drift): 6 `...TelemetryMissing` alerts firing, equal to the scheduler's 6 deterministic alerts | pass |
+| Alertmanager routed the 6 alerts: 3 to `operator-critical`, 3 to `operator-warning`; the scheduler webhook logged 6 notifications with codes only | pass |
+| Controlled alert: a synthetic inbox signal `parser_events = 0` for `synthetic-book`. The scheduler appended a source stop (actor `scheduler`) and `tennis_controls_applied_total{control="SOURCE_STOP"} 1`. Prometheus fired `TennisParserZeroEvents` | pass |
+| Stopped scheduler: `TennisScrapeTargetDown` firing after 2 minutes | pass |
+| Grafana: dashboard provisioned, `canSave` and `canEdit` false; an anonymous save returns 403 | pass |
+| API `/metrics` without a token: 401. Prometheus admin API: refused | pass |
+| No local path or user name in the container logs (content scan) | pass |
+| PostgreSQL 17.11 runs as UID 70 (the entrypoint does not run `gosu`) | pass |
+
+Rule checks: `promtool check rules` found 36 rules. `promtool test rules` passed the
+threshold, missing, stale, target-down, target-absent and stale-scheduler cases.
+`amtool check-config` passed, and `amtool config routes test` routes `severity=critical` to
+`operator-critical` and `severity=warning` to `operator-warning`.
+
+## Image scans (2026-09-30)
+
+Trivy 0.74.0, CRITICAL and HIGH, `--ignore-unfixed`:
+
+| Image | Findings | Note |
+|---|---|---|
+| Application image | 0 | Blocking gate in CI |
+| `postgres:17.11-alpine3.24` | 22 | All in `gosu` (Go standard library 1.24.6). The service runs as UID 70, so the entrypoint does not run `gosu`. `17.6-alpine` had 50, including OpenSSL. |
+| `chrislusf/seaweedfs:4.47` | 1 | `google.golang.org/grpc` CVE-2026-84445 in `weed` |
+| `prom/prometheus:v3.15.0` | 0 | |
+| `prom/alertmanager:v0.34.1` | 2 | `google.golang.org/grpc` CVE-2026-84445 in `alertmanager` and `amtool`; v0.34.1 is the latest release |
+| `grafana/grafana:13.0.10-distroless-slim` | 3 | `grafana/tempo` CVE-2026-21728 and CVE-2026-28377, `prometheus/prometheus` CVE-2026-42151 inside `grafana` |
+
+The upstream findings need upstream releases. CI scans these five images as a report only.
+Update the pinned digests when upstream publishes fixed images.
+
+Image sizes on this host (`docker images`): application 1.06 GB (unchanged by the
+scheduler), Prometheus 381 MB, Alertmanager 124 MB, Grafana distroless-slim 1.37 GB (the
+full image is 1.48 GB), PostgreSQL 17.11 423 MB.
+
 ## Limits
 
-- All data is synthetic. The alert thresholds are proposals.
+- All data is synthetic. The alert thresholds are accepted version 1 for shadow operation, not tuned on real data.
 - The drills run in one process on one machine. They do not prove behaviour under real
   network partitions or clock skew between hosts. Lease expiry uses the caller's clock.
-- No scheduler runs the jobs yet.
+- The scheduler has handlers only for `sync_source_registry` and the alert task.

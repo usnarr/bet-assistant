@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:17.6-alpine
+        image: postgres:17.11-alpine3.24@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
         env:
           POSTGRES_DB: tennis_test
           POSTGRES_USER: tennis
@@ -54,6 +54,28 @@ jobs:
       - run: uv run mypy src
       - run: uv run pytest -q
       - run: uv run pip-audit
+      - name: Check generated monitoring files
+        run: |
+          uv run tennis-ops prometheus-rules --check
+          uv run tennis-ops grafana-dashboard --check
+      - name: Validate Prometheus and Alertmanager configuration
+        env:
+          PROMETHEUS_IMAGE: prom/prometheus:v3.15.0@sha256:efd719c99d83b060d9daefdcf00360461adf279f45ef5391f8d111892118753e
+          ALERTMANAGER_IMAGE: prom/alertmanager:v0.34.1@sha256:e9733bafb1bdef9b00e25a21f8f99dc26a22224bf16641ad754d1649f4c3357a
+        run: |
+          # A throwaway token only lets promtool find the credentials file.
+          python -c "import secrets; print(secrets.token_urlsafe(32))" > "$RUNNER_TEMP/scrape-token"
+          chmod 0644 "$RUNNER_TEMP/scrape-token"
+          docker run --rm --entrypoint promtool \
+            -v "$PWD/deploy/prometheus:/etc/prometheus:ro" \
+            -v "$RUNNER_TEMP/scrape-token:/run/secrets/prometheus_api_token:ro" \
+            "$PROMETHEUS_IMAGE" check config /etc/prometheus/prometheus.yml
+          docker run --rm --entrypoint promtool -w /etc/prometheus/tests \
+            -v "$PWD/deploy/prometheus:/etc/prometheus:ro" \
+            "$PROMETHEUS_IMAGE" test rules tennis-alerts.test.yml
+          docker run --rm --entrypoint amtool \
+            -v "$PWD/deploy/alertmanager:/etc/alertmanager:ro" \
+            "$ALERTMANAGER_IMAGE" check-config /etc/alertmanager/alertmanager.yml
       - name: Build application image
         run: docker build --tag tennis-engine:${{ github.sha }} .
       - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
@@ -61,6 +83,30 @@ jobs:
           image-ref: tennis-engine:${{ github.sha }}
           format: table
           exit-code: "1"
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          scanners: vuln
+
+  scan-compose-images:
+    # Report-only: these images come from upstream projects, and a fix needs a new
+    # upstream release. The application image above has the blocking gate. The findings
+    # are reviewed in docs/operations/evidence/OPS-01.md.
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - postgres:17.11-alpine3.24@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+          - chrislusf/seaweedfs:4.47@sha256:ce9e796f1fe6f06968f4c04bdaf8f678dad9c8acdfef3d244133d71bfa6bf882
+          - prom/prometheus:v3.15.0@sha256:efd719c99d83b060d9daefdcf00360461adf279f45ef5391f8d111892118753e
+          - prom/alertmanager:v0.34.1@sha256:e9733bafb1bdef9b00e25a21f8f99dc26a22224bf16641ad754d1649f4c3357a
+          - grafana/grafana:13.0.10-distroless-slim@sha256:c61d1d0e2408bc536c44cd8df25066956dbac6113cf864a55d6c300aa57f01e1
+    steps:
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ matrix.image }}
+          format: table
+          exit-code: "0"
           severity: CRITICAL,HIGH
           ignore-unfixed: true
           scanners: vuln

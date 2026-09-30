@@ -13,3 +13,5 @@ var
 dist
 docs/implementation
 tennis_betting_ai_implementation_plan.md
+secrets
+deploy

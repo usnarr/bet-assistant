@@ -1,0 +1,13 @@
+# F15.3 read-only data source. Grafana users cannot edit it.
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    uid: tennis-prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      httpMethod: POST
+      timeInterval: 30s

@@ -10,7 +10,10 @@ Demonstrated on synthetic fixtures and isolated local services:
 - F15.3 metrics: an in-process registry with the Prometheus text format at `GET /metrics`.
 - F15.3 signals: freshness, parser drift, missing-value rate, probability drift (PSI) and
   ledger balance.
-- F15.4 versioned alert rules (`configs/operations/alert-rules.json`, status `PROPOSED`).
+- F15.4 versioned alert rules (`configs/operations/alert-rules.json`, version
+  `f15-alert-rules-v1`, status `ACCEPTED` by the owner on 2026-09-30 for shadow operation).
+- F15.3/F15.4 monitoring stack in Compose: Prometheus, Alertmanager and a read-only Grafana
+  dashboard. The Prometheus rules are generated from the rule set. See "Monitoring stack".
 - F15.4 deterministic controls: a critical alert stops the affected source, or turns the
   global stop on, through the F01 journal.
 - F15.1 job graph for the blueprint section 33.1 jobs, dependency and publication gates,
@@ -71,8 +74,68 @@ Rules for labels:
 
 Counters are per process. A restart sets them to zero. Prometheus handles counter resets.
 
-No Prometheus server, Grafana dashboard or alert manager is part of the repository. The
-blueprint names them as options. They need a concrete deployment first.
+
+## Monitoring stack (F15.3, F15.4)
+
+Compose runs three pinned monitoring images. Every port binds to `127.0.0.1` only.
+
+| Service | Image (tag and digest in `compose.yaml`) | Port | Purpose |
+|---|---|---|---|
+| `prometheus` | `prom/prometheus:v3.15.0` | 9090 | Scrapes the API, the scheduler, itself and Alertmanager every 30 s. Keeps 30 days. |
+| `alertmanager` | `prom/alertmanager:v0.34.1` | 9093 | Routes alerts by severity. |
+| `grafana` | `grafana/grafana:13.0.10-distroless-slim` | 3000 | Read-only dashboard "Tennis operations". |
+| `monitoring-token` | application image | none | Stores the digest of the Prometheus scrape token before the API starts. |
+
+Scraping:
+
+- `tennis-api` scrapes `GET /metrics` with a bearer token from the Compose secret
+  `prometheus_api_token`. The token has the `operator` role. `register-api-token` stores
+  only its digest. The plain token stays in the secret file.
+- `tennis-scheduler` scrapes the scheduler on the internal port 9101.
+
+Rules: `deploy/prometheus/rules/tennis-alerts.yml` is generated. Do not edit it.
+
+```powershell
+uv run tennis-ops prometheus-rules            # regenerate from the rule set
+uv run tennis-ops prometheus-rules --check    # exit 1 when the file is out of date
+uv run tennis-ops grafana-dashboard --check
+```
+
+| Alert group | Content |
+|---|---|
+| `tennis-signal-rules` | Two alerts per rule: `<Name>` when the value breaches the threshold, and `<Name>TelemetryMissing` when an expected signal has no value or is older than 900 s. Labels carry `severity`, `rule_id`, `rule_set`, `reason`, `control` and `scope`. |
+| `tennis-telemetry` (`f15-telemetry-rules-v1`) | A scrape target down or absent, a stale scheduler tick or alert evaluation, no expected signal, a failed collector or signal producer, and failed jobs or tasks. |
+
+Missing telemetry always alerts. A stopped exporter makes `up == 0`, then its series
+disappear, and the `absent` and staleness alerts fire. A test checks that each rule and
+dashboard query names an exported metric. A test checks that the committed files equal the
+generator output. CI runs `promtool check config`, `promtool test rules` on
+`deploy/prometheus/tests/tennis-alerts.test.yml`, and `amtool check-config`.
+
+The scheduler applies the stop. Prometheus does not. So an alert route failure cannot
+delay a stop.
+
+Routing (`deploy/alertmanager/alertmanager.yml`): `severity="critical"` goes to
+`operator-critical` (repeat every hour); everything else goes to `operator-warning` (repeat
+every 4 hours). Both receivers post to the scheduler webhook. The webhook logs the alert
+name, severity, rule, scope and status, and counts `tennis_alert_notifications_total`. It
+logs no annotation and no value. A down scheduler inhibits the rule-set missing-telemetry
+alerts, so the cause is reported once. An external channel (e-mail or chat) needs an
+approved outbound host first; it is not configured.
+
+Grafana: anonymous visitors are viewers. Sign-up, analytics, update checks, the news feed
+and plugin installs are off. The data source and the dashboard are provisioned from files
+and cannot be changed or deleted in the UI. The admin password comes from the Compose
+secret `grafana_admin_password`.
+
+Local secrets: `uv run python scripts/init_local_secrets.py` writes random files into
+`./secrets` (ignored by Git and Docker). Set `TENNIS_SECRETS_DIR` for another directory.
+Production uses the host's secret manager. The directory is private (0700). Each file is
+readable by the container user (0644), because a Compose file secret is a bind mount.
+
+Upstream images: CI scans the five third-party Compose images with Trivy as a report
+only, because a fix needs an upstream release. The application image keeps the blocking
+scan. See [OPS-01](evidence/OPS-01.md) for the findings.
 
 ## Signals and alert rules (F15.3, F15.4)
 
@@ -99,9 +162,11 @@ and an optional control. Evaluation rules:
   runs, for example the leakage suite.
 - Only a `CRITICAL` rule can name a control. `SOURCE_STOP` needs a source-scoped rule.
 
-The thresholds are proposals. Blueprint section 34.5 and the F05 parser-drift proposal are
-their basis. They are not tuned on real data. Change a threshold only with a new version
-and a reason.
+User decision, 2026-09-30: the owner accepted the proposed thresholds unchanged as version
+1 (`f15-alert-rules-v1`, status `ACCEPTED`) for shadow operation. Blueprint section 34.5 and
+the F05 parser-drift proposal are their basis. They are not tuned on real data. Retune them
+with a new version after real data arrives. Change a threshold only with a new version and
+a reason. A test pins the accepted values.
 
 ## Deterministic controls (F15.4)
 
@@ -117,7 +182,7 @@ Only a reviewer can resume a source (`tennis-governance source-stop <id> off`) o
 global stop off. F14 reads the journal on every current read, so a stop takes effect on
 the next request. It does not wait for an operator to see the alert.
 
-A `PROPOSED` rule set can apply controls. A stop is the safe direction, so this needs no
+Any rule set status can apply controls. A stop is the safe direction, so this needs no
 approval.
 
 ```powershell
@@ -391,7 +456,8 @@ Runbooks: [runbooks.md](runbooks.md).
 
 - Handlers for the collection, feature, scoring and publication jobs. Only
   `sync_source_registry` has a handler, so publication stays `BLOCKED`.
-- A Prometheus server, dashboards and an alert manager.
+- An external notification channel for Alertmanager (e-mail or chat). It needs an approved
+  outbound host.
 - F15.6: a separate database role for agent writes. The agent store uses the main role.
 - F15.6: live tool backends for the agent roles. The agent guide lists which roles read
   live records. The other roles run on fixture backends only.

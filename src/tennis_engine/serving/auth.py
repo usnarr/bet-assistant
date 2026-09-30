@@ -94,6 +94,30 @@ def issue_token(path: Path, identity: str, role: Role, *, rotate: bool = False) 
     return token
 
 
+MIN_REGISTERED_TOKEN_LENGTH = 32
+
+
+def register_token(path: Path, identity: str, role: Role, token: str) -> bool:
+    """Store the digest of a token that a secret file supplies, for example the
+    Prometheus scrape token. Return False when the same digest is already stored.
+
+    The token itself is never written. A short token is refused.
+    """
+    token = token.strip()
+    if len(token) < MIN_REGISTERED_TOKEN_LENGTH or any(ch.isspace() for ch in token):
+        raise ValueError("A registered token has at least 32 characters and no spaces")
+    digest = token_digest(token)
+    existing = load_credentials(path) if path.exists() else ()
+    wanted = ApiCredential(identity=identity, role=role, token_sha256=digest)
+    if wanted in existing:
+        return False
+    if any(item.token_sha256 == digest and item.identity != identity for item in existing):
+        raise ValueError("Another identity already uses this token")
+    kept = tuple(item for item in existing if item.identity != identity)
+    _write_credentials(path, (*kept, wanted))
+    return True
+
+
 def revoke_token(path: Path, identity: str) -> bool:
     """Remove the credential of one identity. Return False when none exists."""
     existing = load_credentials(path) if path.exists() else ()

@@ -7,7 +7,7 @@ can resume a source or turn a stop off.
 
 import json
 from collections.abc import Iterable
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
@@ -70,7 +70,13 @@ class AlertRule(Contract):
 
 class AlertRuleSet(Contract):
     version: Identifier
-    status: Literal["PROPOSED", "APPROVED"]
+    # ACCEPTED: the owner accepted the thresholds for a stated use. It needs a date,
+    # the accepting party and a note that says when the thresholds are reviewed again.
+    status: Literal["PROPOSED", "ACCEPTED", "APPROVED"]
+    accepted_on: date | None = None
+    accepted_by: str | None = Field(default=None, min_length=1, max_length=64)
+    accepted_for: str | None = Field(default=None, min_length=1, max_length=200)
+    note: str = Field(default="", max_length=500)
     # A signal older than this is missing telemetry.
     max_signal_age_seconds: Annotated[int, Field(gt=0, le=86_400, strict=True)]
     rules: tuple[AlertRule, ...]
@@ -80,6 +86,10 @@ class AlertRuleSet(Contract):
         ids = [rule.rule_id for rule in self.rules]
         if len(ids) != len(set(ids)):
             raise ValueError("Rule IDs must be unique")
+        if self.status == "ACCEPTED" and not (
+            self.accepted_on and self.accepted_by and self.accepted_for and self.note
+        ):
+            raise ValueError("An accepted rule set needs a date, a party, a use and a note")
         return self
 
 

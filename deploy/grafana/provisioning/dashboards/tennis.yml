@@ -1,0 +1,13 @@
+# F15.3 dashboards from files. The UI cannot save or delete a provisioned dashboard.
+apiVersion: 1
+providers:
+  - name: tennis
+    orgId: 1
+    folder: Tennis
+    type: file
+    disableDeletion: true
+    allowUiUpdates: false
+    updateIntervalSeconds: 60
+    options:
+      path: /etc/grafana/dashboards
+      foldersFromFilesStructure: false

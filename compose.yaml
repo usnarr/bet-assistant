@@ -18,7 +18,9 @@ x-app-environment: &app-environment
 
 services:
   postgres:
-    image: postgres:17.6-alpine
+    image: postgres:17.11-alpine3.24@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+    # Start as the postgres user (UID 70). The entrypoint then never runs gosu.
+    user: "70:70"
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-tennis}
       POSTGRES_USER: ${POSTGRES_USER:-tennis}
@@ -91,6 +93,8 @@ services:
         condition: service_completed_successfully
       governance-init:
         condition: service_completed_successfully
+      monitoring-token:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready')"]
       interval: 5s
@@ -122,6 +126,83 @@ services:
       timeout: 3s
       retries: 20
 
+  monitoring-token:
+    # Stores the digest of the Prometheus scrape token (an operator token) before the
+    # API starts. The plain token stays in the Compose secret.
+    build: .
+    command: >-
+      tennis-platform register-api-token --identity prometheus --role operator
+      --token-file /run/secrets/prometheus_api_token
+    environment: *app-environment
+    secrets:
+      - prometheus_api_token
+    volumes:
+      - serving-config:/app/var/serving
+    restart: "no"
+
+  prometheus:
+    image: prom/prometheus:v3.15.0@sha256:efd719c99d83b060d9daefdcf00360461adf279f45ef5391f8d111892118753e
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=30d
+      - --web.listen-address=:9090
+    secrets:
+      - prometheus_api_token
+    volumes:
+      - ./deploy/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./deploy/prometheus/rules:/etc/prometheus/rules:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+    read_only: true
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:9090/-/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 20
+
+  alertmanager:
+    image: prom/alertmanager:v0.34.1@sha256:e9733bafb1bdef9b00e25a21f8f99dc26a22224bf16641ad754d1649f4c3357a
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+      - --cluster.listen-address=
+    volumes:
+      - ./deploy/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
+    ports:
+      - "127.0.0.1:9093:9093"
+    read_only: true
+
+  grafana:
+    # Read-only dashboard. Anonymous visitors are viewers; provisioned items cannot change.
+    image: grafana/grafana:13.0.10-distroless-slim@sha256:c61d1d0e2408bc536c44cd8df25066956dbac6113cf864a55d6c300aa57f01e1
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD__FILE: /run/secrets/grafana_admin_password
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_USERS_VIEWERS_CAN_EDIT: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES: "false"
+      GF_PLUGINS_PREINSTALL_DISABLED: "true"
+      GF_NEWS_NEWS_FEED_ENABLED: "false"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/dashboards/tennis-operations.json
+    secrets:
+      - grafana_admin_password
+    volumes:
+      - ./deploy/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./deploy/grafana/dashboards:/etc/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "127.0.0.1:3000:3000"
+    read_only: true
+    tmpfs:
+      - /tmp
+
   admin:
     # Operator commands only, for example:
     # docker compose run --rm admin tennis-platform create-api-token --identity ops --role operator
@@ -140,3 +221,14 @@ volumes:
   governance-data:
   serving-config:
   signal-inbox:
+  prometheus-data:
+  alertmanager-data:
+  grafana-data:
+
+# Local files from `scripts/init_local_secrets.py`. Production supplies them from the
+# host's secret manager. The directory is ignored by Git and Docker.
+secrets:
+  prometheus_api_token:
+    file: ${TENNIS_SECRETS_DIR:-./secrets}/prometheus-api-token
+  grafana_admin_password:
+    file: ${TENNIS_SECRETS_DIR:-./secrets}/grafana-admin-password

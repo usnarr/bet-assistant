@@ -1,6 +1,10 @@
 {
-  "version": "f15-alert-rules-proposed-v1",
-  "status": "PROPOSED",
+  "version": "f15-alert-rules-v1",
+  "status": "ACCEPTED",
+  "accepted_on": "2026-09-30",
+  "accepted_by": "user (project owner)",
+  "accepted_for": "shadow operation",
+  "note": "The owner accepted the proposed thresholds unchanged as version 1 for shadow operation. They are not tuned on real data. Retune them with a new version after real data arrives.",
   "max_signal_age_seconds": 900,
   "rules": [
     {

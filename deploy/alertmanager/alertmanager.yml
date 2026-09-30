@@ -1,0 +1,35 @@
+# F15.4 alert routing for the single-host Compose stack.
+# The deterministic stop does not wait for this route: the scheduler applies it first.
+# Both receivers post to the scheduler webhook, which logs codes and counts notifications.
+# An external channel (e-mail, chat) needs an approved egress host first; see
+# docs/operations/README.md, "Monitoring stack".
+route:
+  receiver: operator-warning
+  group_by: ["alertname", "rule_id", "scope"]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  routes:
+    - receiver: operator-critical
+      matchers:
+        - severity="critical"
+      repeat_interval: 1h
+
+receivers:
+  - name: operator-critical
+    webhook_configs:
+      - url: http://scheduler:9101/alertmanager
+        send_resolved: true
+  - name: operator-warning
+    webhook_configs:
+      - url: http://scheduler:9101/alertmanager
+        send_resolved: true
+
+inhibit_rules:
+  # A down scheduler makes every scheduler signal missing. Report the cause once.
+  - source_matchers:
+      - alertname="TennisScrapeTargetDown"
+      - job="tennis-scheduler"
+    target_matchers:
+      - reason="TELEMETRY_MISSING"
+      - rule_set="f15-alert-rules-v1"

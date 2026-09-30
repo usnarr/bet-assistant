@@ -1,0 +1,122 @@
+# Controlled alert test (OPS-01): promtool test rules deploy/prometheus/tests/tennis-alerts.test.yml
+# Synthetic series only. It checks a threshold breach, missing and stale telemetry, and
+# a down or absent scrape target.
+rule_files:
+  - ../rules/tennis-alerts.yml
+
+evaluation_interval: 30s
+
+tests:
+  - interval: 30s
+    input_series:
+      - series: 'tennis_signal_expected{signal="parser_events",scope="book-a"}'
+        values: "1x40"
+      - series: 'tennis_signal_value{signal="parser_events",scope="book-a"}'
+        values: "0x40"
+      - series: 'tennis_signal_observed_timestamp_seconds{signal="parser_events",scope="book-a"}'
+        values: "0+30x40"
+      - series: 'tennis_signal_expected{signal="leakage_test_failures",scope="global"}'
+        values: "1x40"
+      - series: 'tennis_signal_expected{signal="source_observation_age_seconds",scope="book-a"}'
+        values: "1x40"
+      - series: 'tennis_signal_value{signal="source_observation_age_seconds",scope="book-a"}'
+        values: "10x40"
+      # Measured once at time 0 and never again: stale after 900 s.
+      - series: 'tennis_signal_observed_timestamp_seconds{signal="source_observation_age_seconds",scope="book-a"}'
+        values: "0x40"
+      - series: 'up{job="tennis-api",instance="api:8000"}'
+        values: "0x40"
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: TennisParserZeroEvents
+        exp_alerts:
+          - exp_labels:
+              alertname: TennisParserZeroEvents
+              severity: critical
+              rule_id: parser-zero-events
+              rule_set: f15-alert-rules-v1
+              reason: THRESHOLD
+              control: SOURCE_STOP
+              signal: parser_events
+              scope: book-a
+            exp_annotations:
+              summary: "The parser returned zero events. Blueprint section 34.5, critical."
+              scope: book-a
+      - eval_time: 1m
+        alertname: TennisParserZeroEventsTelemetryMissing
+        exp_alerts: []
+      - eval_time: 1m
+        alertname: TennisFutureLeakageTelemetryMissing
+        exp_alerts:
+          - exp_labels:
+              alertname: TennisFutureLeakageTelemetryMissing
+              severity: critical
+              rule_id: future-leakage
+              rule_set: f15-alert-rules-v1
+              reason: TELEMETRY_MISSING
+              control: NONE
+              signal: leakage_test_failures
+              scope: global
+            exp_annotations:
+              summary: "Signal leakage_test_failures is missing or older than 900 s. Missing telemetry is not healthy."
+              scope: global
+      - eval_time: 10m
+        alertname: TennisSourceStaleTelemetryMissing
+        exp_alerts: []
+      - eval_time: 16m
+        alertname: TennisSourceStaleTelemetryMissing
+        exp_alerts:
+          - exp_labels:
+              alertname: TennisSourceStaleTelemetryMissing
+              severity: warning
+              rule_id: source-stale
+              rule_set: f15-alert-rules-v1
+              reason: TELEMETRY_MISSING
+              control: NONE
+              signal: source_observation_age_seconds
+              scope: book-a
+            exp_annotations:
+              summary: "Signal source_observation_age_seconds is missing or older than 900 s. Missing telemetry is not healthy."
+              scope: book-a
+      - eval_time: 1m
+        alertname: TennisScrapeTargetDown
+        exp_alerts: []
+      - eval_time: 3m
+        alertname: TennisScrapeTargetDown
+        exp_alerts:
+          - exp_labels:
+              alertname: TennisScrapeTargetDown
+              severity: critical
+              rule_id: TennisScrapeTargetDown
+              rule_set: f15-telemetry-rules-v1
+              reason: TELEMETRY_MISSING
+              control: NONE
+              job: tennis-api
+              instance: "api:8000"
+            exp_annotations:
+              summary: "A scrape target is down. Its metrics are missing, not healthy."
+      - eval_time: 3m
+        alertname: TennisSchedulerTargetAbsent
+        exp_alerts:
+          - exp_labels:
+              alertname: TennisSchedulerTargetAbsent
+              severity: critical
+              rule_id: TennisSchedulerTargetAbsent
+              rule_set: f15-telemetry-rules-v1
+              reason: TELEMETRY_MISSING
+              control: NONE
+              job: tennis-scheduler
+            exp_annotations:
+              summary: "Prometheus has no scrape target for tennis-scheduler."
+      - eval_time: 3m
+        alertname: TennisSchedulerStale
+        exp_alerts:
+          - exp_labels:
+              alertname: TennisSchedulerStale
+              severity: critical
+              rule_id: TennisSchedulerStale
+              rule_set: f15-telemetry-rules-v1
+              reason: TELEMETRY_MISSING
+              control: NONE
+            exp_annotations:
+              summary: "The scheduler has not completed a tick recently."

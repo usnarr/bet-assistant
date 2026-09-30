@@ -206,10 +206,35 @@ def healthy(source="synthetic-book"):
     ]
 
 
-def test_proposed_rules_load_and_healthy_signals_raise_nothing():
+def test_accepted_rules_load_and_healthy_signals_raise_nothing():
     rules = load_rules(RULES)
-    assert rules.status == "PROPOSED"
+    assert (rules.version, rules.status) == ("f15-alert-rules-v1", "ACCEPTED")
+    assert str(rules.accepted_on) == "2026-09-30" and rules.accepted_for == "shadow operation"
+    assert "Retune" in rules.note
     assert evaluate(rules, healthy(), sources=["synthetic-book"], now=READ_AT) == ()
+
+
+def test_accepted_thresholds_are_the_proposed_values():
+    """The owner accepted the proposed numbers unchanged. A change needs a new version."""
+    rules = load_rules(RULES)
+    assert rules.max_signal_age_seconds == 900
+    assert {rule.rule_id: (rule.comparison.value, str(rule.threshold)) for rule in rules.rules} == {
+        "parser-zero-events": ("<=", "0"),
+        "parser-invalid-records": ("<", "0.99"),
+        "parser-duplicate-selections": (">", "0"),
+        "parser-unknown-labels": (">", "0.02"),
+        "parser-volume-change": (">", "0.50"),
+        "source-stale": (">", "600"),
+        "stale-publication": (">", "0"),
+        "settlement-mismatch": (">", "0"),
+        "future-leakage": (">", "0"),
+        "payout-inconsistency": (">", "0"),
+        "identity-review-queue": (">", "50"),
+        "feature-missingness": (">", "0.20"),
+        "model-probability-drift": (">", "0.25"),
+    }
+    with pytest.raises(ValidationError, match="accepted rule set"):
+        AlertRuleSet(version="v", status="ACCEPTED", max_signal_age_seconds=60, rules=())
 
 
 def test_breach_missing_and_stale_signals_raise_alerts():

@@ -35,6 +35,29 @@ from .recovery import (
 from .roles import grant_serving_reader
 
 DEFAULT_RULES = Path("configs/operations/alert-rules.json")
+PROMETHEUS_RULES = Path("deploy/prometheus/rules/tennis-alerts.yml")
+
+
+GRAFANA_DASHBOARD = Path("deploy/grafana/dashboards/tennis-operations.json")
+
+
+def prometheus_command(args: argparse.Namespace) -> int:
+    from tennis_engine.monitoring.dashboard import render_dashboard
+    from tennis_engine.monitoring.prometheus import render_rules
+
+    if args.command == "grafana-dashboard":
+        text = render_dashboard()
+    else:
+        text = render_rules(load_rules(args.rules))
+    if args.check:
+        current = args.output.read_text(encoding="utf-8") if args.output.exists() else ""
+        same = current.replace("\r\n", "\n") == text
+        _print({"up_to_date": same})
+        return 0 if same else 1
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_bytes(text.encode("utf-8"))
+    _print({"written": args.output.name})
+    return 0
 
 
 def parser() -> argparse.ArgumentParser:
@@ -85,6 +108,20 @@ def parser() -> argparse.ArgumentParser:
         "grant-reader", help="Grant SELECT-only access for the API to an existing role"
     )
     reader.add_argument("--role", required=True)
+
+    prometheus = commands.add_parser(
+        "prometheus-rules", help="Generate Prometheus alerting rules from the rule set"
+    )
+    prometheus.add_argument("--rules", type=Path, default=DEFAULT_RULES)
+    prometheus.add_argument("--output", type=Path, default=PROMETHEUS_RULES)
+    prometheus.add_argument(
+        "--check", action="store_true", help="Exit 1 when the output file differs"
+    )
+    grafana = commands.add_parser(
+        "grafana-dashboard", help="Generate the read-only Grafana operations dashboard"
+    )
+    grafana.add_argument("--output", type=Path, default=GRAFANA_DASHBOARD)
+    grafana.add_argument("--check", action="store_true", help="Exit 1 when the file differs")
 
     scheduler = commands.add_parser(
         "scheduler", help="Run the F15 job graph and operations tasks on a cadence"
@@ -241,6 +278,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             return incident_command(args)
         if args.command == "scheduler":
             return scheduler_command(args)
+        if args.command in ("prometheus-rules", "grafana-dashboard"):
+            return prometheus_command(args)
         return recovery_command(args)
     except ValidationError as error:
         # Do not echo input values; they can hold operational data.

@@ -28,6 +28,14 @@ def parser() -> argparse.ArgumentParser:
     issue.add_argument("--role", required=True, choices=[role.value for role in Role])
     issue.add_argument("--rotate", action="store_true", help="Replace the identity's token")
     issue.add_argument("--file", type=Path, help="Default: TENNIS_API_CREDENTIALS_FILE")
+    register = subcommands.add_parser(
+        "register-api-token",
+        help="Store the digest of a token read from a secret file (for example Prometheus)",
+    )
+    register.add_argument("--identity", required=True)
+    register.add_argument("--role", required=True, choices=[role.value for role in Role])
+    register.add_argument("--token-file", type=Path, required=True)
+    register.add_argument("--file", type=Path, help="Default: TENNIS_API_CREDENTIALS_FILE")
     revoke = subcommands.add_parser("revoke-api-token", help="Remove an F14 API token")
     revoke.add_argument("--identity", required=True)
     revoke.add_argument("--file", type=Path, help="Default: TENNIS_API_CREDENTIALS_FILE")
@@ -51,6 +59,16 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 0 if ready(checks) else 2
         if args.command == "show-config":
             print(json.dumps(settings.public_summary(), sort_keys=True))
+            return 0
+        if args.command == "register-api-token":
+            from tennis_engine.serving.auth import register_token
+
+            path = _credentials_file(args, settings)
+            changed = register_token(
+                path, args.identity, Role(args.role), args.token_file.read_text(encoding="utf-8")
+            )
+            # Print neither the token nor any path.
+            print(json.dumps({"identity": args.identity, "role": args.role, "changed": changed}))
             return 0
         if args.command in ("create-api-token", "revoke-api-token"):
             from tennis_engine.serving.auth import issue_token, revoke_token
