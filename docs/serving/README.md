@@ -16,12 +16,11 @@ Demonstrated on synthetic fixtures:
 - F14.7 responsible-use status and the manual quote-confirmation notice.
 - F14.8 read-time rechecks of expiry, supersession, kill switches and quote state.
 - PostgreSQL decision store (migration `0010_decision_records`).
+- Production wiring from typed settings (see "Production wiring"). The Compose API uses it.
 
 Not implemented or pending:
 
 - F14.6 explanation agent. It depends on F18 and its evaluation gates.
-- Production wiring. `create_app()` without a `Serving` argument returns HTTP 503 on
-  every F14 route. The host must build the service from approved stores (see below).
 - A browser and assistive-technology review of the dashboard. Only automated structure
   checks exist.
 - Redistribution approvals. No source has a reviewed redistribution right.
@@ -70,7 +69,8 @@ Every error body is `{"error": {"code": ..., "detail": ...}}`.
 | 422 | `INVALID_FILTER` | A malformed value, a naive time, a reversed range, a bad limit or ID |
 | 422 | `INVALID_CURSOR` | A malformed cursor or a cursor from other filters |
 | 422 | `UNSUPPORTED_MARKET`, `UNSUPPORTED_BOOKMAKER` | Out of scope |
-| 503 | `SERVICE_NOT_CONFIGURED` | The host did not supply the F14 service |
+| 503 | `SERVICE_NOT_CONFIGURED` | Serving is off (`TENNIS_SERVING_ENABLED=false`) |
+| 503 | `DEPENDENCY_UNAVAILABLE` | The decision store or another required store failed |
 
 ## Views and numbers
 
@@ -192,22 +192,65 @@ A decision blocked at read time shows "recorded BET; blocked at read time".
 - An identical retry is a no-op. Other content under the same ID raises
   `DecisionConflict`.
 
-## Host wiring
+## Production wiring
 
-The host builds the service and passes it to `create_app`:
+The process entry point is `tennis_engine.serving.wiring:create_production_app`. The image
+starts it with `uvicorn --factory`. It reads these settings:
 
-```python
-service = RecommendationService(
-    store=PostgresDecisionStore(engine),
-    checks=GovernanceReadChecks(per_thread(open_governance), history_actionability(history, policy)),
-    clock=SystemClock(),
-    redistribution=GovernanceRedistribution(per_thread(open_governance)),
-)
-app = create_app(settings, serving=Serving(service, TokenAuthenticator(load_credentials(path))))
+| Variable | Default | Meaning |
+|---|---|---|
+| `TENNIS_SERVING_ENABLED` | `false` | Off: every F14 route returns 503 |
+| `TENNIS_API_CREDENTIALS_FILE` | none | Token digest file. Required when serving is on |
+| `TENNIS_GOVERNANCE_JOURNAL` | none | F01 journal. Required when serving is on |
+| `TENNIS_SERVING_DATABASE_URL` | `TENNIS_DATABASE_URL` | Optional read-only database role |
+| `TENNIS_SERVING_ACCOUNT_SCOPE` | `shadow` | Responsible-use scope for read checks |
+| `TENNIS_SERVING_STALE_AFTER_SECONDS` | `300` | Source-health stale limit |
+| `TENNIS_SERVING_CONNECT_TIMEOUT_SECONDS` | `3` | Database connection limit |
+
+The factory builds the service from these stores:
+
+- `PostgresDecisionStore` for decisions.
+- `PostgresHistoryStore` and `QuoteHistory` for F05 quote actionability, with the
+  proposed `ActionabilityPolicy`.
+- The F01 journal, opened read-only for each thread with a viewer principal. SQLite
+  rejects every write on this connection.
+- `GovernanceRedistribution` on the same journal.
+
+### Fail-closed behaviour
+
+| Condition | Result |
+|---|---|
+| Serving off | 503 `SERVICE_NOT_CONFIGURED` on every F14 route |
+| Serving on, a path setting missing | Settings validation fails; the process does not start |
+| Production: placeholder database or object-store secret | The process does not start |
+| Production: credential file missing, empty, invalid or with a placeholder token | The process does not start |
+| Production: journal missing or not initialized | The process does not start |
+| Development: credential file missing | Every F14 request gets 401 |
+| Journal fails at read time | Each record is `NO_BET` with `READ_CHECK_UNAVAILABLE` |
+| Quote store fails or has no observation for a `BET` | That `BET` is served as `NO_BET` |
+| Decision store fails | 503 `DEPENDENCY_UNAVAILABLE` |
+
+`/health/ready` adds a `governance_journal` check when serving is on. It shows only
+`read-only; global_stop=on|off`, never a path.
+
+### Tokens
+
+`tennis-platform create-api-token --identity <name> --role <role>` adds a random token. It
+prints the plain token once. The file keeps only its SHA-256 digest. Use `--rotate` to
+replace a token and `revoke-api-token --identity <name>` to remove it. The API reads the
+file at start, so restart the API after a change.
+
+### Compose
+
+Compose turns serving on. `governance-init` creates an empty journal. An empty journal
+denies every permission, and the global stop is on. The API mounts the journal and the
+credential volume read-only, and its root file system is read-only. Operator commands use
+the `admin` profile:
+
+```powershell
+docker compose run --rm admin tennis-platform create-api-token --identity ops --role operator
+docker compose restart api
 ```
-
-`open_governance` opens a `GovernanceService` on the governance journal with a read-only
-principal. Settings for these paths do not exist yet. They belong to F15 operations.
 
 ## Latency
 

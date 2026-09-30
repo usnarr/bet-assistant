@@ -11,6 +11,10 @@ x-app-environment: &app-environment
   TENNIS_ARTIFACT_ROOT: ${TENNIS_ARTIFACT_ROOT:-/app/var/artifacts}
   TENNIS_LOG_LEVEL: ${TENNIS_LOG_LEVEL:-INFO}
   TENNIS_WORKER_POLL_SECONDS: ${TENNIS_WORKER_POLL_SECONDS:-5}
+  # F14 serving. The API opens the governance journal read-only.
+  TENNIS_SERVING_ENABLED: ${TENNIS_SERVING_ENABLED:-true}
+  TENNIS_API_CREDENTIALS_FILE: /app/var/serving/api-credentials.json
+  TENNIS_GOVERNANCE_JOURNAL: /app/var/governance/governance.sqlite3
 
 services:
   postgres:
@@ -57,15 +61,35 @@ services:
     depends_on: [object-store]
     restart: on-failure
 
+  governance-init:
+    # Creates an empty F01 journal if missing. Empty means every permission is denied.
+    build: .
+    command: >-
+      tennis-governance --database /app/var/governance/governance.sqlite3
+      --access-file /app/var/governance/governance-access.json init
+    environment: *app-environment
+    volumes:
+      - governance-data:/app/var/governance
+    restart: "no"
+
   api:
     build: .
     environment: *app-environment
     ports:
       - "127.0.0.1:8000:8000"
+    # Read-only mounts: the API cannot change policy, stops or credentials.
+    volumes:
+      - governance-data:/app/var/governance:ro
+      - serving-config:/app/var/serving:ro
+    read_only: true
+    tmpfs:
+      - /tmp
     depends_on:
       migrate:
         condition: service_completed_successfully
       object-store-init:
+        condition: service_completed_successfully
+      governance-init:
         condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready')"]
@@ -81,6 +105,20 @@ services:
       api:
         condition: service_healthy
 
+  admin:
+    # Operator commands only, for example:
+    # docker compose run --rm admin tennis-platform create-api-token --identity ops --role operator
+    build: .
+    command: tennis-platform show-config
+    environment: *app-environment
+    volumes:
+      - governance-data:/app/var/governance
+      - serving-config:/app/var/serving
+    profiles: ["admin"]
+    restart: "no"
+
 volumes:
   postgres-data:
   object-store-data:
+  governance-data:
+  serving-config:

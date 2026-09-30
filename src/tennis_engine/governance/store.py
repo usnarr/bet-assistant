@@ -52,9 +52,29 @@ class GovernanceStore:
         path: str | Path,
         principal: Principal,
         clock: Callable[[], datetime] = system_clock,
+        *,
+        read_only: bool = False,
     ) -> None:
+        """Open the journal. `read_only` never creates or changes the file.
+
+        A read-only store needs an existing, initialized journal. SQLite then rejects every
+        write, independent of the principal's role.
+        """
         self.principal = principal
         self.clock = clock
+        if read_only:
+            location = Path(path).resolve()
+            if not location.is_file():
+                raise FileNotFoundError("The governance journal does not exist")
+            self.db = sqlite3.connect(
+                f"{location.as_uri()}?mode=ro", isolation_level=None, timeout=10, uri=True
+            )
+            self.db.row_factory = sqlite3.Row
+            version = self.db.execute("PRAGMA user_version").fetchone()[0]
+            if version != 1:
+                self.db.close()
+                raise ValueError("The governance journal is not initialized")
+            return
         self.db = sqlite3.connect(path, isolation_level=None, timeout=10)
         self.db.row_factory = sqlite3.Row
         self.db.execute("PRAGMA foreign_keys=ON")

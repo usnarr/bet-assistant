@@ -41,9 +41,11 @@ RUN apt-get update \
       /usr/local/bin/pip3 \
       /usr/local/bin/pip3.13 \
     && useradd --create-home --uid 10001 tennis \
+    && mkdir -p /app/var/governance /app/var/serving /app/var/artifacts \
     && chown -R tennis:tennis /app
 
 USER tennis
 
 EXPOSE 8000
-CMD ["uvicorn", "tennis_engine.serving.api:app", "--host", "0.0.0.0", "--port", "8000"]
+# The factory reads settings at start and refuses an unsafe serving configuration.
+CMD ["uvicorn", "--factory", "tennis_engine.serving.wiring:create_production_app", "--host", "0.0.0.0", "--port", "8000"]

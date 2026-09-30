@@ -11,6 +11,8 @@ import binascii
 import hashlib
 import hmac
 import json
+import os
+import secrets
 from collections.abc import Iterable
 from enum import StrEnum
 from pathlib import Path
@@ -58,6 +60,46 @@ def load_credentials(path: Path) -> tuple[ApiCredential, ...]:
     """Read a JSON list of credentials. The file holds digests, never plain tokens."""
     data = json.loads(path.read_text(encoding="utf-8"))
     return TypeAdapter(tuple[ApiCredential, ...]).validate_python(data)
+
+
+def _write_credentials(path: Path, credentials: Iterable[ApiCredential]) -> None:
+    """Replace the file atomically. The file holds digests only, never plain tokens."""
+    body = json.dumps(
+        [item.model_dump(mode="json") for item in credentials], indent=2, sort_keys=True
+    )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    try:
+        with temporary.open("x", encoding="utf-8") as stream:
+            stream.write(body + "\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.chmod(temporary, 0o600)
+        temporary.replace(path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def issue_token(path: Path, identity: str, role: Role, *, rotate: bool = False) -> str:
+    """Add or rotate one credential. Return the new plain token; it is shown only once."""
+    existing = load_credentials(path) if path.exists() else ()
+    if any(item.identity == identity for item in existing) and not rotate:
+        raise ValueError("The identity already has a token; use rotation to replace it")
+    token = secrets.token_urlsafe(32)
+    kept = tuple(item for item in existing if item.identity != identity)
+    added = ApiCredential(identity=identity, role=role, token_sha256=token_digest(token))
+    _write_credentials(path, (*kept, added))
+    return token
+
+
+def revoke_token(path: Path, identity: str) -> bool:
+    """Remove the credential of one identity. Return False when none exists."""
+    existing = load_credentials(path) if path.exists() else ()
+    kept = tuple(item for item in existing if item.identity != identity)
+    if len(kept) == len(existing):
+        return False
+    _write_credentials(path, kept)
+    return True
 
 
 class TokenAuthenticator:

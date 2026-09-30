@@ -5,6 +5,8 @@ permission. Responses are not cacheable, so a cache cannot keep a record actiona
 after an expiry or a hard stop.
 """
 
+import logging
+import sqlite3
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -14,6 +16,7 @@ from uuid import UUID
 from fastapi import Depends, FastAPI, Header, Query, Request, Response, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import SQLAlchemyError
 
 from tennis_engine import __version__
 from tennis_engine.contracts.domain import RecommendationStatus
@@ -33,6 +36,9 @@ from .service import ApiError, RecommendationFilter, RecommendationService
 
 CHALLENGE = 'Basic realm="tennis-engine", Bearer'
 PROTECTED_PREFIXES = ("/v1/", "/dashboard")
+# Store failures at read time. The response is HTTP 503, never a stale record.
+DEPENDENCY_ERRORS = (SQLAlchemyError, sqlite3.Error, OSError)
+logger = logging.getLogger("tennis_engine.serving")
 
 
 @dataclass(frozen=True)
@@ -72,6 +78,18 @@ def create_app(
     @application.exception_handler(ApiError)
     async def api_error(request: Request, error: ApiError) -> JSONResponse:
         return error_response(error)
+
+    async def dependency_error(request: Request, error: Exception) -> JSONResponse:
+        logger.error(
+            "serving dependency unavailable",
+            extra={"context": {"path": request.url.path, "error": type(error).__name__}},
+        )
+        return error_response(
+            ApiError(503, "DEPENDENCY_UNAVAILABLE", "A required store is unavailable.")
+        )
+
+    for error_type in DEPENDENCY_ERRORS:
+        application.add_exception_handler(error_type, dependency_error)
 
     @application.exception_handler(RequestValidationError)
     async def invalid_request(request: Request, error: RequestValidationError) -> JSONResponse:
@@ -178,6 +196,3 @@ def create_app(
         return dependencies.recommendations.source_health_for(principal)
 
     return application
-
-
-app = create_app()

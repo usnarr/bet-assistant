@@ -9,8 +9,12 @@ from sqlalchemy.engine import Connection
 EXPECTED_ALEMBIC_REVISION = "0010_decision_records"
 
 
-def build_engine(database_url: str, *, pool_pre_ping: bool = True) -> Engine:
-    return create_engine(database_url, pool_pre_ping=pool_pre_ping)
+def build_engine(
+    database_url: str, *, pool_pre_ping: bool = True, connect_timeout: int | None = None
+) -> Engine:
+    """`connect_timeout` (seconds) bounds a connection attempt, so an outage fails fast."""
+    connect_args = {"connect_timeout": connect_timeout} if connect_timeout else {}
+    return create_engine(database_url, pool_pre_ping=pool_pre_ping, connect_args=connect_args)
 
 
 @contextmanager
