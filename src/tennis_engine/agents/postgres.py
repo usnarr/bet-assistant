@@ -1,7 +1,9 @@
 """PostgreSQL agent traces and proposals (migration 0012). Both tables are append-only.
 
-A proposal insert uses `ON CONFLICT (idempotency_key) DO NOTHING`, then reads the stored
-row. So two concurrent retries of one proposal store it once. A trace insert with an
+A proposal insert uses `ON CONFLICT DO NOTHING`, then reads the stored row. The proposal
+ID derives from the idempotency key, so a concurrent retry can conflict on either unique
+index first. Without a conflict target both conflicts are no-ops, and two concurrent
+retries of one proposal store it once. A trace insert with an
 existing ID is a no-op when the content is equal and a `TraceConflict` otherwise.
 """
 
@@ -31,7 +33,7 @@ class PostgresAgentStore:
                     "(:proposal_id, :idempotency_key, :role, :tool, :subject_id, :kind, "
                     "CAST(:fields AS JSONB), CAST(:evidence_ids AS JSONB), :rationale, "
                     ":trace_id, :created_at, :state) "
-                    "ON CONFLICT (idempotency_key) DO NOTHING RETURNING proposal_id"
+                    "ON CONFLICT DO NOTHING RETURNING proposal_id"
                 ),
                 {
                     **proposal.model_dump(mode="python"),
