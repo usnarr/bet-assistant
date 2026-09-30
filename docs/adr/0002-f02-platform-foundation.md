@@ -14,6 +14,8 @@ job orchestration. They are architectural choices, not F02 runtime dependencies:
 added to the lockfile when F03/F07 supplies a concrete consumer and contract tests. This
 keeps the platform image small and avoids exposing a scheduler before jobs exist. Redis,
 MLflow, Prometheus, and Grafana follow the same consumer-driven rule.
+Update 2026-09-30: [ADR 0005](0005-f15-scheduler.md) replaces Prefect with a small
+scheduler that runs the F15 job graph. Prefect is not installed.
 
 Domain contracts reject naive timestamps and binary floats for probabilities, odds, and
 money. Money is represented by `Decimal` plus an explicit PLN currency and becomes a JSON

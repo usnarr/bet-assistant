@@ -5,12 +5,14 @@ Exit codes: 0 no alert, 1 at least one alert, 2 an error. See docs/operations/RE
 
 import argparse
 import json
+import logging
 from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 
 from pydantic import TypeAdapter, ValidationError
 
+from tennis_engine.common.logging import configure_logging
 from tennis_engine.governance.cli import resolve_principal
 from tennis_engine.governance.store import GovernanceStore
 from tennis_engine.infrastructure.database import build_engine
@@ -83,7 +85,44 @@ def parser() -> argparse.ArgumentParser:
         "grant-reader", help="Grant SELECT-only access for the API to an existing role"
     )
     reader.add_argument("--role", required=True)
+
+    scheduler = commands.add_parser(
+        "scheduler", help="Run the F15 job graph and operations tasks on a cadence"
+    )
+    scheduler.add_argument("--once", action="store_true", help="Run one tick and exit")
+    scheduler.add_argument("--tick-seconds", type=float, default=60.0)
+    scheduler.add_argument("--metrics-port", type=int, default=9101)
+    scheduler.add_argument("--rules", type=Path, default=DEFAULT_RULES)
+    scheduler.add_argument("--signal-inbox", type=Path, default=Path("var/signals"))
+    scheduler.add_argument(
+        "--no-apply", action="store_true", help="Evaluate alerts but apply no control"
+    )
     return root
+
+
+def scheduler_command(args: argparse.Namespace) -> int:
+    from .runtime import SchedulerOptions, build_scheduler, run_scheduler
+
+    settings = Settings()
+    configure_logging(getattr(logging, settings.log_level))
+    options = SchedulerOptions(
+        tick_seconds=args.tick_seconds,
+        # One tick serves no scrape, so it takes any free port.
+        metrics_port=0 if args.once else args.metrics_port,
+        rules=args.rules,
+        signal_inbox=args.signal_inbox,
+        apply_controls=not args.no_apply,
+    )
+    process = build_scheduler(settings, options)
+    if args.once:
+        try:
+            report = process.scheduler.tick()
+        finally:
+            process.close()
+        _print(report.model_dump(mode="json"))
+        return 0
+    run_scheduler(process)
+    return 0
 
 
 def evaluate_alerts(args: argparse.Namespace) -> int:
@@ -200,6 +239,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             return evaluate_alerts(args)
         if args.command in ("open-incident", "verify-incident"):
             return incident_command(args)
+        if args.command == "scheduler":
+            return scheduler_command(args)
         return recovery_command(args)
     except ValidationError as error:
         # Do not echo input values; they can hold operational data.

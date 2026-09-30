@@ -97,13 +97,30 @@ services:
       timeout: 3s
       retries: 20
 
-  worker:
+  scheduler:
+    # F15 scheduler (ADR 0005): the job graph, alert evaluation and deterministic stops.
     build: .
-    command: python -m tennis_engine.worker
+    command: >-
+      tennis-ops scheduler --tick-seconds 60 --metrics-port 9101
+      --signal-inbox /app/var/signals
     environment: *app-environment
+    # The journal mount is writable: a critical alert appends a stop. Nothing resumes.
+    volumes:
+      - governance-data:/app/var/governance
+      - signal-inbox:/app/var/signals
+    read_only: true
+    tmpfs:
+      - /tmp
     depends_on:
-      api:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      governance-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9101/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 20
 
   admin:
     # Operator commands only, for example:
@@ -122,3 +139,4 @@ volumes:
   object-store-data:
   governance-data:
   serving-config:
+  signal-inbox:

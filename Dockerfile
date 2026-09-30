@@ -26,6 +26,8 @@ WORKDIR /app
 COPY --from=builder /app/.venv ./.venv
 COPY --from=builder /app/migrations ./migrations
 COPY --from=builder /app/alembic.ini ./
+# Versioned configuration: alert rules, source register drafts, risk and settlement files.
+COPY configs ./configs
 
 # Apply released Debian security fixes. The base image can lag behind them.
 # Runtime containers do not install packages. Removing pip/ensurepip also removes
@@ -41,7 +43,7 @@ RUN apt-get update \
       /usr/local/bin/pip3 \
       /usr/local/bin/pip3.13 \
     && useradd --create-home --uid 10001 tennis \
-    && mkdir -p /app/var/governance /app/var/serving /app/var/artifacts \
+    && mkdir -p /app/var/governance /app/var/serving /app/var/artifacts /app/var/signals \
     && chown -R tennis:tennis /app
 
 USER tennis

@@ -15,6 +15,8 @@ Demonstrated on synthetic fixtures and isolated local services:
   global stop on, through the F01 journal.
 - F15.1 job graph for the blueprint section 33.1 jobs, dependency and publication gates,
   separate backfill capacity, and idempotent job runs.
+- F15.1 scheduler (`tennis-ops scheduler`, ADR 0005): the job graph and the alert
+  evaluation with deterministic controls on a cadence.
 - F15.2 resource leases with expiry and fencing tokens (migration `0011_operations`).
 - F15.5 security: read-only API mounts and root file system in Compose, a SELECT-only
   database role for the API, token digests only, placeholder refusal in production, and
@@ -153,8 +155,67 @@ The scheduler is not trusted for exactly-once delivery:
 one `SUCCEEDED` attempt per run. A `RUNNING` or `SUCCEEDED` attempt must carry a fencing
 token.
 
-The job graph and runner are ready for a scheduler. No scheduler runs them yet. ADR 0002
-selects Prefect, but it is not installed. It needs a concrete deployment first.
+## Scheduler (F15.1)
+
+`tennis-ops scheduler` runs the job graph and the operations tasks on a cadence. It is a
+small loop in `tennis_engine.operations.scheduler`. [ADR 0005](../adr/0005-f15-scheduler.md)
+records why it replaces Prefect (Prefect added 78 packages and 103 MB, and a second run
+state). The Compose service `scheduler` runs it.
+
+| Rule | Behaviour |
+|---|---|
+| Tick | Every 60 s. One tick walks the graph in topological order. |
+| Job cutoff | The start of the job's window (`every`). A job runs once per window. |
+| Duplicate tick, restart, second scheduler | The same run key gives `ALREADY_SUCCEEDED`. The effect runs once. |
+| Job without a handler | `NOT_CONFIGURED`, so it counts as `INCOMPLETE`. Its dependants are `BLOCKED`. |
+| Store failure | The job is `FAILED` for this tick. Its dependants are `BLOCKED`. The loop continues. |
+| Operations task | Runs once per window under the lease `task:<name>`. A failure is retried on the next tick. |
+| Stop | `SIGTERM` ends the loop after the current tick. |
+
+Only `sync_source_registry` has a handler. It reads the F01 register at the cutoff and
+records the journal revision and the number of fetchable sources. It changes nothing. So
+every job that needs collected data is `NOT_CONFIGURED`, and `publish_recommendations`
+never runs. A new job needs a handler and a test.
+
+The operations task `evaluate_alerts` runs every minute:
+
+1. Collect signals: source freshness (F14 source health), ledger balance
+   (`reconcile_ledgers`) and the signal inbox (`var/signals/*.json`).
+2. Evaluate the versioned rule set. The expected sources are the sources that the F01
+   register allows to be fetched now.
+3. Apply the deterministic controls to the F01 journal (operator principal).
+4. Keep the result as one snapshot for the next scrape.
+
+Other jobs report a signal through the inbox with `monitoring.cadence.write_signals`. An
+invalid file is skipped and counted in `tennis_signal_inbox_invalid_files`.
+
+```powershell
+uv run tennis-ops scheduler --once          # one tick, print the report
+uv run tennis-ops scheduler --no-apply      # evaluate alerts but apply no control
+```
+
+The scheduler serves on port 9101 inside the container: `GET /metrics`, `GET /health`
+(503 before the first tick or when the last tick is older than three ticks) and
+`POST /alertmanager`. The access log is off. The webhook logs alert names, severities and
+scopes only.
+
+| Metric | Type | Labels |
+|---|---|---|
+| `tennis_scheduler_ticks_total` | counter | |
+| `tennis_scheduler_last_tick_timestamp_seconds` | gauge | |
+| `tennis_job_outcomes_total` | counter | `job`, `state` |
+| `tennis_job_last_success_timestamp_seconds` | gauge | `job` |
+| `tennis_job_configured` | gauge | `job` |
+| `tennis_task_runs_total` | counter | `task`, `state` |
+| `tennis_task_last_success_timestamp_seconds` | gauge | `task` |
+| `tennis_signal_value` | gauge | `signal`, `scope` (absent when missing) |
+| `tennis_signal_observed_timestamp_seconds` | gauge | `signal`, `scope` |
+| `tennis_signal_expected` | gauge | `signal`, `scope` |
+| `tennis_signal_producer_up` | gauge | `producer` |
+| `tennis_deterministic_alert` | gauge | `rule_id`, `severity`, `reason`, `scope` |
+| `tennis_alert_evaluation_timestamp_seconds` | gauge | |
+| `tennis_controls_applied_total` | counter | `control` |
+| `tennis_alert_notifications_total` | counter | `alertname`, `severity`, `status` |
 
 ## Leases and fencing (F15.2)
 
@@ -328,7 +389,8 @@ Runbooks: [runbooks.md](runbooks.md).
 
 ## Not implemented
 
-- A scheduler that runs the jobs, the signal producers and `evaluate-alerts` on a cadence.
+- Handlers for the collection, feature, scoring and publication jobs. Only
+  `sync_source_registry` has a handler, so publication stays `BLOCKED`.
 - A Prometheus server, dashboards and an alert manager.
 - F15.6: a separate database role for agent writes. The agent store uses the main role.
 - F15.6: live tool backends for the agent roles. The agent guide lists which roles read

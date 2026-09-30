@@ -23,8 +23,8 @@ Invoke-RestMethod http://127.0.0.1:8000/health/ready
 
 `/health/live` confirms only that the API process runs. `/health/ready` returns HTTP 503
 until PostgreSQL is reachable at the head migration (`EXPECTED_ALEMBIC_REVISION`) and the object-store bucket exists.
-The worker waits at the same gate. `migrate` and `object-store-init` complete before Compose
-starts the API.
+`migrate` and `object-store-init` complete before Compose starts the API. The F15
+`scheduler` service replaced the worker skeleton (see ADR 0005).
 
 Stop services with `docker compose down`. This preserves named development volumes. Use a
 dedicated Compose project or explicit test endpoints for integration tests; never point a

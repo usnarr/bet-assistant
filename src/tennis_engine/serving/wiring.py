@@ -104,7 +104,7 @@ def load_authenticator(settings: Settings) -> TokenAuthenticator:
         raise ServingConfigurationError(str(error)) from None
 
 
-def build_serving(
+def build_recommendation_service(
     settings: Settings,
     *,
     engine: Engine | None = None,
@@ -112,8 +112,9 @@ def build_serving(
     history_store: HistoryStore | None = None,
     clock: Clock | None = None,
     actionability_policy: ActionabilityPolicy | None = None,
-) -> Serving:
-    """Build the F14 service from the approved stores. Overrides exist for tests."""
+) -> RecommendationService:
+    """The read-only F14 service without an authenticator. The scheduler uses it for
+    source-health signals."""
     if settings.governance_journal is None:
         raise ServingConfigurationError("TENNIS_GOVERNANCE_JOURNAL is not set")
     if decision_store is None or history_store is None:
@@ -124,7 +125,7 @@ def build_serving(
         history_store = history_store or PostgresHistoryStore(engine)
     governance = per_thread(governance_factory(settings.governance_journal))
     history = QuoteHistory(history_store)
-    service = RecommendationService(
+    return RecommendationService(
         store=decision_store,
         checks=GovernanceReadChecks(
             governance,
@@ -134,6 +135,26 @@ def build_serving(
         redistribution=GovernanceRedistribution(governance),
         account_scope=settings.serving_account_scope,
         stale_after_seconds=settings.serving_stale_after_seconds,
+    )
+
+
+def build_serving(
+    settings: Settings,
+    *,
+    engine: Engine | None = None,
+    decision_store: DecisionStore | None = None,
+    history_store: HistoryStore | None = None,
+    clock: Clock | None = None,
+    actionability_policy: ActionabilityPolicy | None = None,
+) -> Serving:
+    """Build the F14 service from the approved stores. Overrides exist for tests."""
+    service = build_recommendation_service(
+        settings,
+        engine=engine,
+        decision_store=decision_store,
+        history_store=history_store,
+        clock=clock,
+        actionability_policy=actionability_policy,
     )
     return Serving(service, load_authenticator(settings))
 
