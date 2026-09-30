@@ -295,7 +295,7 @@ def _filters(request: RecommendationFilter) -> str:
         '<form class="filters" method="get" action="/dashboard" role="search">'
         f'<label>View <select name="view">{options}</select></label>'
         f'<label>Bookmaker <input name="bookmaker" value="{escape(request.bookmaker or "")}">'
-        f"</label><fieldset><legend>Decision</legend>{boxes}</fieldset>"
+        f"</label><fieldset><legend>Decision shown after read checks</legend>{boxes}</fieldset>"
         '<button type="submit">Filter</button></form>'
     )
 

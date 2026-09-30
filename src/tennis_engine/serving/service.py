@@ -45,6 +45,15 @@ MARKET_ALIASES = {
     "TENNIS_MATCH_WINNER": "TENNIS_MATCH_WINNER",
 }
 MAX_LIMIT = 100
+# Rows one list request may read and recheck. A page can then be short with a cursor.
+MAX_SCAN = 1000
+# Recorded decisions that can be served as each effective decision. A read-time hard stop
+# turns BET and WATCH into NO_BET; it never raises a decision.
+SERVED_FROM = {
+    RecommendationStatus.BET: frozenset({RecommendationStatus.BET}),
+    RecommendationStatus.WATCH: frozenset({RecommendationStatus.WATCH}),
+    RecommendationStatus.NO_BET: frozenset(RecommendationStatus),
+}
 ZERO = Money(amount=Decimal("0.00"))
 
 
@@ -61,11 +70,25 @@ class RecommendationFilter:
     view: Literal["current", "history"] = "current"
     bookmaker: str | None = None
     market: str | None = None
+    # Effective (served) decision, after read-time checks. This is the `decision` field.
     statuses: frozenset[RecommendationStatus] = frozenset()
+    # Stored decision. This is the `recorded_decision` field.
+    recorded_statuses: frozenset[RecommendationStatus] = frozenset()
     starts_after: datetime | None = None
     starts_before: datetime | None = None
     limit: int = 50
     cursor: str | None = None
+
+    def store_statuses(self) -> frozenset[RecommendationStatus] | None:
+        """Recorded decisions to read. None means that no record can match."""
+        allowed = frozenset(RecommendationStatus)
+        if self.statuses:
+            allowed = frozenset().union(*(SERVED_FROM[status] for status in self.statuses))
+        if self.recorded_statuses:
+            allowed &= self.recorded_statuses
+        if not allowed:
+            return None
+        return frozenset() if allowed == frozenset(RecommendationStatus) else allowed
 
     def fingerprint(self) -> str:
         parts = [
@@ -73,6 +96,7 @@ class RecommendationFilter:
             self.bookmaker or "",
             self.market or "",
             ",".join(sorted(self.statuses)),
+            ",".join(sorted(self.recorded_statuses)),
             self.starts_after.isoformat() if self.starts_after else "",
             self.starts_before.isoformat() if self.starts_before else "",
         ]
@@ -265,34 +289,50 @@ class RecommendationService:
         fingerprint = request.fingerprint()
         after = decode_cursor(request.cursor, fingerprint) if request.cursor else None
         current = request.view == "current"
-        items = self.store.query(
-            DecisionQuery(
-                limit=request.limit + 1,
-                bookmaker=request.bookmaker,
-                statuses=request.statuses,
-                starts_after=request.starts_after,
-                starts_before=request.starts_before,
-                active_at=now if current else None,
-                latest_only=current,
-                after=after,
-            )
-        )
-        page, more = list(items[: request.limit]), len(items) > request.limit
         withhold = self._withhold(principal, now)
-        views = tuple(self.view(item, now, withhold, current=current) for item in page)
-        next_cursor = None
-        if more and page:
-            last = page[-1]
-            next_cursor = encode_cursor(
-                (last.scheduled_start, last.record.decision_id), fingerprint
+        views: list[RecommendationView] = []
+        next_key: tuple[datetime, UUID] | None = None
+        store_statuses = request.store_statuses()
+        scanned, exhausted = 0, store_statuses is None
+        while not exhausted and len(views) <= request.limit and scanned < MAX_SCAN:
+            batch = request.limit + 1
+            items = self.store.query(
+                DecisionQuery(
+                    limit=batch,
+                    bookmaker=request.bookmaker,
+                    statuses=store_statuses or frozenset(),
+                    starts_after=request.starts_after,
+                    starts_before=request.starts_before,
+                    active_at=now if current else None,
+                    latest_only=current,
+                    after=after,
+                )
             )
+            exhausted = len(items) < batch
+            for item in items:
+                scanned += 1
+                after = (item.scheduled_start, item.record.decision_id)
+                # The filter uses the served view, so every candidate is rechecked now.
+                view = self.view(item, now, withhold, current=current)
+                if not request.statuses or view.decision in request.statuses:
+                    views.append(view)
+                if len(views) > request.limit or scanned >= MAX_SCAN:
+                    exhausted = exhausted and item is items[-1]
+                    break
+        if len(views) > request.limit:
+            views = views[: request.limit]
+            next_key = (views[-1].scheduled_start, views[-1].recommendation_id)
+        elif not exhausted and after is not None:
+            # The scan limit stopped the read. Continue after the last row read.
+            next_key = after
+        next_cursor = encode_cursor(next_key, fingerprint) if next_key else None
         return RecommendationPage(
             generated_at=now,
             view=request.view,
             mode=Mode.SHADOW,
             responsible_use=self.responsible_use(now),
             notice=f"Shadow mode. All records are virtual. {NO_PLACEMENT}",
-            recommendations=views,
+            recommendations=tuple(views),
             next_cursor=next_cursor,
         )
 

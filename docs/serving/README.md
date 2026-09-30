@@ -49,12 +49,34 @@ All F14 routes are `GET` only. Each route needs a token. Each route sets
 | `view` | `current` (default), `history` | See "Current and history views" |
 | `bookmaker` | a supported bookmaker ID | Default set: `betclic`, `superbet`, `fortuna` |
 | `market` | `match_winner` or `TENNIS_MATCH_WINNER` | Other markets return `UNSUPPORTED_MARKET` |
-| `decision` | `BET`, `WATCH`, `NO_BET`; repeat for more | Matches the recorded decision |
+| `decision` | `BET`, `WATCH`, `NO_BET`; repeat for more | Matches the served (effective) decision |
+| `recorded_decision` | `BET`, `WATCH`, `NO_BET`; repeat for more | Matches the stored decision |
 | `starts_after`, `starts_before` | ISO 8601 with offset | Half-open interval on scheduled start |
 | `limit` | 1 to 100, default 50 | |
 | `cursor` | the `next_cursor` of the previous page | Bound to the same filters |
 
 Order is scheduled start, then recommendation ID. The order is stable across pages.
+
+### Decision filter semantics
+
+`decision` filters on the `decision` field of the response: the decision after the
+read checks. In the current view, a `BET` that a read check blocks is served as `NO_BET`.
+It then matches `decision=NO_BET`, not `decision=BET`. So `decision=BET` returns only
+`BET` rows that are actionable now. In the history view, the served decision is the
+recorded decision, so both filters give the same result.
+
+`recorded_decision` filters on the stored F12 decision. Use it for audit questions, for
+example `recorded_decision=BET&decision=NO_BET` lists stored BETs that are blocked now.
+The audit route always shows the stored record unchanged.
+
+Reason for this choice: F14 says that current lists revalidate expiry and hard stops, and
+that historical audit reads keep the original decision. A current filter on the stored
+value would return a blocked record under `decision=BET`. That is misleading.
+
+The store can filter only on the stored decision. The service therefore reads candidate
+rows and rechecks each one. One request reads at most 1000 rows (`MAX_SCAN`). When it
+reaches this limit, the page can be shorter than `limit` and still have a `next_cursor`.
+Follow the cursor until it is `null`.
 
 ### Errors
 

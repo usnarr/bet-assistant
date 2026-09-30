@@ -248,6 +248,60 @@ def test_filters_select_bookmaker_decision_market_and_start_time():
     assert "later" not in keys("starts_before=2026-09-21T00:00:00%2B00:00")
 
 
+def test_decision_filter_matches_the_served_decision_and_recorded_decision_is_separate():
+    checks = FakeChecks()
+    client, *_ = build([stored(bet()), stored(watch()), stored(no_bet())], checks=checks)
+
+    def keys(query, view="current"):
+        rows = items(client.get(f"{LIST}?view={view}&{query}", headers=headers()))
+        return sorted(row["decision_key"] for row in rows)
+
+    assert keys("decision=BET") == [bet().decision_key]
+    checks.disabled[BOOK_SOURCE] = "SOURCE_DISABLED"
+    # The blocked BET and WATCH are served as NO_BET, so decision=BET finds nothing.
+    assert keys("decision=BET") == []
+    assert keys("decision=WATCH") == []
+    assert keys("decision=NO_BET") == sorted(
+        [bet().decision_key, "decision-watch", "decision-no-bet"]
+    )
+    # The recorded filter still finds the stored BET; the row shows both values.
+    rows = items(client.get(f"{LIST}?recorded_decision=BET", headers=headers()))
+    assert [(r["recorded_decision"], r["decision"]) for r in rows] == [("BET", "NO_BET")]
+    assert keys("recorded_decision=BET&decision=NO_BET") == [bet().decision_key]
+    assert keys("recorded_decision=BET&decision=WATCH") == []
+    # History keeps the recorded decision, so both filters agree there.
+    assert keys("decision=BET", view="history") == [bet().decision_key]
+    error(client.get(f"{LIST}?recorded_decision=MAYBE", headers=headers()), 422, "INVALID_FILTER")
+
+
+def test_served_filter_pages_are_complete_under_the_scan_limit(monkeypatch):
+    import tennis_engine.serving.service as service_module
+
+    class BlockSome(FakeChecks):
+        def check(self, item, now):
+            blocked = item.record.decision_key.startswith("skip")
+            return ("SYNTHETIC_BLOCK",) if blocked else super().check(item, now)
+
+    monkeypatch.setattr(service_module, "MAX_SCAN", 2)
+    # Recorded WATCH rows that read checks block: the store cannot filter them out.
+    records = [copy(watch(), f"skip-{index}") for index in range(5)]
+    wanted = copy(watch(), "zz-watch")
+    client, *_ = build([stored(r) for r in records] + [stored(wanted)], checks=BlockSome())
+    found, cursor, pages = [], None, 0
+    while True:
+        url = f"{LIST}?decision=WATCH&limit=1" + (f"&cursor={cursor}" if cursor else "")
+        body = client.get(url, headers=headers()).json()
+        found += [row["decision_key"] for row in body["recommendations"]]
+        pages += 1
+        cursor = body["next_cursor"]
+        if cursor is None:
+            break
+        assert pages < 10
+    assert found == ["zz-watch"]
+    # Each short page stopped at the scan limit and gave a cursor to continue.
+    assert pages >= 3
+
+
 def test_pagination_is_deterministic_and_complete():
     base = no_bet()
     records = [copy(base, f"page-{index}") for index in range(7)]
