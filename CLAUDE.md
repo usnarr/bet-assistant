@@ -37,7 +37,10 @@ are implemented on synthetic data (`docs/models/README.md`). F12 value, sizing,
 reservations, gates and publication recheck are implemented on synthetic inputs
 (`docs/pricing/README.md`); raw F09 baselines cannot BET; policy approvals are pending.
 F11 symmetric Platt/isotonic calibration on a disjoint window feeds F12 calibrated input
-(`docs/models/README.md`); the F11 tabular model and stacker are not implemented. Later features
+(`docs/models/README.md`); the F11 tabular model and stacker are not implemented. The F13
+walk-forward harness, metrics, block bootstrap, economic summary and gated promotion
+decision are implemented on synthetic data (`docs/backtesting/README.md`); its execution
+replay is pending. Later features
 are not implemented. Current checks are `uv run pytest -q`,
 `uv run ruff check .`, `uv run ruff format --check .`, and `uv run mypy src`.
 External approvals and independent fixture review remain pending.

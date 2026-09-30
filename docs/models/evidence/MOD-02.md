@@ -1,7 +1,8 @@
 # MOD-02 evidence — tennis formats, solver and simulator (synthetic)
 
 Status: engineering tests pass. Independent review of the fixtures: pending.
-Held-out comparison with surface Elo: not run (needs the F13 harness and approved data).
+Comparison with surface Elo: synthetic run through the F13 harness only
+([F13 evidence](../../backtesting/evidence/F13.md)); held-out run on approved data: not run.
 Release classification: `INCONCLUSIVE`; the point model stays `EXPERIMENTAL`.
 
 Fixture: `tests/fixtures/tennis/mod-02-cases.json`, 45 cases. Expectations come from

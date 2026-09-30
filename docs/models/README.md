@@ -40,7 +40,8 @@ Rules:
 
 Limitations: parameters, weights and windows are candidate values. The baselines have
 only synthetic results. They are shadow candidates, not evidence that any model beats the
-market. F09.8 (with/without market inputs) waits for F11/F13 comparisons.
+market. F13 runs the baselines through `backtesting.runner.BaselineCandidate`. F09.8 (with/without
+market inputs) still needs a market-consensus candidate from F05 quote history.
 
 See [MOD-01/SYS-09 evidence](evidence/F09.md).
 
@@ -75,8 +76,9 @@ recency weights (half-life 180 days) and an L2 prior on effects (precision 10). 
 only stats known at the training cutoff. `predict` returns the central probability and a
 seeded spread from diagonal Laplace draws, labelled as not a confidence interval. Sparse
 players (weighted points below `min_weighted_points`) abstain. The model is
-`EXPERIMENTAL`: F10.7 (held-out comparison with surface Elo) runs in F13 once the harness
-is wired, and failure keeps it experimental.
+`EXPERIMENTAL`: F10.7 (comparison with surface Elo) runs through the F13 harness
+(`backtesting.runner.PointCandidate`). The synthetic run fails the calibration gate; see
+[F13 evidence](../backtesting/evidence/F13.md). Approved held-out data is still needed.
 
 See [MOD-02 evidence](evidence/MOD-02.md).
 

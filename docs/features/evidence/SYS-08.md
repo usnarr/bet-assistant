@@ -34,6 +34,8 @@ and flagged; a permitted forecast issued before the cutoff is used; late, realiz
 late-archived and unapproved forecasts are ignored and leave the snapshot unchanged;
 indoor venues need no weather; Warsaw to New York in September gives a 6-hour proxy shift.
 
-Not yet covered: F08.8 ablations through F13, and fitted priors.
+F08.8: the F13 ablation path (`backtesting.studies.ablation`) passes a negative control
+(see [F13 evidence](../../backtesting/evidence/F13.md)). A real ablation needs a
+multi-feature candidate (F11) and a permitted weather source. Fitted priors: not covered.
 
 Command: `uv run pytest tests/test_tennis_features.py -q`.
