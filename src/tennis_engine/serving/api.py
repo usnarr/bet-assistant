@@ -28,6 +28,7 @@ from tennis_engine.infrastructure.settings import Settings
 
 from .auth import TokenAuthenticator
 from .contracts import AuditView, MatchAnalysis, RecommendationPage, SourceHealth
+from .dashboard import register_dashboard
 from .service import ApiError, RecommendationFilter, RecommendationService
 
 CHALLENGE = 'Basic realm="tennis-engine", Bearer'
@@ -125,6 +126,11 @@ def create_app(
 
     ServingDep = Annotated[Serving, Depends(get_serving)]
     PrincipalDep = Annotated[Principal, Depends(get_principal)]
+
+    def get_service(dependencies: ServingDep) -> RecommendationService:
+        return dependencies.recommendations
+
+    register_dashboard(application, get_service, get_principal)
 
     @application.get("/v1/tennis/recommendations", tags=["recommendations"])
     def recommendations(

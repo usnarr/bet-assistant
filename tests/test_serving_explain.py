@@ -20,7 +20,11 @@ from tennis_engine.governance.service import GovernanceService
 from tennis_engine.governance.store import GovernanceStore
 from tennis_engine.ingestion.bookmakers.quotes import Actionability
 from tennis_engine.pricing.decision import Gate
-from tennis_engine.serving.checks import GovernanceReadChecks, per_thread
+from tennis_engine.serving.checks import (
+    GovernanceReadChecks,
+    GovernanceRedistribution,
+    per_thread,
+)
 from tennis_engine.serving.explain import GATE_TEXT, explain
 
 NUMBER = re.compile(r"[+-]?\d+(?:\.\d+)?")
@@ -179,3 +183,17 @@ def test_payout_policy_outside_its_interval_blocks_reads(governed, store):
     item = client.get("/v1/tennis/recommendations", headers=headers()).json()["recommendations"]
     assert item[0]["recorded_decision"] == "WATCH" and item[0]["decision"] == "NO_BET"
     assert "PAYOUT_POLICY:PAYOUT_POLICY_OUTSIDE_EFFECTIVE_INTERVAL" in item[0]["read_time_reasons"]
+
+
+def test_governance_redistribution_needs_an_approved_redistribution_purpose(store, enabled):
+    open_source = source_policy(
+        store,
+        "synthetic-open-data",
+        redistribution="yes",
+        allowed_purposes=["prototype", "production", "redistribution"],
+    )
+    store.save(open_source, expected_revision=0, reason="Synthetic open licence")
+    rights = GovernanceRedistribution(lambda: GovernanceService(store))
+    assert rights.allows("synthetic-open-data", READ_AT) is True
+    assert rights.allows("synthetic-sports", READ_AT) is False
+    assert rights.allows("unknown-source", READ_AT) is False
