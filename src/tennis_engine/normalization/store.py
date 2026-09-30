@@ -2,9 +2,14 @@
 
 Aliases and facts are versions. A newer version never edits an older one, so F07 can
 select exactly what was recorded or observed by a cutoff.
+
+``transaction()`` groups the writes of one warehouse operation. Either all of them are
+kept or none of them are. An inner ``transaction()`` joins the outermost one: an error
+undoes all of its writes only when the error leaves the outermost block.
 """
 
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
+from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import StrEnum
@@ -78,6 +83,7 @@ class TournamentAlias:
 
 
 class IdentityStore(Protocol):
+    def transaction(self) -> AbstractContextManager[None]: ...
     def add_player(self, player: Player) -> Player: ...
     def player(self, player_id: UUID) -> Player: ...
     def players(self) -> Sequence[Player]: ...
@@ -133,6 +139,18 @@ def _next_version(existing: Sequence[Any], proposed: Any) -> None:
         raise ValueError(f"Version must be {expected}, got {proposed.version}")
 
 
+def _clone(value: Any) -> Any:
+    """Copy the containers of the store. The stored contracts are immutable."""
+    if isinstance(value, dict):
+        return {
+            key: item.copy() if isinstance(item, (dict, list, set)) else item
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return list(value)
+    return value
+
+
 class MemoryIdentityStore:
     """Deterministic reference model used by unit tests and fixture backfills."""
 
@@ -155,6 +173,25 @@ class MemoryIdentityStore:
         self._reviews: dict[UUID, list[ReviewItem]] = {}
         self._audit: list[AuditEntry] = []
         self._checkpoints: dict[str, int] = {}
+        self._depth = 0
+
+    @contextmanager
+    def transaction(self) -> Iterator[None]:
+        """Restore the state from the outermost entry if the block raises an error."""
+        snapshot = None
+        if self._depth == 0:
+            snapshot = {
+                name: _clone(value) for name, value in vars(self).items() if name != "_depth"
+            }
+        self._depth += 1
+        try:
+            yield
+        except BaseException:
+            if snapshot is not None:
+                vars(self).update(snapshot)
+            raise
+        finally:
+            self._depth -= 1
 
     def _index(self, player_id: UUID, name: str) -> None:
         for key in blocking_keys(name):

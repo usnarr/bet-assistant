@@ -55,8 +55,9 @@ F05 adapters call `resolve_event(EventQuery, at=...)`. A result with
 ## Backfill and reports
 
 `Backfill.run` reads F03 derived records in a deterministic order (observation time, record
-type, natural key). It saves a checkpoint after each batch, so an interrupted run resumes
-from the last full batch. Reprocessing the same batch changes nothing. The sealed
+type, natural key). Each batch and its checkpoint commit in one transaction, so an
+interrupted run resumes from the last full batch and never keeps half a batch.
+Reprocessing the same batch changes nothing. The sealed
 `BackfillReport` lists accepted and review counts, per season/tour coverage, and how many
 facts have verified archive evidence. Facts without that evidence are research-only for
 historical replay (F07).
@@ -64,8 +65,11 @@ historical replay (F07).
 ## Limitations
 
 - `PostgresIdentityStore` takes an advisory lock per versioned key, so concurrent writers
-  cannot skip or duplicate a version. Each method is its own transaction, as in the
-  reference store; a warehouse operation that writes several rows is not one transaction.
+  cannot skip or duplicate a version. `IdentityStore.transaction()` groups writes: each
+  public `SportsWarehouse` operation and each backfill batch is one transaction, so a
+  failure part way through writes no rows. An inner transaction joins the outer one. In
+  PostgreSQL each write has its own savepoint, so a rejected write leaves the transaction
+  usable. The memory store restores a copy of its state when the outer block fails.
   It passed against an isolated PostgreSQL database; it has no production run.
 - Name candidates use the `player_name_key` index. Keys come from the canonical name and
   every alias name.

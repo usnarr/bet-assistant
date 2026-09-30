@@ -183,8 +183,12 @@ class Backfill:
         batches = 0
         while position < len(facts) and (max_batches is None or batches < max_batches):
             batch = facts[position : position + batch_size]
-            for fact in batch:
-                outcome, has_evidence = self._apply(fact)
+            # The batch and its checkpoint commit together, so a resumed run never
+            # skips a fact or applies half a batch.
+            with self.store.transaction():
+                outcomes = [(fact, *self._apply(fact)) for fact in batch]
+                self.store.save_checkpoint(checkpoint, position + len(batch))
+            for fact, outcome, has_evidence in outcomes:
                 kind = fact.record.record_type
                 if outcome.accepted:
                     accepted[kind] += 1
@@ -197,7 +201,6 @@ class Backfill:
                     archived += int(has_evidence)
                     unarchived += int(not has_evidence)
             position += len(batch)
-            self.store.save_checkpoint(checkpoint, position)
             batches += 1
         return BackfillReport(
             checkpoint=checkpoint,

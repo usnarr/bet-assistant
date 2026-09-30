@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+import pytest
+
 from tennis_engine.common.clock import FrozenClock
 from tennis_engine.infrastructure.object_store import LocalObjectStore
 from tennis_engine.ingestion.contracts import FetchCapture, FetchDisposition, FetchOrigin
@@ -16,9 +18,13 @@ from tennis_engine.normalization.backfill import (
     SyntheticWarehouseParser,
     facts_from_ingestion,
 )
-from tennis_engine.normalization.contracts import ResolutionPolicy
+from tennis_engine.normalization.contracts import (
+    ResolutionPolicy,
+    ReviewState,
+    SourcePlayerRecord,
+)
 from tennis_engine.normalization.resolver import DEFAULT_POLICY, EvidenceResolver
-from tennis_engine.normalization.store import IdentityStore, MemoryIdentityStore
+from tennis_engine.normalization.store import AuditEntry, IdentityStore, MemoryIdentityStore
 from tennis_engine.normalization.warehouse import SportsWarehouse
 
 FIXTURES = Path(__file__).parent / "fixtures" / "identity" / "synthetic-warehouse-v1"
@@ -114,3 +120,65 @@ def world(
     return World(
         clock, ingestion, service, store, resolver, warehouse, Backfill(warehouse, store, clock)
     )
+
+
+def check_operations_are_atomic(state: World, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A failed operation or batch writes no rows; the same checks run for every store."""
+    store = state.store
+    apply = state.backfill._apply
+    calls = 0
+
+    def fail_third(fact: SourceFact):
+        nonlocal calls
+        calls += 1
+        if calls == 3:
+            raise RuntimeError("injected backfill failure")
+        return apply(fact)
+
+    monkeypatch.setattr(state.backfill, "_apply", fail_third)
+    with pytest.raises(RuntimeError, match="injected"):
+        state.run(batch_size=5)
+    assert store.checkpoint("sys-04") == 0
+    assert (store.players(), store.reviews(), store.audit_log()) == ((), (), ())
+    monkeypatch.setattr(state.backfill, "_apply", apply)
+    report = state.run(batch_size=5)
+    assert report.start_position == 0 and store.checkpoint("sys-04") == len(state.facts())
+
+    outcome = state.warehouse.ingest_player(
+        SourcePlayerRecord(
+            source_id="synthetic-stats", source_player_id="s-10", full_name="Kowalski", tour="ATP"
+        )
+    )
+    assert outcome.review_id is not None
+    audit_rows = len(store.audit_log())
+    with pytest.raises(RuntimeError, match="caller failure"):
+        with store.transaction():
+            state.warehouse.reject_review(outcome.review_id, reviewer="fixture", reason="x")
+            raise RuntimeError("caller failure")
+    assert store.review(outcome.review_id).state == ReviewState.OPEN
+
+    def fail_audit(entry: AuditEntry) -> None:
+        raise RuntimeError("injected audit failure")
+
+    monkeypatch.setattr(store, "audit", fail_audit)
+    with pytest.raises(RuntimeError, match="injected audit"):
+        state.warehouse.approve_player(
+            outcome.review_id, reviewer="fixture", reason="x", create=True
+        )
+    monkeypatch.undo()
+    assert store.player_alias_history("synthetic-stats", "s-10") == ()
+    assert store.review(outcome.review_id).state == ReviewState.OPEN
+    assert len(store.audit_log()) == audit_rows
+
+    known = store.player_alias("synthetic-sports", "p-kowalski-j")
+    assert known is not None
+    with store.transaction():
+        with pytest.raises(ValueError, match="Version must be"):
+            store.append_player_alias(known.model_copy(update={"version": known.version + 2}))
+        store.save_checkpoint("atomic-nested", 7)
+    assert store.checkpoint("atomic-nested") == 7
+    alias = state.warehouse.approve_player(
+        outcome.review_id, reviewer="fixture", reason="x", create=True
+    )
+    assert alias.version == 1
+    assert store.review(outcome.review_id).state == ReviewState.APPROVED

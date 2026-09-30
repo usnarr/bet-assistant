@@ -9,7 +9,7 @@ from uuid import UUID
 import pytest
 from alembic import command
 from alembic.config import Config
-from identity_support import FIRST_OBSERVATION, world
+from identity_support import FIRST_OBSERVATION, check_operations_are_atomic, world
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import DBAPIError
 
@@ -169,3 +169,7 @@ def test_concurrent_alias_writers_create_one_version(engine, tmp_path):
     assert outcomes.count(True) == 1
     history = w.store.player_alias_history(current.source_id, current.source_player_id)
     assert [item.version for item in history] == list(range(1, current.version + 2))
+
+
+def test_failed_operations_and_batches_write_nothing(engine, tmp_path, monkeypatch):
+    check_operations_are_atomic(world(tmp_path, store=PostgresIdentityStore(engine)), monkeypatch)

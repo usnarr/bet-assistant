@@ -3,7 +3,13 @@
 from datetime import UTC, datetime, timedelta
 
 import pytest
-from identity_support import FIRST_OBSERVATION, SECOND_OBSERVATION, archive_payload, world
+from identity_support import (
+    FIRST_OBSERVATION,
+    SECOND_OBSERVATION,
+    archive_payload,
+    check_operations_are_atomic,
+    world,
+)
 
 from tennis_engine.contracts.domain import AvailabilityClass
 from tennis_engine.normalization.contracts import (
@@ -272,3 +278,7 @@ def test_two_source_ids_with_the_same_pairing_stay_two_matches():
     second = state.match("rr-2", "alpha", "bravo", start=start, observed=start)
     assert first != second
     assert len(state.store.matches()) == 2
+
+
+def test_failed_operations_and_batches_write_nothing(tmp_path, monkeypatch):
+    check_operations_are_atomic(world(tmp_path), monkeypatch)

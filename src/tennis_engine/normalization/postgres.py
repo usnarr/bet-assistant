@@ -4,10 +4,15 @@ It follows ``MemoryIdentityStore`` exactly: the same checks, the same idempotent
 the same errors (``KeyError`` for a missing entity, ``ValueError`` for a version gap).
 Versioned writes take a transaction-scoped advisory lock on their key, so concurrent
 writers cannot skip or duplicate a version. The tables reject UPDATE and DELETE.
+
+Inside ``transaction()`` every method on the same thread uses one connection. Each write
+runs in its own savepoint, so a rejected write leaves the transaction usable.
 """
 
 import json
-from collections.abc import Sequence
+import threading
+from collections.abc import Iterator, Sequence
+from contextlib import contextmanager
 from datetime import datetime
 from typing import Any
 from uuid import UUID
@@ -173,6 +178,43 @@ def _review(row: Any) -> ReviewItem:
 class PostgresIdentityStore:
     def __init__(self, engine: Engine) -> None:
         self.engine = engine
+        self._local = threading.local()
+
+    def _shared(self) -> Connection | None:
+        db: Connection | None = getattr(self._local, "connection", None)
+        return db
+
+    @contextmanager
+    def transaction(self) -> Iterator[None]:
+        """Commit all writes of the block together. An inner block joins the outer one."""
+        if self._shared() is not None:
+            yield
+            return
+        with self._write() as db:
+            self._local.connection = db
+            try:
+                yield
+            finally:
+                self._local.connection = None
+
+    @contextmanager
+    def _write(self) -> Iterator[Connection]:
+        db = self._shared()
+        if db is None:
+            with self.engine.begin() as own:
+                yield own
+            return
+        with db.begin_nested():
+            yield db
+
+    @contextmanager
+    def _read(self) -> Iterator[Connection]:
+        db = self._shared()
+        if db is None:
+            with self.engine.connect() as own:
+                yield own
+            return
+        yield db
 
     # Players and aliases.
 
@@ -187,7 +229,7 @@ class PostgresIdentityStore:
             )
 
     def add_player(self, player: Player) -> Player:
-        with self.engine.begin() as db:
+        with self._write() as db:
             inserted = db.execute(
                 text(
                     "INSERT INTO tennis.player (player_id, tour, display_name, birth_date, "
@@ -211,7 +253,7 @@ class PostgresIdentityStore:
         return self.player(player.player_id)
 
     def player(self, player_id: UUID) -> Player:
-        with self.engine.connect() as db:
+        with self._read() as db:
             row = db.execute(
                 text("SELECT * FROM tennis.player WHERE player_id = :id"), {"id": player_id}
             ).one_or_none()
@@ -220,14 +262,14 @@ class PostgresIdentityStore:
         return _player(row)
 
     def players(self) -> Sequence[Player]:
-        with self.engine.connect() as db:
+        with self._read() as db:
             rows = db.execute(
                 text("SELECT * FROM tennis.player ORDER BY created_at, player_id::text")
             )
             return tuple(_player(row) for row in rows)
 
     def append_player_alias(self, alias: PlayerAlias) -> PlayerAlias:
-        with self.engine.begin() as db:
+        with self._write() as db:
             exists = db.execute(
                 text("SELECT 1 FROM tennis.player WHERE player_id = :id"),
                 {"id": alias.player_id},
@@ -272,7 +314,7 @@ class PostgresIdentityStore:
     def player_alias(
         self, source_id: str, source_player_id: str, *, as_of: datetime | None = None
     ) -> PlayerAlias | None:
-        with self.engine.connect() as db:
+        with self._read() as db:
             row = db.execute(
                 text(
                     "SELECT * FROM tennis.player_alias WHERE source_id = :source "
@@ -287,7 +329,7 @@ class PostgresIdentityStore:
         return _player_alias(row)
 
     def player_alias_history(self, source_id: str, source_player_id: str) -> Sequence[PlayerAlias]:
-        with self.engine.connect() as db:
+        with self._read() as db:
             rows = db.execute(
                 text(
                     "SELECT * FROM tennis.player_alias WHERE source_id = :source "
@@ -298,7 +340,7 @@ class PostgresIdentityStore:
             return tuple(_player_alias(row) for row in rows)
 
     def aliases_for_player(self, player_id: UUID) -> Sequence[PlayerAlias]:
-        with self.engine.connect() as db:
+        with self._read() as db:
             rows = db.execute(
                 text(
                     "SELECT * FROM tennis.player_alias WHERE player_id = :id "
@@ -312,7 +354,7 @@ class PostgresIdentityStore:
         keys = sorted(blocking_keys(name))
         if not keys:
             return set()
-        with self.engine.connect() as db:
+        with self._read() as db:
             rows = db.execute(
                 text(
                     "SELECT DISTINCT player_id FROM tennis.player_name_key "
@@ -325,7 +367,7 @@ class PostgresIdentityStore:
     # Tournaments.
 
     def add_tournament(self, tournament: Tournament) -> Tournament:
-        with self.engine.begin() as db:
+        with self._write() as db:
             db.execute(
                 text(
                     "INSERT INTO tennis.tournament (tournament_id, tour, name, level) "
@@ -341,7 +383,7 @@ class PostgresIdentityStore:
         return self.tournament(tournament.tournament_id)
 
     def tournament(self, tournament_id: UUID) -> Tournament:
-        with self.engine.connect() as db:
+        with self._read() as db:
             row = db.execute(
                 text("SELECT * FROM tennis.tournament WHERE tournament_id = :id"),
                 {"id": tournament_id},
@@ -356,7 +398,7 @@ class PostgresIdentityStore:
         )
 
     def add_edition(self, edition: TournamentEdition) -> TournamentEdition:
-        with self.engine.begin() as db:
+        with self._write() as db:
             db.execute(
                 text(
                     "INSERT INTO tennis.tournament_edition (edition_id, tournament_id, season, "
@@ -378,7 +420,7 @@ class PostgresIdentityStore:
         return self.edition(edition.edition_id)
 
     def edition(self, edition_id: UUID) -> TournamentEdition:
-        with self.engine.connect() as db:
+        with self._read() as db:
             row = db.execute(
                 text("SELECT * FROM tennis.tournament_edition WHERE edition_id = :id"),
                 {"id": edition_id},
@@ -397,7 +439,7 @@ class PostgresIdentityStore:
         )
 
     def add_tournament_alias(self, alias: TournamentAlias) -> TournamentAlias:
-        with self.engine.begin() as db:
+        with self._write() as db:
             edition = db.execute(
                 text("SELECT tournament_id FROM tennis.tournament_edition WHERE edition_id = :id"),
                 {"id": alias.edition_id},
@@ -426,7 +468,7 @@ class PostgresIdentityStore:
     def tournament_alias(
         self, source_id: str, source_tournament_id: str, season: int
     ) -> TournamentAlias | None:
-        with self.engine.connect() as db:
+        with self._read() as db:
             row = db.execute(
                 text(
                     "SELECT a.*, e.tournament_id FROM tennis.tournament_alias a "
@@ -450,7 +492,7 @@ class PostgresIdentityStore:
     # Matches and aliases.
 
     def add_match(self, match: Match) -> Match:
-        with self.engine.begin() as db:
+        with self._write() as db:
             db.execute(
                 text(
                     "INSERT INTO tennis.canonical_match (match_id, edition_id, tour, draw_type, "
@@ -474,7 +516,7 @@ class PostgresIdentityStore:
         return self.match(match.match_id)
 
     def match(self, match_id: UUID) -> Match:
-        with self.engine.connect() as db:
+        with self._read() as db:
             row = db.execute(
                 text("SELECT * FROM tennis.canonical_match WHERE match_id = :id"),
                 {"id": match_id},
@@ -484,14 +526,14 @@ class PostgresIdentityStore:
         return _match(row)
 
     def matches(self) -> Sequence[Match]:
-        with self.engine.connect() as db:
+        with self._read() as db:
             rows = db.execute(
                 text("SELECT * FROM tennis.canonical_match ORDER BY created_at, match_id::text")
             )
             return tuple(_match(row) for row in rows)
 
     def append_match_alias(self, alias: MatchAlias) -> MatchAlias:
-        with self.engine.begin() as db:
+        with self._write() as db:
             exists = db.execute(
                 text("SELECT 1 FROM tennis.canonical_match WHERE match_id = :id"),
                 {"id": alias.match_id},
@@ -531,7 +573,7 @@ class PostgresIdentityStore:
         return alias
 
     def match_alias(self, source_id: str, source_match_id: str) -> MatchAlias | None:
-        with self.engine.connect() as db:
+        with self._read() as db:
             row = db.execute(
                 text(
                     "SELECT * FROM tennis.match_alias WHERE source_id = :source "
@@ -544,7 +586,7 @@ class PostgresIdentityStore:
         return _match_alias(row)
 
     def match_alias_sources(self, match_id: UUID) -> set[str]:
-        with self.engine.connect() as db:
+        with self._read() as db:
             rows = db.execute(
                 text("SELECT DISTINCT source_id FROM tennis.match_alias WHERE match_id = :id"),
                 {"id": match_id},
@@ -611,7 +653,7 @@ class PostgresIdentityStore:
             f"CAST(:{name} AS JSONB)" if name in (casts or set()) else f":{name}"
             for name in columns
         )
-        with self.engine.begin() as db:
+        with self._write() as db:
             _lock(db, table, match_id)
             _check_next(
                 db,
@@ -633,7 +675,7 @@ class PostgresIdentityStore:
             )
 
     def append_stats(self, version: StatsVersion) -> StatsVersion:
-        with self.engine.begin() as db:
+        with self._write() as db:
             _lock(db, "match_stats_version", version.match_id, version.player_id)
             _check_next(
                 db,
@@ -659,7 +701,7 @@ class PostgresIdentityStore:
         return version
 
     def _facts(self, table: str, where: str, params: dict[str, Any]) -> list[Any]:
-        with self.engine.connect() as db:
+        with self._read() as db:
             return list(
                 db.execute(
                     text(f"SELECT * FROM tennis.{table} WHERE {where} ORDER BY version"), params
@@ -727,7 +769,7 @@ class PostgresIdentityStore:
     # Deciding-set rules.
 
     def append_edition_format(self, version: EditionFormatVersion) -> EditionFormatVersion:
-        with self.engine.begin() as db:
+        with self._write() as db:
             exists = db.execute(
                 text("SELECT 1 FROM tennis.tournament_edition WHERE edition_id = :id"),
                 {"id": version.edition_id},
@@ -801,7 +843,7 @@ class PostgresIdentityStore:
             "rank": snapshot.rank,
             "points": snapshot.points,
         }
-        with self.engine.begin() as db:
+        with self._write() as db:
             _lock(db, "ranking_snapshot", snapshot.player_id)
             existing = db.execute(
                 text(
@@ -841,7 +883,7 @@ class PostgresIdentityStore:
         )
 
     def rankings(self, player_id: UUID) -> Sequence[RankingSnapshot]:
-        with self.engine.connect() as db:
+        with self._read() as db:
             rows = db.execute(
                 text(
                     "SELECT * FROM tennis.ranking_snapshot WHERE player_id = :id "
@@ -854,7 +896,7 @@ class PostgresIdentityStore:
     # Review queue, audit and checkpoints.
 
     def append_review(self, item: ReviewItem) -> ReviewItem:
-        with self.engine.begin() as db:
+        with self._write() as db:
             _lock(db, "identity_review", item.review_id)
             current = db.execute(
                 text(
@@ -890,7 +932,7 @@ class PostgresIdentityStore:
         return item
 
     def review(self, review_id: UUID) -> ReviewItem:
-        with self.engine.connect() as db:
+        with self._read() as db:
             row = db.execute(
                 text(
                     "SELECT * FROM tennis.identity_review_revision WHERE review_id = :id "
@@ -903,7 +945,7 @@ class PostgresIdentityStore:
         return _review(row)
 
     def reviews(self, state: ReviewState | None = None) -> Sequence[ReviewItem]:
-        with self.engine.connect() as db:
+        with self._read() as db:
             rows = db.execute(
                 text(
                     "SELECT latest.* FROM (SELECT DISTINCT ON (review_id) * "
@@ -918,7 +960,7 @@ class PostgresIdentityStore:
             return tuple(_review(row) for row in rows)
 
     def audit(self, entry: AuditEntry) -> None:
-        with self.engine.begin() as db:
+        with self._write() as db:
             db.execute(
                 text(
                     "INSERT INTO tennis.identity_audit (recorded_at, actor, action, subject, "
@@ -936,7 +978,7 @@ class PostgresIdentityStore:
             )
 
     def audit_log(self) -> Sequence[AuditEntry]:
-        with self.engine.connect() as db:
+        with self._read() as db:
             rows = db.execute(text("SELECT * FROM tennis.identity_audit ORDER BY audit_id"))
             return tuple(
                 AuditEntry(
@@ -951,7 +993,7 @@ class PostgresIdentityStore:
             )
 
     def checkpoint(self, name: str) -> int:
-        with self.engine.connect() as db:
+        with self._read() as db:
             position = db.execute(
                 text("SELECT position FROM tennis.backfill_checkpoint WHERE name = :name"),
                 {"name": name},
@@ -959,7 +1001,7 @@ class PostgresIdentityStore:
         return int(position or 0)
 
     def save_checkpoint(self, name: str, position: int) -> None:
-        with self.engine.begin() as db:
+        with self._write() as db:
             _lock(db, "backfill_checkpoint", name)
             current = db.execute(
                 text("SELECT position FROM tennis.backfill_checkpoint WHERE name = :name"),

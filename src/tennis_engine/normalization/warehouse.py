@@ -2,11 +2,14 @@
 
 Only accepted resolutions write aliases. Everything else opens a review item. Facts are
 appended as new versions only when their content changes, so reprocessing is idempotent
-and a provider correction keeps the earlier version.
+and a provider correction keeps the earlier version. Each public operation is one store
+transaction, so a failure part way through writes no rows.
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from functools import wraps
+from typing import Any, Concatenate
 from uuid import UUID
 
 from tennis_engine.common.clock import Clock
@@ -74,6 +77,17 @@ def orient_set(score: SetScore, swapped: bool) -> SetScore:
         games=(score.games[1], score.games[0]),
         tiebreak_points=(points[1], points[0]) if points is not None else None,
     )
+
+
+def _atomic[**P, R](
+    method: Callable[Concatenate["SportsWarehouse", P], R],
+) -> Callable[Concatenate["SportsWarehouse", P], R]:
+    @wraps(method)
+    def run(warehouse: "SportsWarehouse", /, *args: P.args, **kwargs: P.kwargs) -> R:
+        with warehouse.store.transaction():
+            return method(warehouse, *args, **kwargs)
+
+    return run
 
 
 class SportsWarehouse:
@@ -206,10 +220,12 @@ class SportsWarehouse:
             )
         )
 
+    @_atomic
     def ingest_player(self, record: SourcePlayerRecord) -> IngestOutcome:
         resolution = self.resolver.resolve_player(record, at=self.clock.now())
         return self.apply_player_resolution(record, resolution)
 
+    @_atomic
     def apply_player_resolution(
         self, record: SourcePlayerRecord, resolution: PlayerResolution
     ) -> IngestOutcome:
@@ -237,6 +253,7 @@ class SportsWarehouse:
         )
         return IngestOutcome(True, alias.player_id, None, changed=alias.version > before)
 
+    @_atomic
     def approve_player(
         self,
         review_id: UUID,
@@ -270,9 +287,11 @@ class SportsWarehouse:
         self._close_review(review_id, ReviewState.APPROVED, reviewer, reason)
         return alias
 
+    @_atomic
     def reject_review(self, review_id: UUID, *, reviewer: str, reason: str) -> ReviewItem:
         return self._close_review(review_id, ReviewState.REJECTED, reviewer, reason)
 
+    @_atomic
     def remap_player_alias(
         self,
         source_id: str,
@@ -325,6 +344,7 @@ class SportsWarehouse:
 
     # Tournaments.
 
+    @_atomic
     def ingest_tournament(self, record: SourceTournamentRecord) -> IngestOutcome:
         issues = validate_tournament(record)
         if errors(issues) or record.tour is None:
@@ -388,6 +408,7 @@ class SportsWarehouse:
 
     # Matches.
 
+    @_atomic
     def ingest_match(self, record: SourceMatchRecord, availability: Availability) -> IngestOutcome:
         key = record.source_match_id
         issues = validate_match(record)
@@ -582,6 +603,7 @@ class SportsWarehouse:
 
     # Rankings.
 
+    @_atomic
     def ingest_format(
         self, record: SourceFormatRecord, availability: Availability
     ) -> IngestOutcome:
@@ -630,6 +652,7 @@ class SportsWarehouse:
         )
         return IngestOutcome(True, alias.edition_id, None, changed=True)
 
+    @_atomic
     def ingest_ranking(
         self, record: SourceRankingRecord, availability: Availability
     ) -> IngestOutcome:
