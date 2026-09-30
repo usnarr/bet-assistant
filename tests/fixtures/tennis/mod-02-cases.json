@@ -1,0 +1,603 @@
+{
+ "fixture_id": "mod-02-tennis-formats-v1",
+ "provenance": "Synthetic; expectations from tests/tennis_oracle.py (independent recursion).",
+ "author": "implementation",
+ "independent_reviewer": "pending",
+ "tolerance": 1e-10,
+ "cases": [
+  {
+   "id": "MOD-02-001",
+   "kind": "hold",
+   "inputs": {
+    "p": 0.0,
+    "advantage": true
+   },
+   "expected": 0.0,
+   "note": "advantage game"
+  },
+  {
+   "id": "MOD-02-002",
+   "kind": "hold",
+   "inputs": {
+    "p": 0.1,
+    "advantage": true
+   },
+   "expected": 0.001447804878,
+   "note": "advantage game"
+  },
+  {
+   "id": "MOD-02-003",
+   "kind": "hold",
+   "inputs": {
+    "p": 0.25,
+    "advantage": true
+   },
+   "expected": 0.05078125,
+   "note": "advantage game"
+  },
+  {
+   "id": "MOD-02-004",
+   "kind": "hold",
+   "inputs": {
+    "p": 0.5,
+    "advantage": true
+   },
+   "expected": 0.5,
+   "note": "advantage game"
+  },
+  {
+   "id": "MOD-02-005",
+   "kind": "hold",
+   "inputs": {
+    "p": 0.6,
+    "advantage": true
+   },
+   "expected": 0.735729230769,
+   "note": "advantage game"
+  },
+  {
+   "id": "MOD-02-006",
+   "kind": "hold",
+   "inputs": {
+    "p": 0.64,
+    "advantage": true
+   },
+   "expected": 0.812614662685,
+   "note": "advantage game"
+  },
+  {
+   "id": "MOD-02-007",
+   "kind": "hold",
+   "inputs": {
+    "p": 0.7,
+    "advantage": true
+   },
+   "expected": 0.900788965517,
+   "note": "advantage game"
+  },
+  {
+   "id": "MOD-02-008",
+   "kind": "hold",
+   "inputs": {
+    "p": 1.0,
+    "advantage": true
+   },
+   "expected": 1.0,
+   "note": "advantage game"
+  },
+  {
+   "id": "MOD-02-009",
+   "kind": "hold",
+   "inputs": {
+    "p": 0.5,
+    "advantage": false
+   },
+   "expected": 0.5,
+   "note": "no-ad deciding point"
+  },
+  {
+   "id": "MOD-02-010",
+   "kind": "hold",
+   "inputs": {
+    "p": 0.6,
+    "advantage": false
+   },
+   "expected": 0.710208,
+   "note": "no-ad deciding point"
+  },
+  {
+   "id": "MOD-02-011",
+   "kind": "hold",
+   "inputs": {
+    "p": 0.7,
+    "advantage": false
+   },
+   "expected": 0.873964,
+   "note": "no-ad deciding point"
+  },
+  {
+   "id": "MOD-02-012",
+   "kind": "tiebreak_server",
+   "inputs": {
+    "index": 0,
+    "first": 0
+   },
+   "expected": 0,
+   "note": "A, B, B, A, A service order"
+  },
+  {
+   "id": "MOD-02-013",
+   "kind": "tiebreak_server",
+   "inputs": {
+    "index": 1,
+    "first": 0
+   },
+   "expected": 1,
+   "note": "A, B, B, A, A service order"
+  },
+  {
+   "id": "MOD-02-014",
+   "kind": "tiebreak_server",
+   "inputs": {
+    "index": 2,
+    "first": 0
+   },
+   "expected": 1,
+   "note": "A, B, B, A, A service order"
+  },
+  {
+   "id": "MOD-02-015",
+   "kind": "tiebreak_server",
+   "inputs": {
+    "index": 3,
+    "first": 0
+   },
+   "expected": 0,
+   "note": "A, B, B, A, A service order"
+  },
+  {
+   "id": "MOD-02-016",
+   "kind": "tiebreak_server",
+   "inputs": {
+    "index": 4,
+    "first": 0
+   },
+   "expected": 0,
+   "note": "A, B, B, A, A service order"
+  },
+  {
+   "id": "MOD-02-017",
+   "kind": "tiebreak_server",
+   "inputs": {
+    "index": 5,
+    "first": 0
+   },
+   "expected": 1,
+   "note": "A, B, B, A, A service order"
+  },
+  {
+   "id": "MOD-02-018",
+   "kind": "tiebreak_server",
+   "inputs": {
+    "index": 6,
+    "first": 0
+   },
+   "expected": 1,
+   "note": "A, B, B, A, A service order"
+  },
+  {
+   "id": "MOD-02-019",
+   "kind": "tiebreak_server",
+   "inputs": {
+    "index": 7,
+    "first": 0
+   },
+   "expected": 0,
+   "note": "A, B, B, A, A service order"
+  },
+  {
+   "id": "MOD-02-020",
+   "kind": "tiebreak_server",
+   "inputs": {
+    "index": 8,
+    "first": 0
+   },
+   "expected": 0,
+   "note": "A, B, B, A, A service order"
+  },
+  {
+   "id": "MOD-02-021",
+   "kind": "tiebreak_server",
+   "inputs": {
+    "index": 9,
+    "first": 0
+   },
+   "expected": 1,
+   "note": "A, B, B, A, A service order"
+  },
+  {
+   "id": "MOD-02-022",
+   "kind": "tiebreak",
+   "inputs": {
+    "pa": 0.6,
+    "pb": 0.6,
+    "target": 7,
+    "first": 0
+   },
+   "expected": 0.5,
+   "note": "tiebreak incl. win-by-two"
+  },
+  {
+   "id": "MOD-02-023",
+   "kind": "tiebreak",
+   "inputs": {
+    "pa": 0.6,
+    "pb": 0.6,
+    "target": 7,
+    "first": 1
+   },
+   "expected": 0.5,
+   "note": "tiebreak incl. win-by-two"
+  },
+  {
+   "id": "MOD-02-024",
+   "kind": "tiebreak",
+   "inputs": {
+    "pa": 0.7,
+    "pb": 0.6,
+    "target": 7,
+    "first": 0
+   },
+   "expected": 0.662973182748,
+   "note": "tiebreak incl. win-by-two"
+  },
+  {
+   "id": "MOD-02-025",
+   "kind": "tiebreak",
+   "inputs": {
+    "pa": 0.7,
+    "pb": 0.6,
+    "target": 7,
+    "first": 1
+   },
+   "expected": 0.662973182748,
+   "note": "tiebreak incl. win-by-two"
+  },
+  {
+   "id": "MOD-02-026",
+   "kind": "tiebreak",
+   "inputs": {
+    "pa": 0.65,
+    "pb": 0.55,
+    "target": 10,
+    "first": 0
+   },
+   "expected": 0.68336431866,
+   "note": "tiebreak incl. win-by-two"
+  },
+  {
+   "id": "MOD-02-027",
+   "kind": "tiebreak",
+   "inputs": {
+    "pa": 0.55,
+    "pb": 0.65,
+    "target": 10,
+    "first": 1
+   },
+   "expected": 0.31663568134,
+   "note": "tiebreak incl. win-by-two"
+  },
+  {
+   "id": "MOD-02-028",
+   "kind": "tiebreak",
+   "inputs": {
+    "pa": 1.0,
+    "pb": 0.5,
+    "target": 7,
+    "first": 1
+   },
+   "expected": 1.0,
+   "note": "tiebreak incl. win-by-two"
+  },
+  {
+   "id": "MOD-02-029",
+   "kind": "next_server",
+   "inputs": {
+    "first": 0,
+    "score": [
+     6,
+     4
+    ]
+   },
+   "expected": 0,
+   "note": "rotation continues"
+  },
+  {
+   "id": "MOD-02-030",
+   "kind": "next_server",
+   "inputs": {
+    "first": 0,
+    "score": [
+     6,
+     3
+    ]
+   },
+   "expected": 1,
+   "note": "rotation continues"
+  },
+  {
+   "id": "MOD-02-031",
+   "kind": "next_server",
+   "inputs": {
+    "first": 0,
+    "score": [
+     7,
+     6
+    ]
+   },
+   "expected": 1,
+   "note": "rotation continues"
+  },
+  {
+   "id": "MOD-02-032",
+   "kind": "next_server",
+   "inputs": {
+    "first": 0,
+    "score": [
+     7,
+     5
+    ]
+   },
+   "expected": 0,
+   "note": "rotation continues"
+  },
+  {
+   "id": "MOD-02-033",
+   "kind": "next_server",
+   "inputs": {
+    "first": 1,
+    "score": [
+     0,
+     6
+    ]
+   },
+   "expected": 1,
+   "note": "rotation continues"
+  },
+  {
+   "id": "MOD-02-034",
+   "kind": "next_server",
+   "inputs": {
+    "first": 1,
+    "score": [
+     6,
+     7
+    ]
+   },
+   "expected": 0,
+   "note": "rotation continues"
+  },
+  {
+   "id": "MOD-02-035",
+   "kind": "match",
+   "inputs": {
+    "pa": 0.64,
+    "pb": 0.62,
+    "first": 0,
+    "final_target": 7,
+    "match_tiebreak": false
+   },
+   "expected": {
+    "0-2": 0.187733691284,
+    "1-2": 0.212783950905,
+    "2-0": 0.321168768652,
+    "2-1": 0.278313589159
+   },
+   "note": "correct-score distribution"
+  },
+  {
+   "id": "MOD-02-036",
+   "kind": "match",
+   "inputs": {
+    "pa": 0.64,
+    "pb": 0.62,
+    "first": 1,
+    "final_target": 7,
+    "match_tiebreak": false
+   },
+   "expected": {
+    "0-2": 0.187733691284,
+    "1-2": 0.212783950905,
+    "2-0": 0.321168768652,
+    "2-1": 0.278313589159
+   },
+   "note": "correct-score distribution"
+  },
+  {
+   "id": "MOD-02-037",
+   "kind": "match",
+   "inputs": {
+    "pa": 0.6,
+    "pb": 0.6,
+    "first": 0,
+    "final_target": 7,
+    "match_tiebreak": false
+   },
+   "expected": {
+    "0-2": 0.25,
+    "1-2": 0.25,
+    "2-0": 0.25,
+    "2-1": 0.25
+   },
+   "note": "correct-score distribution"
+  },
+  {
+   "id": "MOD-02-038",
+   "kind": "match",
+   "inputs": {
+    "pa": 0.7,
+    "pb": 0.55,
+    "first": 1,
+    "final_target": 7,
+    "match_tiebreak": false
+   },
+   "expected": {
+    "0-2": 0.010573855131,
+    "1-2": 0.018973107028,
+    "2-0": 0.804915350504,
+    "2-1": 0.165537687336
+   },
+   "note": "correct-score distribution"
+  },
+  {
+   "id": "MOD-02-039",
+   "kind": "match",
+   "inputs": {
+    "pa": 0.64,
+    "pb": 0.62,
+    "first": 0,
+    "final_target": 10,
+    "match_tiebreak": false
+   },
+   "expected": {
+    "0-2": 0.187733691284,
+    "1-2": 0.212201736439,
+    "2-0": 0.321168768652,
+    "2-1": 0.278895803625
+   },
+   "note": "correct-score distribution"
+  },
+  {
+   "id": "MOD-02-040",
+   "kind": "match",
+   "inputs": {
+    "pa": 0.66,
+    "pb": 0.6,
+    "first": 1,
+    "final_target": 10,
+    "match_tiebreak": false
+   },
+   "expected": {
+    "0-2": 0.094320138955,
+    "1-2": 0.12937016982,
+    "2-0": 0.480088459684,
+    "2-1": 0.296221231541
+   },
+   "note": "correct-score distribution"
+  },
+  {
+   "id": "MOD-02-041",
+   "kind": "match",
+   "inputs": {
+    "pa": 0.64,
+    "pb": 0.62,
+    "first": 0,
+    "final_target": 7,
+    "match_tiebreak": true
+   },
+   "expected": {
+    "0-2": 0.187733691284,
+    "1-2": 0.22660597576,
+    "2-0": 0.321168768652,
+    "2-1": 0.264491564304
+   },
+   "note": "correct-score distribution"
+  },
+  {
+   "id": "MOD-02-042",
+   "kind": "match",
+   "inputs": {
+    "pa": 0.58,
+    "pb": 0.63,
+    "first": 1,
+    "final_target": 7,
+    "match_tiebreak": true
+   },
+   "expected": {
+    "0-2": 0.443792853482,
+    "1-2": 0.264346691788,
+    "2-0": 0.111437265087,
+    "2-1": 0.180423189643
+   },
+   "note": "correct-score distribution"
+  },
+  {
+   "id": "MOD-02-043",
+   "kind": "set",
+   "inputs": {
+    "pa": 0.62,
+    "pb": 0.62,
+    "first": 0
+   },
+   "expected": {
+    "0-6": 0.005258925309,
+    "1-6": 0.01326216677,
+    "2-6": 0.07695221981,
+    "3-6": 0.052478170186,
+    "4-6": 0.200202498628,
+    "5-7": 0.052811974845,
+    "6-0": 0.005258925309,
+    "6-1": 0.04590766859,
+    "6-2": 0.04430671799,
+    "6-3": 0.181655870178,
+    "6-4": 0.071024798637,
+    "6-7": 0.099034044451,
+    "7-5": 0.052811974845,
+    "7-6": 0.099034044451
+   },
+   "note": "set score distribution"
+  },
+  {
+   "id": "MOD-02-044",
+   "kind": "set",
+   "inputs": {
+    "pa": 0.62,
+    "pb": 0.62,
+    "first": 1
+   },
+   "expected": {
+    "0-6": 0.005258925309,
+    "1-6": 0.04590766859,
+    "2-6": 0.04430671799,
+    "3-6": 0.181655870178,
+    "4-6": 0.071024798637,
+    "5-7": 0.052811974845,
+    "6-0": 0.005258925309,
+    "6-1": 0.01326216677,
+    "6-2": 0.07695221981,
+    "6-3": 0.052478170186,
+    "6-4": 0.200202498628,
+    "6-7": 0.099034044451,
+    "7-5": 0.052811974845,
+    "7-6": 0.099034044451
+   },
+   "note": "set score distribution"
+  },
+  {
+   "id": "MOD-02-045",
+   "kind": "set",
+   "inputs": {
+    "pa": 0.7,
+    "pb": 0.58,
+    "first": 0
+   },
+   "expected": {
+    "0-6": 0.000324382068,
+    "1-6": 0.000919457763,
+    "2-6": 0.012115529478,
+    "3-6": 0.008658235299,
+    "4-6": 0.073908273952,
+    "5-7": 0.0160576318,
+    "6-0": 0.021239276568,
+    "6-1": 0.135617827932,
+    "6-2": 0.107486046487,
+    "6-3": 0.316849790375,
+    "6-4": 0.089179115441,
+    "6-7": 0.047114838276,
+    "7-5": 0.06472058824,
+    "7-6": 0.105809006321
+   },
+   "note": "set score distribution"
+  }
+ ]
+}
