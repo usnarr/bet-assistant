@@ -14,6 +14,9 @@ from tennis_engine.common.ids import stable_id
 from tennis_engine.contracts.domain import Availability
 
 from .contracts import (
+    BestOf,
+    DrawStage,
+    EditionFormatVersion,
     EvidenceKind,
     Match,
     MatchAlias,
@@ -28,6 +31,7 @@ from .contracts import (
     Round,
     ScheduleVersion,
     SetScore,
+    SourceFormatRecord,
     SourceMatchRecord,
     SourcePlayerRecord,
     SourceRankingRecord,
@@ -577,6 +581,54 @@ class SportsWarehouse:
         return changed
 
     # Rankings.
+
+    def ingest_format(
+        self, record: SourceFormatRecord, availability: Availability
+    ) -> IngestOutcome:
+        """Append a deciding-set rule version when it differs from the latest version."""
+        alias = self.store.tournament_alias(
+            record.source_id, record.source_tournament_id, record.season
+        )
+        key = f"{record.source_tournament_id}:{record.season}:{record.draw_stage}:{record.best_of}"
+        if (
+            alias is None
+            or record.draw_stage == DrawStage.UNKNOWN
+            or (record.best_of == BestOf.UNKNOWN)
+        ):
+            reason = (
+                "format rule for an unresolved edition"
+                if alias is None
+                else "format rule for an unknown draw stage or best-of format"
+            )
+            review_id = self._open_review(
+                ReviewKind.RECORD,
+                record.source_id,
+                f"format:{key}",
+                (reason,),
+                {"record": record.model_dump(mode="json")},
+            )
+            return IngestOutcome(False, None, review_id)
+        history = self.store.edition_formats(alias.edition_id, record.draw_stage, record.best_of)
+        latest = history[-1] if history else None
+        if latest is not None and (latest.deciding_set, latest.reference) == (
+            record.deciding_set,
+            record.reference,
+        ):
+            return IngestOutcome(True, alias.edition_id, None)
+        self.store.append_edition_format(
+            EditionFormatVersion(
+                edition_id=alias.edition_id,
+                draw_stage=record.draw_stage,
+                best_of=record.best_of,
+                version=len(history) + 1,
+                deciding_set=record.deciding_set,
+                reference=record.reference,
+                source_id=record.source_id,
+                availability=availability,
+                corrects_version=None if latest is None else latest.version,
+            )
+        )
+        return IngestOutcome(True, alias.edition_id, None, changed=True)
 
     def ingest_ranking(
         self, record: SourceRankingRecord, availability: Availability

@@ -12,6 +12,9 @@ from typing import Any, Protocol
 from uuid import UUID
 
 from .contracts import (
+    BestOf,
+    DrawStage,
+    EditionFormatVersion,
     Match,
     MatchAlias,
     Player,
@@ -105,10 +108,14 @@ class IdentityStore(Protocol):
     def append_status(self, version: StatusVersion) -> StatusVersion: ...
     def append_result(self, version: ResultVersion) -> ResultVersion: ...
     def append_stats(self, version: StatsVersion) -> StatsVersion: ...
+    def append_edition_format(self, version: EditionFormatVersion) -> EditionFormatVersion: ...
     def schedules(self, match_id: UUID) -> Sequence[ScheduleVersion]: ...
     def statuses(self, match_id: UUID) -> Sequence[StatusVersion]: ...
     def results(self, match_id: UUID) -> Sequence[ResultVersion]: ...
     def stats(self, match_id: UUID, player_id: UUID) -> Sequence[StatsVersion]: ...
+    def edition_formats(
+        self, edition_id: UUID, draw_stage: DrawStage, best_of: BestOf
+    ) -> Sequence[EditionFormatVersion]: ...
     def add_ranking(self, snapshot: RankingSnapshot) -> tuple[RankingSnapshot, bool]: ...
     def rankings(self, player_id: UUID) -> Sequence[RankingSnapshot]: ...
     def append_review(self, item: ReviewItem) -> ReviewItem: ...
@@ -143,6 +150,7 @@ class MemoryIdentityStore:
         self._statuses: dict[UUID, list[StatusVersion]] = {}
         self._results: dict[UUID, list[ResultVersion]] = {}
         self._stats: dict[tuple[UUID, UUID], list[StatsVersion]] = {}
+        self._formats: dict[tuple[UUID, DrawStage, BestOf], list[EditionFormatVersion]] = {}
         self._rankings: dict[UUID, list[RankingSnapshot]] = {}
         self._reviews: dict[UUID, list[ReviewItem]] = {}
         self._audit: list[AuditEntry] = []
@@ -269,6 +277,20 @@ class MemoryIdentityStore:
         _next_version(history, version)
         history.append(version)
         return version
+
+    def append_edition_format(self, version: EditionFormatVersion) -> EditionFormatVersion:
+        if version.edition_id not in self._editions:
+            raise ValueError("A format rule requires an existing edition")
+        key = (version.edition_id, version.draw_stage, version.best_of)
+        history = self._formats.setdefault(key, [])
+        _next_version(history, version)
+        history.append(version)
+        return version
+
+    def edition_formats(
+        self, edition_id: UUID, draw_stage: DrawStage, best_of: BestOf
+    ) -> Sequence[EditionFormatVersion]:
+        return tuple(self._formats.get((edition_id, draw_stage, best_of), ()))
 
     def schedules(self, match_id: UUID) -> Sequence[ScheduleVersion]:
         return tuple(self._schedules.get(match_id, ()))

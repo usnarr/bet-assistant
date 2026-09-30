@@ -80,6 +80,16 @@ class BestOf(StrEnum):
         return {BestOf.THREE: 2, BestOf.FIVE: 3}.get(self)
 
 
+class DecidingSetRule(StrEnum):
+    """How the final set of a match is decided. ``UNKNOWN`` blocks format-based models."""
+
+    TIEBREAK_7 = "TIEBREAK_7"  # Normal set, 7-point tiebreak at 6-6.
+    TIEBREAK_10 = "TIEBREAK_10"  # Normal set, 10-point tiebreak at 6-6.
+    MATCH_TIEBREAK_10 = "MATCH_TIEBREAK_10"  # A 10-point tiebreak replaces the final set.
+    ADVANTAGE = "ADVANTAGE"  # No tiebreak; win by two games.
+    UNKNOWN = "UNKNOWN"
+
+
 class MatchStatus(StrEnum):
     SCHEDULED = "SCHEDULED"
     IN_PROGRESS = "IN_PROGRESS"
@@ -240,6 +250,19 @@ class SourceMatchRecord(Contract):
     stats: tuple[ServeReturnCounts | None, ServeReturnCounts | None] = (None, None)
 
 
+class SourceFormatRecord(Contract):
+    """A source's statement of the deciding-set rule for one edition, stage and format."""
+
+    schema_version: Literal["1.0"] = "1.0"
+    source_id: Identifier
+    source_tournament_id: SourceKey
+    season: Annotated[int, Field(ge=1968, le=2100, strict=True)]
+    draw_stage: DrawStage
+    best_of: BestOf
+    deciding_set: DecidingSetRule
+    reference: SourceText
+
+
 class SourceRankingRecord(Contract):
     schema_version: Literal["1.0"] = "1.0"
     source_id: Identifier
@@ -391,6 +414,32 @@ class StatsVersion(Contract):
     counts: ServeReturnCounts
     source_id: Identifier
     availability: Availability
+
+
+class EditionFormatVersion(Contract):
+    """Deciding-set rule for one edition, draw stage and best-of format.
+
+    A change or correction is a new version. The stage and best-of values must be known,
+    because a rule for an unknown scope could attach to the wrong matches.
+    """
+
+    edition_id: UUID
+    draw_stage: DrawStage
+    best_of: BestOf
+    version: Annotated[int, Field(ge=1, strict=True)]
+    deciding_set: DecidingSetRule
+    reference: SourceText
+    source_id: Identifier
+    availability: Availability
+    corrects_version: int | None = None
+
+    @model_validator(mode="after")
+    def known_scope(self) -> Self:
+        if self.draw_stage == DrawStage.UNKNOWN or self.best_of == BestOf.UNKNOWN:
+            raise ValueError("A format rule needs a known draw stage and best-of format")
+        if self.corrects_version is not None and not 1 <= self.corrects_version < self.version:
+            raise ValueError("A correction must refer to an earlier version")
+        return self
 
 
 class RankingSnapshot(Contract):

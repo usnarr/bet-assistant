@@ -4,12 +4,16 @@ Only formats listed in ``VERIFIED_FORMATS`` are enabled. A format that is not ve
 a tournament must not be approximated by a similar one; the caller abstains instead.
 """
 
+from datetime import datetime
 from enum import StrEnum
 from typing import Annotated, Literal
+from uuid import UUID
 
 from pydantic import Field
 
 from tennis_engine.common.contracts import Contract, Identifier
+from tennis_engine.normalization.formats import deciding_set_known_at
+from tennis_engine.normalization.store import IdentityStore
 
 
 class DecidingSet(StrEnum):
@@ -86,3 +90,20 @@ def enabled(version: str) -> MatchFormat:
         return VERIFIED_FORMATS[version]
     except KeyError as error:
         raise UnsupportedFormat(f"Format {version!r} is not verified") from error
+
+
+def for_rule(best_of: int, deciding_set: str) -> MatchFormat:
+    """Return the verified format for a best-of count and an F04 deciding-set rule."""
+    for item in VERIFIED_FORMATS.values():
+        if item.best_of == best_of and item.deciding_set.value == deciding_set:
+            return item
+    raise UnsupportedFormat(f"No verified format for best of {best_of}, {deciding_set}")
+
+
+def match_format(store: IdentityStore, match_id: UUID, as_of: datetime) -> MatchFormat:
+    """Verified format of a canonical match from its F04 rule known at ``as_of``."""
+    rule = deciding_set_known_at(store, match_id, as_of)
+    sets = None if rule is None else rule.best_of.sets_to_win
+    if rule is None or sets is None:
+        raise UnsupportedFormat("The deciding-set rule is unknown at the cutoff")
+    return for_rule(sets * 2 - 1, rule.deciding_set.value)

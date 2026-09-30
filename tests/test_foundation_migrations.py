@@ -24,4 +24,6 @@ def test_migrations_have_one_expected_head_and_compile_offline(capsys):
     assert "bookmaker_quote_observation_append_only" in sql
     assert "CREATE TABLE tennis.risk_reservation" in sql
     assert "risk_reservation_event_append_only" in sql
+    assert "CREATE TABLE tennis.edition_format_version" in sql
+    assert "player_name_key_append_only" in sql
     assert "INSERT INTO alembic_version" in sql
