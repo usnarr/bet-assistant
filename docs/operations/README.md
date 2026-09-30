@@ -16,6 +16,14 @@ Demonstrated on synthetic fixtures and isolated local services:
 - F15.1 job graph for the blueprint section 33.1 jobs, dependency and publication gates,
   separate backfill capacity, and idempotent job runs.
 - F15.2 resource leases with expiry and fencing tokens (migration `0011_operations`).
+- F15.5 security: read-only API mounts and root file system in Compose, a SELECT-only
+  database role for the API, token digests only, placeholder refusal in production, and
+  a source scan for unsafe deserialization.
+- F15.7 restore verification: database and journal fingerprints, raw-object and ledger
+  reconciliation, and incident bundles with affected recommendation IDs.
+- F15.8 runbooks: [runbooks.md](runbooks.md).
+
+Evidence: [OPS-01](evidence/OPS-01.md) and [OPS-02](evidence/OPS-02.md).
 
 Pending or not implemented: see "Not implemented" at the end of this file.
 
@@ -154,8 +162,116 @@ A job's own effects must also be idempotent or fenced. For example, decision rec
 `ON CONFLICT DO NOTHING` on their ID. The runner fences the success record, not every
 write inside the work function.
 
+## Security (F15.5)
+
+### Least-privilege matrix
+
+| Principal | Recommendations, analysis | Audit | Metrics | Governance journal | Database |
+|---|---|---|---|---|---|
+| `dashboard` token | read | no | no | none | none |
+| `agent` token | read | no | no | none | none |
+| `operator` token | read | read | read | none through the API | none |
+| `policy_reviewer` token | read | read | read | none through the API | none |
+| API process | serves the above | | | read-only SQLite connection, read-only mount | `SELECT` only with the reader role |
+| Operator (CLI) | | | | stop a source, global stop on, archive documents | migrations, backups |
+| Policy reviewer (CLI) | | | | all operator actions, approve policies, resume | |
+
+No F14 or F15 HTTP route writes. No role can change identities, policy, funds, models or
+risk through the API. Tests check each denial.
+
+### Secrets
+
+- Settings wrap secrets in `SecretStr`. `show-config` and the start-up log show no secret
+  and no file path.
+- Production refuses a missing or placeholder database password, placeholder object-store
+  keys, object storage without TLS, and a credential file that is missing, empty or holds
+  a placeholder token.
+- The credential file holds SHA-256 digests only. `create-api-token` prints the token once.
+- Metric labels cannot hold a token (see "Metrics"). The JSON logger redacts keys that look
+  like secrets.
+- Store production secrets in the host's secret manager or Compose secrets. Never commit
+  `.env`.
+
+### Separate database role
+
+The API can use a SELECT-only role through `TENNIS_SERVING_DATABASE_URL`. An administrator
+creates the login role, then grants read access:
+
+```powershell
+docker compose exec postgres psql -U tennis -d tennis -c "CREATE ROLE tennis_reader LOGIN PASSWORD '<secret>'"
+uv run tennis-ops grant-reader --role tennis_reader
+```
+
+Run `grant-reader` again after each migration, because new tables need the grant. The role
+cannot insert, update, delete or create tables. An integration test checks this. The
+ingestion and pricing writers still use the main role. Separate writer roles per
+component are pending.
+
+### Containers
+
+- The API container has a read-only root file system and read-only volume mounts.
+- The image runs as the non-root user `tennis` (UID 10001) and has no `pip`.
+- CI scans the image with Trivy (CRITICAL and HIGH, fixed issues only) and runs
+  `pip-audit`.
+
+### Code and artifacts
+
+- A test scans `src/` for `pickle`, `joblib`, `marshal`, `shelve`, `eval`, `exec`,
+  `yaml.load`, `torch.load` and `shell=True`. There are none.
+- Tabular models are JSON boosters. `load_booster` checks the SHA-256 before it loads.
+- Incident bundles and journal backups have hash manifests. A changed file is detected.
+
+Encryption at rest and in transit depends on the deployment (disk encryption, TLS on
+PostgreSQL). Production requires TLS for object storage. Outbound network allow lists are
+a deployment control; no rule is in the repository yet.
+
+## Backup and restore (F15.7)
+
+Back up three stores:
+
+| Store | Backup | Verify |
+|---|---|---|
+| PostgreSQL | `pg_dump -Fc` | `tennis-ops fingerprint` before, `tennis-ops verify-restore` after |
+| F01 journal | `tennis-ops backup-journal` (SQLite online backup) | journal fingerprint, hash of every row and document |
+| Raw objects | Copy or replicate the bucket | `reconcile_raw_objects`: each archived content exists and matches its SHA-256 |
+
+`verify-restore` compares row counts and ordered-row digests of every `tennis` table, the
+Alembic revision and, when given, both journals. The ledger check confirms that every
+virtual ledger balances.
+
+Recovery objectives (RTO and RPO) are not agreed. Without them the report is `BLOCKED`,
+even when integrity passes. This blocks operational readiness, as F15 requires. Pass
+`--rto-seconds` and `--rpo-seconds` after the owner agrees them.
+
+The drill `scripts/ops02_restore_drill.py` runs the full cycle on a disposable test
+container. See [OPS-02](evidence/OPS-02.md).
+
+### Model rollback
+
+No model registry or serving model selection exists yet. F13 promotion decisions record a
+rollback reference, and model artifacts are hash-checked. A rollback drill is pending until
+a model serves decisions.
+
+## Incidents (F15.7)
+
+`tennis-ops open-incident` applies the stops first, then writes an immutable bundle:
+
+- `incident.json`: category, window, sources, affected recommendation IDs, stops applied.
+- `decisions.jsonl`: the affected stored decisions, unchanged.
+- `governance.json`: the journal export.
+- `manifest.json`: the SHA-256 of each file.
+
+An affected decision is any stored version decided in the window that uses a named source
+or bookmaker. The command never changes a decision. `verify-incident` checks the hashes.
+Runbooks: [runbooks.md](runbooks.md).
+
 ## Not implemented
 
-- A scheduler that runs the signal producers and `evaluate-alerts` on a cadence.
+- A scheduler that runs the jobs, the signal producers and `evaluate-alerts` on a cadence.
 - A Prometheus server, dashboards and an alert manager.
 - F15.6 agent tool scoping. It depends on F18.
+- Agreed RTO and RPO. Continuous WAL archiving (point-in-time recovery).
+- Model rollback drill (no model registry yet).
+- Separate writer roles per component, outbound allow lists and at-rest encryption
+  settings. These depend on the deployment.
+- Staging drills, real data and production stores.

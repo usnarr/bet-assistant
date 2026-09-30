@@ -353,9 +353,10 @@ def test_ops_cli_evaluates_and_applies_controls(tmp_path, operator, monkeypatch,
     assert "1.5" not in capsys.readouterr().out
 
 
-class _FrozenDatetime:
-    def __init__(self, instant):
-        self.instant = instant
+def _FrozenDatetime(instant):  # noqa: N802 - stands in for the datetime class
+    class Frozen(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return instant + timedelta(seconds=2)
 
-    def now(self, tz=None):
-        return self.instant + timedelta(seconds=2)
+    return Frozen

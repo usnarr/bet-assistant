@@ -46,9 +46,17 @@ replay (F13.2 to F13.5) runs F05 quote history, F12 decisions and F06 settlement
 synthetic history; no execution-grade replay on real data exists. F14 read-only API,
 server-rendered dashboard, token roles, read-time rechecks, deterministic explanations
 and the PostgreSQL decision store (migration 0010) run on synthetic fixtures
-(`docs/serving/README.md`); the optional F14.6 agent, production wiring, a browser
-accessibility review and redistribution approvals are pending. Later features
-are not implemented. Current checks are `uv run pytest -q`,
+(`docs/serving/README.md`); the optional F14.6 agent, a browser accessibility review and
+redistribution approvals are pending. F14 production wiring builds the service from typed
+settings (`create_production_app`, read-only journal, fail-closed start-up) and Compose
+uses it; the `decision` filter matches the served decision. F15 metrics (`GET /metrics`),
+monitoring signals, proposed versioned alert rules with automatic source/global stops,
+the job graph with idempotent runs, fenced leases (migration 0011), a SELECT-only API
+database role, restore verification and incident bundles run on synthetic data and
+isolated services (`docs/operations/README.md`, runbooks and OPS-01/OPS-02 evidence);
+a scheduler, a Prometheus server, F15.6 agent scoping, agreed RTO/RPO and a model
+rollback drill are pending. Later features are not implemented. Current checks are
+`uv run pytest -q`,
 `uv run ruff check .`, `uv run ruff format --check .`, and `uv run mypy src`.
 External approvals and independent fixture review remain pending.
 
