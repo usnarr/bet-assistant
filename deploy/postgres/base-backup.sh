@@ -23,7 +23,8 @@ KEEP="${BASE_BACKUP_KEEP:-7}"
 CHECK_SECONDS="${BASE_BACKUP_CHECK_SECONDS:-60}"
 if [ "$KEEP" -lt 2 ]; then KEEP=2; fi
 if [ -n "${PGPASSWORD_FILE:-}" ]; then
-  PGPASSWORD="$(cat "$PGPASSWORD_FILE")"
+  # Strip the line end (LF or CRLF), as the other secret readers do.
+  PGPASSWORD="$(tr -d '\r\n' < "$PGPASSWORD_FILE")"
   export PGPASSWORD
 fi
 

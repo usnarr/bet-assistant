@@ -1,8 +1,14 @@
 name: tennis-engine
 
+# F15.5 per-component PostgreSQL roles (docs/operations/README.md). Only the one-shot
+# services `migrate`, `db-roles` and `admin` use the owner role. Each other service
+# connects with its own role; its password comes from a Compose secret file.
+x-owner-database-url: &owner-database-url ${TENNIS_DATABASE_URL:-postgresql+psycopg://tennis:local-only@postgres:5432/tennis}
+x-api-database-url: &api-database-url postgresql+psycopg://tennis_api@postgres:5432/${POSTGRES_DB:-tennis}
+x-scheduler-database-url: &scheduler-database-url postgresql+psycopg://tennis_scheduler@postgres:5432/${POSTGRES_DB:-tennis}
+
 x-app-environment: &app-environment
   TENNIS_ENVIRONMENT: ${TENNIS_ENVIRONMENT:-development}
-  TENNIS_DATABASE_URL: ${TENNIS_DATABASE_URL:-postgresql+psycopg://tennis:local-only@postgres:5432/tennis}
   TENNIS_OBJECT_STORE_ENDPOINT: ${TENNIS_OBJECT_STORE_ENDPOINT:-object-store:9000}
   TENNIS_OBJECT_STORE_ACCESS_KEY: ${TENNIS_OBJECT_STORE_ACCESS_KEY:-local-development}
   TENNIS_OBJECT_STORE_SECRET_KEY: ${TENNIS_OBJECT_STORE_SECRET_KEY:-change-me-before-use}
@@ -97,8 +103,8 @@ services:
     tmpfs:
       - /tmp
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-roles:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD-SHELL", "find /backup/base -name COMPLETE -mmin -1560 | grep -q ."]
       interval: 30s
@@ -121,16 +127,45 @@ services:
   migrate:
     build: .
     command: alembic upgrade head
-    environment: *app-environment
+    environment:
+      <<: *app-environment
+      TENNIS_DATABASE_URL: *owner-database-url
     depends_on:
       postgres:
         condition: service_healthy
     restart: "no"
 
+  db-roles:
+    # F15.5: creates the component roles, grants least privilege and verifies it after
+    # each migration. A role with more or less privilege stops the dependent services.
+    build: .
+    command: tennis-ops provision-roles --secrets-dir /run/secrets
+    environment:
+      <<: *app-environment
+      TENNIS_DATABASE_URL: *owner-database-url
+    secrets:
+      - postgres_api_password
+      - postgres_scheduler_password
+      - postgres_agent_password
+      - postgres_backup_password
+    read_only: true
+    tmpfs:
+      - /tmp
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: "no"
+
   object-store-init:
+    # No database connection. The read-only API role keeps the owner password out.
     build: .
     command: tennis-platform init-object-store
-    environment: *app-environment
+    environment:
+      <<: *app-environment
+      TENNIS_DATABASE_URL: *api-database-url
+      TENNIS_DATABASE_PASSWORD_FILE: /run/secrets/postgres_api_password
+    secrets:
+      - postgres_api_password
     depends_on: [object-store]
     restart: on-failure
 
@@ -147,7 +182,12 @@ services:
 
   api:
     build: .
-    environment: *app-environment
+    environment:
+      <<: *app-environment
+      TENNIS_DATABASE_URL: *api-database-url
+      TENNIS_DATABASE_PASSWORD_FILE: /run/secrets/postgres_api_password
+    secrets:
+      - postgres_api_password
     ports:
       - "127.0.0.1:8000:8000"
     # Read-only mounts: the API cannot change policy, stops or credentials.
@@ -158,7 +198,7 @@ services:
     tmpfs:
       - /tmp
     depends_on:
-      migrate:
+      db-roles:
         condition: service_completed_successfully
       object-store-init:
         condition: service_completed_successfully
@@ -179,7 +219,12 @@ services:
       tennis-ops scheduler --tick-seconds 60 --metrics-port 9101
       --signal-inbox /app/var/signals
       --backup-root /backup/app --postgres-backup-root /backup/postgres
-    environment: *app-environment
+    environment:
+      <<: *app-environment
+      TENNIS_DATABASE_URL: *scheduler-database-url
+      TENNIS_DATABASE_PASSWORD_FILE: /run/secrets/postgres_scheduler_password
+    secrets:
+      - postgres_scheduler_password
     # The journal mount is writable: a critical alert appends a stop. Nothing resumes.
     # The scheduler copies raw objects and journal snapshots to the backup volume every
     # 5 minutes and reads the PostgreSQL backup markers.
@@ -192,7 +237,7 @@ services:
     tmpfs:
       - /tmp
     depends_on:
-      migrate:
+      db-roles:
         condition: service_completed_successfully
       governance-init:
         condition: service_completed_successfully
@@ -213,9 +258,14 @@ services:
     command: >-
       tennis-platform register-api-token --identity prometheus --role operator
       --token-file /run/secrets/prometheus_api_token
-    environment: *app-environment
+    # No database connection. The read-only API role keeps the owner password out.
+    environment:
+      <<: *app-environment
+      TENNIS_DATABASE_URL: *api-database-url
+      TENNIS_DATABASE_PASSWORD_FILE: /run/secrets/postgres_api_password
     secrets:
       - prometheus_api_token
+      - postgres_api_password
     volumes:
       - serving-config:/app/var/serving
     restart: "no"
@@ -288,7 +338,9 @@ services:
     # docker compose run --rm admin tennis-platform create-api-token --identity ops --role operator
     build: .
     command: tennis-platform show-config
-    environment: *app-environment
+    environment:
+      <<: *app-environment
+      TENNIS_DATABASE_URL: *owner-database-url
     volumes:
       - governance-data:/app/var/governance
       - serving-config:/app/var/serving
@@ -317,3 +369,9 @@ secrets:
     file: ${TENNIS_SECRETS_DIR:-./secrets}/grafana-admin-password
   postgres_backup_password:
     file: ${TENNIS_SECRETS_DIR:-./secrets}/postgres-backup-password
+  postgres_api_password:
+    file: ${TENNIS_SECRETS_DIR:-./secrets}/postgres-api-password
+  postgres_scheduler_password:
+    file: ${TENNIS_SECRETS_DIR:-./secrets}/postgres-scheduler-password
+  postgres_agent_password:
+    file: ${TENNIS_SECRETS_DIR:-./secrets}/postgres-agent-password

@@ -33,7 +33,7 @@ from .recovery import (
     database_fingerprint,
     journal_fingerprint,
 )
-from .roles import grant_serving_reader
+from .roles import COMPONENT_ROLES, grant_serving_reader, provision_roles, read_passwords
 
 DEFAULT_RULES = Path("configs/operations/alert-rules.json")
 PROMETHEUS_RULES = Path("deploy/prometheus/rules/tennis-alerts.yml")
@@ -110,6 +110,13 @@ def parser() -> argparse.ArgumentParser:
         "grant-reader", help="Grant SELECT-only access for the API to an existing role"
     )
     reader.add_argument("--role", required=True)
+    provision = commands.add_parser(
+        "provision-roles",
+        help="Create the per-component roles, grant least privilege and verify it (owner only)",
+    )
+    provision.add_argument(
+        "--secrets-dir", type=Path, required=True, help="Directory with the role password files"
+    )
 
     prometheus = commands.add_parser(
         "prometheus-rules", help="Generate Prometheus alerting rules from the rule set"
@@ -223,6 +230,11 @@ def recovery_command(args: argparse.Namespace) -> int:
         if args.command == "grant-reader":
             grant_serving_reader(engine, args.role)
             _print({"role": args.role, "granted": "SELECT"})
+            return 0
+        if args.command == "provision-roles":
+            passwords = read_passwords(args.secrets_dir, COMPONENT_ROLES)
+            roles = provision_roles(engine, passwords)
+            _print({"provisioned": list(roles), "verified": True})
             return 0
         expected = DatabaseFingerprint.model_validate_json(args.expected.read_bytes())
         # The agreed objectives (user decision 2026-09-30) unless a flag overrides them.

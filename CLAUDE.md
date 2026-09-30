@@ -56,7 +56,10 @@ the job graph with idempotent runs, fenced leases (migration 0011), a SELECT-onl
 database role, restore verification and incident bundles run on synthetic data and
 isolated services (`docs/operations/README.md`, runbooks and OPS-01/OPS-02 evidence);
 a scheduler, a Prometheus server, agreed RTO/RPO and a model rollback drill are
-pending. F18 agent roles, the server-side tool gateway, output verification, bounded runs,
+pending. F15.5 gives each Compose component its own PostgreSQL role (API, scheduler, agent
+store, backup), provisioned and verified after each migration by `db-roles`
+(`docs/operations/README.md`).
+F18 agent roles, the server-side tool gateway, output verification, bounded runs,
 the F15.6 kill switch on the F01 stops, append-only agent traces and proposals (migration
 0012) and the offline evaluation harness (`tennis-agent-eval`, 45 synthetic cases) run
 with deterministic fake agents only (`docs/agents/README.md`, AG-EVAL-01). No real model,

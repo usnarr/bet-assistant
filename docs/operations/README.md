@@ -21,9 +21,10 @@ Demonstrated on synthetic fixtures and isolated local services:
 - F15.1 scheduler (`tennis-ops scheduler`, ADR 0005): the job graph and the alert
   evaluation with deterministic controls on a cadence.
 - F15.2 resource leases with expiry and fencing tokens (migration `0011_operations`).
-- F15.5 security: read-only API mounts and root file system in Compose, a SELECT-only
-  database role for the API, token digests only, placeholder refusal in production, and
-  a source scan for unsafe deserialization.
+- F15.5 security: read-only API mounts and root file system in Compose, one
+  least-privilege PostgreSQL role per Compose component with a start-up privilege check,
+  token digests only, placeholder refusal in production, and a source scan for unsafe
+  deserialization.
 - F15.7 restore verification: database and journal fingerprints, raw-object and ledger
   reconciliation, and incident bundles with affected recommendation IDs.
 - F15.7 backups for the agreed recovery objectives (RTO 4 hours, RPO 15 minutes; user
@@ -315,7 +316,7 @@ write inside the work function.
 | `agent` token | read | no | no | none | none |
 | `operator` token | read | read | read | none through the API | none |
 | `policy_reviewer` token | read | read | read | none through the API | none |
-| API process | serves the above | | | read-only SQLite connection, read-only mount | `SELECT` only with the reader role |
+| API process | serves the above | | | read-only SQLite connection, read-only mount | `tennis_api`: `SELECT` only |
 | Operator (CLI) | | | | stop a source, global stop on, archive documents | migrations, backups |
 | Policy reviewer (CLI) | | | | all operator actions, approve policies, resume | |
 
@@ -335,20 +336,54 @@ risk through the API. Tests check each denial.
 - Store production secrets in the host's secret manager or Compose secrets. Never commit
   `.env`.
 
-### Separate database role
+### Database roles per component
 
-The API can use a SELECT-only role through `TENNIS_SERVING_DATABASE_URL`. An administrator
-creates the login role, then grants read access:
+User decision 2026-09-30 (user-accepted): the production target is one private host
+that runs the Compose stack. Each component has its own PostgreSQL role. Docker network
+egress allow lists and encrypted volumes with SeaweedFS encryption are later slices.
 
-```powershell
-docker compose exec postgres psql -U tennis -d tennis -c "CREATE ROLE tennis_reader LOGIN PASSWORD '<secret>'"
-uv run tennis-ops grant-reader --role tennis_reader
-```
+| Role | Used by | Privileges |
+|---|---|---|
+| `tennis` (owner) | `migrate`, `db-roles`, `admin` (one-shot services only) | Owns the schema. It is the image's bootstrap superuser. |
+| `tennis_api` | `api`; also `object-store-init` and `monitoring-token`, which do not connect | `SELECT` on every `tennis` table and on `alembic_version`. No write. |
+| `tennis_scheduler` | `scheduler` | `SELECT` on every `tennis` table and on `alembic_version`. `INSERT` on `job_run` and `job_attempt`. `INSERT`, `UPDATE` on `resource_lease`. No `DELETE`. |
+| `tennis_agent` | F18 agent store (`build_agent_store`); no Compose service yet | `SELECT`, `INSERT` on `agent_trace` and `agent_proposal` only. No other table, no `UPDATE`, `DELETE` or `TRUNCATE`. |
+| `tennis_backup` | `postgres-backup` | `REPLICATION` only. No table privilege. |
 
-Run `grant-reader` again after each migration, because new tables need the grant. The role
-cannot insert, update, delete or create tables. An integration test checks this. The
-ingestion and pricing writers still use the main role. Separate writer roles per
-component are pending.
+No role except the owner has `SUPERUSER`, `CREATEDB`, `CREATEROLE`, `BYPASSRLS`, a role
+membership or `CREATE` on a schema or on the database. Prometheus and Grafana do not
+connect to PostgreSQL, so there is no monitoring role. Compose has no worker or
+ingestion service yet. Ingestion commands run in `admin` with the owner role.
+
+How it works:
+
+- `db-roles` runs `tennis-ops provision-roles --secrets-dir /run/secrets` after each
+  `migrate`. It creates a missing role, sets each password from its secret file, revokes
+  every table privilege and grants only the privileges in the table above
+  (`src/tennis_engine/operations/roles.py`).
+- It then reads the effective privileges back (`has_table_privilege`, role attributes and
+  memberships). A role with more or less privilege stops `db-roles` with an error. Then
+  `api`, `scheduler` and `postgres-backup` do not start (fail closed).
+- Each service gets its role in `TENNIS_DATABASE_URL` without a password. The password
+  comes from `TENNIS_DATABASE_PASSWORD_FILE` (a Compose secret). The agent store uses
+  `TENNIS_AGENT_DATABASE_URL` and `TENNIS_AGENT_DATABASE_PASSWORD_FILE`. It has no
+  fallback to the main role. `TENNIS_SERVING_DATABASE_PASSWORD_FILE` does the same for
+  `TENNIS_SERVING_DATABASE_URL`.
+- Secrets: `postgres_api_password`, `postgres_scheduler_password`,
+  `postgres_agent_password` and `postgres_backup_password`. For local use,
+  `scripts/init_local_secrets.py` writes them. Each reader strips the line end (LF or
+  CRLF). A password shorter than 16 characters or a placeholder is refused.
+- Run `db-roles` again after a manual migration:
+  `docker compose run --rm db-roles`.
+- `tennis-ops grant-reader --role <name>` still gives an existing role the API
+  privileges, for a deployment outside Compose.
+
+Integration tests on an isolated PostgreSQL (`tests/integration/test_component_roles.py`)
+check that each role does its work and gets `permission denied` outside its scope. The
+agent role cannot read or write the ledger, decisions, the model registry or leases, and
+cannot update, delete or truncate its own tables. A Compose smoke test on 2026-09-30 showed
+each service healthy under its own role, migrations applied, a base backup and WAL
+archiving working with `tennis_backup`.
 
 ### Containers
 
@@ -517,12 +552,12 @@ Runbooks: [runbooks.md](runbooks.md).
   `sync_source_registry` has a handler, so publication stays `BLOCKED`.
 - An external notification channel for Alertmanager (e-mail or chat). It needs an approved
   outbound host.
-- F15.6: a separate database role for agent writes. The agent store uses the main role.
 - F15.6: live tool backends for the agent roles. The agent guide lists which roles read
   live records. The other roles run on fixture backends only.
 - A backup copy off the host. The backup volumes are on the same host, so a host loss is
   outside the recovery objectives. Encryption of the backup disk depends on the host.
 - A serving path that loads the registry champion (no model serves decisions yet).
-- Separate writer roles per component, outbound allow lists and at-rest encryption
-  settings. These depend on the deployment.
+- Outbound allow lists and at-rest encryption settings (user decision 2026-09-30; later
+  slices). A worker or ingestion writer role, when Compose gets that service. The owner
+  role is still the image superuser.
 - Staging drills, real data and production stores.

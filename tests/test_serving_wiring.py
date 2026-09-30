@@ -8,6 +8,7 @@ from conftest import source_policy
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 from serving_support import BOOK_SOURCE, READ_AT, bet, stored, watch
+from sqlalchemy.engine import make_url
 
 from tennis_engine.common.clock import FrozenClock
 from tennis_engine.governance.contracts import Principal, Role
@@ -104,6 +105,39 @@ def test_public_summary_hides_paths_and_secrets(journal, credentials):
     for hidden in ("synthetic-db-pass", "synthetic-secret-key-1", str(journal.parent)):
         assert hidden not in rendered
     assert settings.public_summary()["serving_database_role"] == "separate"
+
+
+def test_role_password_files_complete_each_url_and_fail_closed(tmp_path):
+    secret = tmp_path / "role-password"
+    secret.write_text("synthetic-role-pass-1\n", encoding="utf-8")
+    bare = "postgresql+psycopg://tennis_api@postgres:5432/tennis"
+    settings = Settings(
+        environment="production",
+        **(REAL_LOOKING | {"database_url": bare}),
+        database_password_file=secret,
+        agent_database_url="postgresql+psycopg://tennis_agent@postgres:5432/tennis",
+        agent_database_password_file=secret,
+    )
+    assert make_url(settings.database_url).password == "synthetic-role-pass-1"
+    assert settings.agent_database_url is not None
+    assert make_url(settings.agent_database_url.get_secret_value()).username == "tennis_agent"
+    assert "synthetic-role-pass-1" not in json.dumps(settings.public_summary())
+    assert settings.public_summary()["agent_database_role"] == "separate"
+    # A password file without its URL, an empty file and a missing file all refuse.
+    with pytest.raises(ValidationError, match="needs a serving database URL"):
+        Settings(environment="test", serving_database_password_file=secret)
+    (tmp_path / "empty").write_text("\n", encoding="utf-8")
+    with pytest.raises(ValidationError, match="empty"):
+        Settings(environment="test", database_password_file=tmp_path / "empty")
+    with pytest.raises(OSError):
+        Settings(environment="test", database_password_file=tmp_path / "missing")
+
+
+def test_agent_store_never_falls_back_to_the_main_role():
+    from tennis_engine.agents.postgres import build_agent_store
+
+    with pytest.raises(ValueError, match="TENNIS_AGENT_DATABASE_URL"):
+        build_agent_store(Settings(environment="test"))
 
 
 # App factory ---------------------------------------------------------------------------

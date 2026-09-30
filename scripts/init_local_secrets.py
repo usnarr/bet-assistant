@@ -23,6 +23,10 @@ SECRETS: dict[str, int] = {
     "prometheus-api-token": 32,
     "grafana-admin-password": 24,
     "postgres-backup-password": 24,
+    # F15.5 per-component PostgreSQL roles (`tennis-ops provision-roles`).
+    "postgres-api-password": 24,
+    "postgres-scheduler-password": 24,
+    "postgres-agent-password": 24,
 }
 
 
@@ -35,7 +39,8 @@ def create(directory: Path) -> list[str]:
         target = directory / name
         if target.exists():
             continue
-        target.write_text(secrets.token_urlsafe(size) + "\n", encoding="utf-8")
+        # LF only, also on Windows: a shell reader must not see a trailing CR.
+        target.write_bytes(secrets.token_urlsafe(size).encode("ascii") + b"\n")
         if os.name == "posix":
             target.chmod(0o644)
         created.append(name)

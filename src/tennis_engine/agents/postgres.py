@@ -11,6 +11,9 @@ import json
 
 from sqlalchemy import Engine, text
 
+from tennis_engine.infrastructure.database import build_engine
+from tennis_engine.infrastructure.settings import Settings
+
 from .contracts import sha256
 from .proposals import Proposal, TraceConflict
 from .trace import AgentTrace
@@ -112,3 +115,12 @@ class PostgresAgentStore:
                 {"id": trace_id},
             ).scalar_one_or_none()
         return None if body is None else AgentTrace.model_validate(body)
+
+
+def build_agent_store(settings: Settings) -> PostgresAgentStore:
+    """The agent store on its own role (F15.5). There is no fallback to the main role."""
+    if settings.agent_database_url is None:
+        raise ValueError("The agent store needs TENNIS_AGENT_DATABASE_URL (the agent role)")
+    return PostgresAgentStore(
+        build_engine(settings.agent_database_url.get_secret_value(), connect_timeout=5)
+    )
