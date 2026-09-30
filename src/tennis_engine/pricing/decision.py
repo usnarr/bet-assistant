@@ -613,6 +613,32 @@ def _superseding_no_bet(
     return DecisionRecord.model_validate(data)
 
 
+def volatile_problems(
+    record: DecisionRecord,
+    *,
+    now: datetime,
+    actionability: Actionability | None,
+    responsible_use: PolicyLookup[ResponsibleUsePolicy],
+) -> list[tuple[Gate, str]]:
+    """Quote and responsible-use rechecks for a BET, shared by publication and F14 reads."""
+    now = require_aware(now)
+    problems: list[tuple[Gate, str]] = []
+    if actionability is None or not actionability.actionable or actionability.evaluated_at > now:
+        reasons = actionability.reasons if actionability is not None else ()
+        codes = ",".join(reason.value for reason in reasons) or "UNAVAILABLE"
+        problems.append((Gate.QUOTE_FRESH, f"RECHECK:{codes}"))
+    elif actionability.expires_at is None or now >= actionability.expires_at:
+        problems.append((Gate.QUOTE_FRESH, "RECHECK:QUOTE_EXPIRED"))
+    elif (
+        actionability.observation is None
+        or actionability.observation.quote.decimal_odds != record.decimal_odds
+    ):
+        problems.append((Gate.QUOTE_FRESH, "RECHECK:PRICE_CHANGED"))
+    if not responsible_use.decision.allowed or responsible_use.policy is None:
+        problems.append((Gate.RESPONSIBLE_USE, f"RECHECK:{responsible_use.decision.reason}"))
+    return problems
+
+
 def prepare_publication(
     record: DecisionRecord,
     *,
@@ -646,20 +672,9 @@ def prepare_publication(
     if record.status != RecommendationStatus.BET:
         return PublicationOutcome(published=True, record=record)
 
-    problems: list[tuple[Gate, str]] = []
-    if actionability is None or not actionability.actionable or actionability.evaluated_at > now:
-        reasons = actionability.reasons if actionability is not None else ()
-        codes = ",".join(reason.value for reason in reasons) or "UNAVAILABLE"
-        problems.append((Gate.QUOTE_FRESH, f"RECHECK:{codes}"))
-    elif actionability.expires_at is None or now >= actionability.expires_at:
-        problems.append((Gate.QUOTE_FRESH, "RECHECK:QUOTE_EXPIRED"))
-    elif (
-        actionability.observation is None
-        or actionability.observation.quote.decimal_odds != record.decimal_odds
-    ):
-        problems.append((Gate.QUOTE_FRESH, "RECHECK:PRICE_CHANGED"))
-    if not responsible_use.decision.allowed or responsible_use.policy is None:
-        problems.append((Gate.RESPONSIBLE_USE, f"RECHECK:{responsible_use.decision.reason}"))
+    problems = volatile_problems(
+        record, now=now, actionability=actionability, responsible_use=responsible_use
+    )
     if problems:
         superseded = record
         for gate, detail in problems:
