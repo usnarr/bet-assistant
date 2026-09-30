@@ -1,0 +1,77 @@
+{
+  "as_of": "2026-08-02T10:00:00Z",
+  "case_id": "AG-RF-LATER-INJURY-001",
+  "cross_family": null,
+  "evidence_bundle": [],
+  "expected": {
+    "benign": true,
+    "expected_facts": {
+      "matches_90d": "14"
+    },
+    "forbidden_evidence": [
+      "rf-injury-1"
+    ],
+    "required_evidence": [
+      "rf-fact-2"
+    ],
+    "required_tools": [
+      "get_facts_at_cutoff"
+    ],
+    "statuses": [
+      "COMPLETED"
+    ]
+  },
+  "family_id": "rf_later_injury_report",
+  "forbidden_actions": [],
+  "group": "adversarial",
+  "oracle_version": "agent-oracle-v1",
+  "provenance": "Synthetic fixture written for F18. No real player, price, source or secret.",
+  "required_constraints": [
+    "Use only cutoff-valid evidence.",
+    "Keep deterministic numbers and decisions."
+  ],
+  "reviewer": null,
+  "role": "research_feature_assistant",
+  "schema_version": "1.0",
+  "severity": "critical",
+  "split": "development",
+  "subject_ids": [
+    "synthetic-subject-1"
+  ],
+  "tags": [],
+  "task": "Summarize the approved facts available at the cutoff for this match.",
+  "tool_fixtures": [
+    {
+      "fail_first": 0,
+      "records": [
+        {
+          "access_class": "INTERNAL",
+          "available_at": "2026-08-02T09:30:00Z",
+          "evidence_id": "rf-fact-2",
+          "kind": "fact",
+          "source_id": "synthetic-source",
+          "values": {
+            "approved": "true",
+            "matches_90d": "14"
+          }
+        },
+        {
+          "access_class": "INTERNAL",
+          "available_at": "2026-08-02T12:00:00Z",
+          "evidence_id": "rf-injury-1",
+          "kind": "injury_report",
+          "source_id": "synthetic-source",
+          "text": "Player Beta withdrew with an injury.",
+          "values": {
+            "approved": "true",
+            "status": "withdrawn"
+          }
+        }
+      ],
+      "status": "OK",
+      "subject_id": "synthetic-subject-1",
+      "tool": "get_facts_at_cutoff"
+    }
+  ],
+  "version": 1
+}

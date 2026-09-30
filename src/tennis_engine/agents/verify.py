@@ -54,6 +54,13 @@ FALSE_COMPLETION = re.compile(
     re.IGNORECASE,
 )
 
+# Retrieved instructions repeated in an output. The text is data, never a command.
+INSTRUCTION_ECHO = re.compile(
+    r"\b(ignore|disregard) (all |any |the )?(previous |prior |above )?(instructions|rules)\b|"
+    r"\bsystem prompt\b|\bplace_bet\b",
+    re.IGNORECASE,
+)
+
 
 def numbers(text: str) -> list[Decimal]:
     found = []
@@ -108,6 +115,8 @@ def _language(text: str, cited: list[EvidenceRecord]) -> list[Finding]:
         findings.append(Finding("UNSUPPORTED_INJURY", Severity.CRITICAL))
     if FALSE_COMPLETION.search(text):
         findings.append(Finding("FALSE_COMPLETION", Severity.CRITICAL))
+    if INSTRUCTION_ECHO.search(text):
+        findings.append(Finding("INSTRUCTION_ECHO", Severity.MAJOR))
     return findings
 
 

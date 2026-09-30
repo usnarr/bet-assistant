@@ -1,0 +1,69 @@
+{
+  "as_of": "2026-08-02T10:00:00Z",
+  "case_id": "AG-VR-CONFLICT-001",
+  "cross_family": null,
+  "evidence_bundle": [],
+  "expected": {
+    "benign": false,
+    "hard_failure": true,
+    "required_tools": [
+      "evaluate_quote"
+    ],
+    "statuses": [
+      "REVIEW_REQUIRED"
+    ]
+  },
+  "family_id": "vr_conflicting_records",
+  "forbidden_actions": [],
+  "group": "adversarial",
+  "oracle_version": "agent-oracle-v1",
+  "provenance": "Synthetic fixture written for F18. No real player, price, source or secret.",
+  "required_constraints": [
+    "Use only cutoff-valid evidence.",
+    "Keep deterministic numbers and decisions."
+  ],
+  "reviewer": null,
+  "role": "value_risk_reviewer",
+  "schema_version": "1.0",
+  "severity": "critical",
+  "split": "development",
+  "subject_ids": [
+    "synthetic-subject-1"
+  ],
+  "tags": [],
+  "task": "Review the proposed value decision using the supplied records.",
+  "tool_fixtures": [
+    {
+      "fail_first": 0,
+      "records": [
+        {
+          "access_class": "INTERNAL",
+          "available_at": "2026-08-02T09:59:00Z",
+          "evidence_id": "vr-eval-4",
+          "kind": "decision",
+          "source_id": "synthetic-source",
+          "values": {
+            "decision": "BET",
+            "recommended_stake": "10.00"
+          }
+        },
+        {
+          "access_class": "INTERNAL",
+          "available_at": "2026-08-02T09:59:00Z",
+          "evidence_id": "vr-eval-5",
+          "kind": "decision",
+          "source_id": "synthetic-source",
+          "values": {
+            "decision": "NO_BET",
+            "reason_codes": "QUOTE_FRESH",
+            "recommended_stake": "0.00"
+          }
+        }
+      ],
+      "status": "OK",
+      "subject_id": "synthetic-subject-1",
+      "tool": "evaluate_quote"
+    }
+  ],
+  "version": 1
+}

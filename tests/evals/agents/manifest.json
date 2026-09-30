@@ -1,0 +1,277 @@
+{
+  "cases": [
+    {
+      "case_id": "AG-DI-VALID-001",
+      "path": "development/AG-DI-VALID-001.json",
+      "sha256": "9dc140490cfbcdaa4e1198d4f114708d1a81e8e8827d252fbaa12e89aefa8797",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-DI-DRIFT-001",
+      "path": "development/AG-DI-DRIFT-001.json",
+      "sha256": "9405c32d7799fa14ba2755f32ba9248ece8fa3c76cc4fee825838ef52f668fd9",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-DI-ZERO-001",
+      "path": "development/AG-DI-ZERO-001.json",
+      "sha256": "4e193abc32fdc234321f1df9e429c93b965a6bbced7a2447fa54940dc21085cd",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-DI-ACCESS-001",
+      "path": "development/AG-DI-ACCESS-001.json",
+      "sha256": "718c059911ef2f5e99c5d0b9179e5dc2296380d179962bcdb350df5917bf5384",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-ID-DIACRITIC-001",
+      "path": "development/AG-ID-DIACRITIC-001.json",
+      "sha256": "496198ef43d6f6b2de6002192683b8eea520c3219acecead9d96105cfefce258",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-ID-REVERSED-001",
+      "path": "development/AG-ID-REVERSED-001.json",
+      "sha256": "c4f31de9bc72e262eb30cb045ea5220884823b0a22604f052f163e6a324fcdf7",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-ID-SURNAME-001",
+      "path": "development/AG-ID-SURNAME-001.json",
+      "sha256": "79cc7969fe322a7944d61566efc02fe6af41f2b552c6fd964049a8e447ccbc5d",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-ID-COLLISION-001",
+      "path": "development/AG-ID-COLLISION-001.json",
+      "sha256": "4649a0e8ba4086d66ba5115347d67b23b899dcf9d59ee5817009262bf67ca137",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-RF-FORECAST-001",
+      "path": "development/AG-RF-FORECAST-001.json",
+      "sha256": "0fdbd7908b8eade2e29534a76503f4a96ccc55ac0b10d343d98f8b8390013a7e",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-RF-WORKLOAD-001",
+      "path": "development/AG-RF-WORKLOAD-001.json",
+      "sha256": "68de3ca818af0b150f8f1335d095f9e95cf31534742c16ab60160b9ad5a16cdc",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-RF-RUMOUR-001",
+      "path": "development/AG-RF-RUMOUR-001.json",
+      "sha256": "264157512c84120fe64238be04e02c65228578be06510343238c5fbbbb28be02",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-RF-LATER-INJURY-001",
+      "path": "development/AG-RF-LATER-INJURY-001.json",
+      "sha256": "dff3d0a725ef9d79b3ca134ee1960621eb63e17292d5f84c48596ee717967774",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-MA-WALKFWD-001",
+      "path": "development/AG-MA-WALKFWD-001.json",
+      "sha256": "9bc0ee1df11033a466bb85a6102d1357d873ce4cdf28c07d6386912ecae3fe47",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-MA-SPARSE-001",
+      "path": "development/AG-MA-SPARSE-001.json",
+      "sha256": "5e4fdcd2a7ee15d641d333db2bda4f8cd8f0e0cd0af9c801e1cc1fcce71794b8",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-MA-RANDOM-001",
+      "path": "development/AG-MA-RANDOM-001.json",
+      "sha256": "443249e1c3afe2cc8206fb169937c6db86732152cc1fe240b20d5d13b667ec22",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-MA-ROI-001",
+      "path": "development/AG-MA-ROI-001.json",
+      "sha256": "ee95b7ed5908d81175d0e83110d45a841c3ca3a2c6ef9031f4a9115fab89695b",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-VR-FRESH-001",
+      "path": "development/AG-VR-FRESH-001.json",
+      "sha256": "9a3fb5aa8522fd49af50ff58925508e23ae815911f5977ed42c374e90c3e1c98",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-VR-STALE-001",
+      "path": "development/AG-VR-STALE-001.json",
+      "sha256": "02432cf36afb4ff9e343aaba920185eab132d754fe21ffd7d3646bb4fcb9dc28",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-VR-PAYOUT-001",
+      "path": "development/AG-VR-PAYOUT-001.json",
+      "sha256": "9b32a4192ba8d4422516035c1df36d9ed752350abdf5e11a1c4abf35242b972e",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-VR-CONFLICT-001",
+      "path": "development/AG-VR-CONFLICT-001.json",
+      "sha256": "4993ae487fabcf6d6d0c7a2452f3db631577ce331563a260a9062c1f82c27e11",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-EX-FACTS-001",
+      "path": "development/AG-EX-FACTS-001.json",
+      "sha256": "3fb5b9fa53c43fb64bdcf684525e92cc213ee8e668b687b2e9b4945eb3e83fc1",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-EX-BET-001",
+      "path": "development/AG-EX-BET-001.json",
+      "sha256": "809045267d7d7a38ed5f73296fac2140b342fa4aa49d24a23a8038057178d70d",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-EX-MISSING-001",
+      "path": "development/AG-EX-MISSING-001.json",
+      "sha256": "1b9c14b0123104d202082b18aa1139ef38c8cc796dd78ee25214ffaf8ab267f4",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-EX-NARRATIVE-001",
+      "path": "development/AG-EX-NARRATIVE-001.json",
+      "sha256": "cbb4d267b395c62e2f7d1d341bb6d6c4c9d2dab228b1e6b6ea98715aef03d83b",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-MO-COLLAPSE-001",
+      "path": "development/AG-MO-COLLAPSE-001.json",
+      "sha256": "ff3f1d3d1560b8385264a702c7a5fabe512e9e198af0c84eaa634e0ed1b8e75f",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-MO-HEALTHY-001",
+      "path": "development/AG-MO-HEALTHY-001.json",
+      "sha256": "9231c2077d752f394f5b22f2f375092b1aa20bcbde4ca275995690d0a03b92bd",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-MO-MISSING-001",
+      "path": "development/AG-MO-MISSING-001.json",
+      "sha256": "4c69fa134cfdfcf6b0d96fdd1454cbec1f7a6a2144efb26ac69cdd9c8c94ea79",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-MO-QUIET-001",
+      "path": "development/AG-MO-QUIET-001.json",
+      "sha256": "925a61584c4604174b507eb1daaf9206a768a783db6658b8df1266ee4c9ac326",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-X-INJECTION-001",
+      "path": "development/AG-X-INJECTION-001.json",
+      "sha256": "b14a5ce3026a23a227e5069a50bc78738c706501878e091f973e4f207dee43e7",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-X-TEMPORAL-001",
+      "path": "development/AG-X-TEMPORAL-001.json",
+      "sha256": "58dd9e764a18f6ff146b3d9085e2641e45ef2b21acb018ebbe2dfdbf8eaf8e1c",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-X-AUTH-001",
+      "path": "development/AG-X-AUTH-001.json",
+      "sha256": "534c97d4eff457dd664de6dcc075865f532e03e24a8a82b9340ba77ad3695fd7",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-X-RETRY-001",
+      "path": "development/AG-X-RETRY-001.json",
+      "sha256": "ed2dc60729f0c6060afac6daad7e7823eeddebcae1c078436ed6b99e9b622a3f",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-X-RESOURCE-001",
+      "path": "development/AG-X-RESOURCE-001.json",
+      "sha256": "68462dec953ed399d6dc08c8ed5f2577d760cdf64627eb4035c58b128b330f74",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-X-HANDOFF-001",
+      "path": "development/AG-X-HANDOFF-001.json",
+      "sha256": "636003fd891dddcea0d20819b35ec4f3138462d2f63f31299ad2306c8da7ec51",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-X-EXPIRED-001",
+      "path": "development/AG-X-EXPIRED-001.json",
+      "sha256": "804f730b8f3fbf1a47f6215e70a1162c49396fdc7bc2dede5739a8fb16f7ef7d",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-X-KILL-001",
+      "path": "development/AG-X-KILL-001.json",
+      "sha256": "6da61d9d498c4eb68c43abd1020a70ac3eaadf2aa71fdce7b72edd12f39df5dd",
+      "split": "development"
+    },
+    {
+      "case_id": "AG-DI-VALID-101",
+      "path": "validation/AG-DI-VALID-101.json",
+      "sha256": "03f563f758c6bf05dd77789fd316eef031faacf510d039c162e087e7e93f8ec6",
+      "split": "validation"
+    },
+    {
+      "case_id": "AG-ID-SURNAME-101",
+      "path": "validation/AG-ID-SURNAME-101.json",
+      "sha256": "39b163d621d8b597d79bbf39f6497217fb53ff0da116800e9c6bb9b31d9a495d",
+      "split": "validation"
+    },
+    {
+      "case_id": "AG-RF-FORECAST-101",
+      "path": "validation/AG-RF-FORECAST-101.json",
+      "sha256": "3da38bda8f0571384f6321c2064977aec795c72a101fc87ce98db8065ea4040b",
+      "split": "validation"
+    },
+    {
+      "case_id": "AG-MA-WALKFWD-101",
+      "path": "validation/AG-MA-WALKFWD-101.json",
+      "sha256": "59f6135e2da065ed05b1eeaa76d2a81fd7961c8b074685a2255f8e0b8ddaf38d",
+      "split": "validation"
+    },
+    {
+      "case_id": "AG-VR-MINSTAKE-101",
+      "path": "validation/AG-VR-MINSTAKE-101.json",
+      "sha256": "e085f0cc26a3bea30a3a9640e8d03d3ddd0d75affa3c45bfd6b18cb494c7de6b",
+      "split": "validation"
+    },
+    {
+      "case_id": "AG-EX-WATCH-101",
+      "path": "validation/AG-EX-WATCH-101.json",
+      "sha256": "fa926dd408d96df197a6f3b57b6f873d38af5ddcb246c70cdb6b31b5dadcb2b2",
+      "split": "validation"
+    },
+    {
+      "case_id": "AG-MO-STALE-101",
+      "path": "validation/AG-MO-STALE-101.json",
+      "sha256": "809873916711961a09dde29cb844b4d2a58ee3d777046953610b0724d460546f",
+      "split": "validation"
+    },
+    {
+      "case_id": "AG-X-INJECTION-101",
+      "path": "validation/AG-X-INJECTION-101.json",
+      "sha256": "28d5dd01b0cc66b216b1dbf042c227b4fe3e0c1a27a10c894b41b77ec959e2e4",
+      "split": "validation"
+    },
+    {
+      "case_id": "AG-X-HANDOFF-101",
+      "path": "validation/AG-X-HANDOFF-101.json",
+      "sha256": "12e9ed5a044bab198d24a2ac4cde4a68c2769004bd06d0daed856bed297efc73",
+      "split": "validation"
+    }
+  ],
+  "fixture_set": "agent-dev-validation-v1",
+  "provenance": "Synthetic fixture written for F18. No real player, price, source or secret.",
+  "schema_version": "1.0"
+}

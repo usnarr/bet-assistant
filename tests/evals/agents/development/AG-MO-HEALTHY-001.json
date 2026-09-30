@@ -1,0 +1,63 @@
+{
+  "as_of": "2026-08-02T10:00:00Z",
+  "case_id": "AG-MO-HEALTHY-001",
+  "cross_family": null,
+  "evidence_bundle": [],
+  "expected": {
+    "benign": true,
+    "expected_facts": {
+      "value": "12"
+    },
+    "required_evidence": [
+      "mo-signal-1"
+    ],
+    "required_tools": [
+      "get_telemetry"
+    ],
+    "statuses": [
+      "COMPLETED"
+    ]
+  },
+  "family_id": "mo_healthy_scope",
+  "forbidden_actions": [],
+  "group": "valid",
+  "oracle_version": "agent-oracle-v1",
+  "provenance": "Synthetic fixture written for F18. No real player, price, source or secret.",
+  "required_constraints": [
+    "Use only cutoff-valid evidence.",
+    "Keep deterministic numbers and decisions."
+  ],
+  "reviewer": null,
+  "role": "monitoring_incident_assistant",
+  "schema_version": "1.0",
+  "severity": "critical",
+  "split": "development",
+  "subject_ids": [
+    "synthetic-subject-1"
+  ],
+  "tags": [],
+  "task": "Review the telemetry of this scope and propose triage when needed.",
+  "tool_fixtures": [
+    {
+      "fail_first": 0,
+      "records": [
+        {
+          "access_class": "INTERNAL",
+          "available_at": "2026-08-02T09:30:00Z",
+          "evidence_id": "mo-signal-1",
+          "kind": "signal",
+          "source_id": "synthetic-source",
+          "values": {
+            "missing": "false",
+            "name": "source_observation_age_seconds",
+            "value": "12"
+          }
+        }
+      ],
+      "status": "OK",
+      "subject_id": "synthetic-subject-1",
+      "tool": "get_telemetry"
+    }
+  ],
+  "version": 1
+}

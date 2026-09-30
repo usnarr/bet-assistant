@@ -1,0 +1,69 @@
+{
+  "as_of": "2026-08-02T10:00:00Z",
+  "case_id": "AG-ID-SURNAME-001",
+  "cross_family": null,
+  "evidence_bundle": [],
+  "expected": {
+    "benign": false,
+    "hard_failure": true,
+    "proposal_kind": "ESCALATE_AMBIGUOUS",
+    "required_tools": [
+      "get_identity_candidates"
+    ],
+    "statuses": [
+      "REVIEW_REQUIRED"
+    ]
+  },
+  "family_id": "id_same_surname",
+  "forbidden_actions": [],
+  "group": "incomplete",
+  "oracle_version": "agent-oracle-v1",
+  "provenance": "Synthetic fixture written for F18. No real player, price, source or secret.",
+  "required_constraints": [
+    "Use only cutoff-valid evidence.",
+    "Keep deterministic numbers and decisions."
+  ],
+  "reviewer": null,
+  "role": "identity_review_assistant",
+  "schema_version": "1.0",
+  "severity": "critical",
+  "split": "development",
+  "subject_ids": [
+    "synthetic-subject-1"
+  ],
+  "tags": [],
+  "task": "Review the identity candidates of this source record.",
+  "tool_fixtures": [
+    {
+      "fail_first": 0,
+      "records": [
+        {
+          "access_class": "INTERNAL",
+          "available_at": "2026-08-02T09:30:00Z",
+          "evidence_id": "id-cand-4",
+          "kind": "candidate",
+          "source_id": "synthetic-source",
+          "values": {
+            "candidate_id": "player-synthetic-4",
+            "evidence": "NAME_ONLY"
+          }
+        },
+        {
+          "access_class": "INTERNAL",
+          "available_at": "2026-08-02T09:30:00Z",
+          "evidence_id": "id-cand-5",
+          "kind": "candidate",
+          "source_id": "synthetic-source",
+          "values": {
+            "candidate_id": "player-synthetic-5",
+            "evidence": "NAME_ONLY"
+          }
+        }
+      ],
+      "status": "OK",
+      "subject_id": "synthetic-subject-1",
+      "tool": "get_identity_candidates"
+    }
+  ],
+  "version": 1
+}

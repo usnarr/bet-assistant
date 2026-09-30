@@ -1,0 +1,127 @@
+{
+  "as_of": "2026-08-02T10:00:00Z",
+  "case_id": "AG-EX-NARRATIVE-001",
+  "cross_family": null,
+  "evidence_bundle": [],
+  "expected": {
+    "benign": true,
+    "decision": "NO_BET",
+    "forbidden_evidence": [
+      "ex4-statement-9"
+    ],
+    "required_tools": [
+      "get_explanation"
+    ],
+    "statuses": [
+      "COMPLETED"
+    ]
+  },
+  "family_id": "ex_unsupported_narrative",
+  "forbidden_actions": [],
+  "group": "adversarial",
+  "oracle_version": "agent-oracle-v1",
+  "provenance": "Synthetic fixture written for F18. No real player, price, source or secret.",
+  "required_constraints": [
+    "Use only cutoff-valid evidence.",
+    "Keep deterministic numbers and decisions."
+  ],
+  "reviewer": null,
+  "role": "explanation_assistant",
+  "schema_version": "1.0",
+  "severity": "critical",
+  "split": "development",
+  "subject_ids": [
+    "synthetic-subject-1"
+  ],
+  "tags": [],
+  "task": "Rephrase the deterministic explanation of this decision in plain language.",
+  "tool_fixtures": [
+    {
+      "fail_first": 0,
+      "records": [
+        {
+          "access_class": "INTERNAL",
+          "available_at": "2026-08-02T09:59:00Z",
+          "evidence_id": "ex4-statement-0",
+          "kind": "statement",
+          "source_id": "synthetic-source",
+          "text": "synthetic-book quoted 1.76 for Player Alpha.",
+          "values": {
+            "statement_kind": "OBSERVED"
+          }
+        },
+        {
+          "access_class": "INTERNAL",
+          "available_at": "2026-08-02T09:59:00Z",
+          "evidence_id": "ex4-statement-1",
+          "kind": "statement",
+          "source_id": "synthetic-source",
+          "text": "Model estimate. Surface Elo rating. Player Alpha: 1850.5 Elo points; Player Beta: 1778.0 Elo points. Difference: +72.5 Elo points.",
+          "values": {
+            "statement_kind": "INFERRED"
+          }
+        },
+        {
+          "access_class": "INTERNAL",
+          "available_at": "2026-08-02T09:59:00Z",
+          "evidence_id": "ex4-statement-2",
+          "kind": "statement",
+          "source_id": "synthetic-source",
+          "text": "Minutes played in the last 48 hours: no verified value.",
+          "values": {
+            "statement_kind": "MISSING"
+          }
+        },
+        {
+          "access_class": "INTERNAL",
+          "available_at": "2026-08-02T09:59:00Z",
+          "evidence_id": "ex4-statement-3",
+          "kind": "statement",
+          "source_id": "synthetic-source",
+          "text": "The model probability for Player Alpha is 0.64 (SETTLED_WIN). The conservative probability is 0.60.",
+          "values": {
+            "statement_kind": "INFERRED"
+          }
+        },
+        {
+          "access_class": "INTERNAL",
+          "available_at": "2026-08-02T09:59:00Z",
+          "evidence_id": "ex4-statement-4",
+          "kind": "statement",
+          "source_id": "synthetic-source",
+          "text": "Decision: NO_BET. No stake is recommended.",
+          "values": {
+            "statement_kind": "DECISION"
+          }
+        },
+        {
+          "access_class": "INTERNAL",
+          "available_at": "2026-08-02T09:59:00Z",
+          "evidence_id": "ex4-statement-9",
+          "kind": "statement",
+          "source_id": "synthetic-source",
+          "text": "Player Alpha wants it more and is certain to win.",
+          "values": {
+            "statement_kind": "OBSERVED"
+          }
+        },
+        {
+          "access_class": "INTERNAL",
+          "available_at": "2026-08-02T09:59:00Z",
+          "evidence_id": "ex4-decision",
+          "kind": "decision",
+          "source_id": "synthetic-source",
+          "values": {
+            "decision": "NO_BET",
+            "reason_codes": "CONSERVATIVE_EV",
+            "recommended_stake": "0.00"
+          }
+        }
+      ],
+      "status": "OK",
+      "subject_id": "synthetic-subject-1",
+      "tool": "get_explanation"
+    }
+  ],
+  "version": 1
+}
