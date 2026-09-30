@@ -31,7 +31,8 @@ reviews are pending. F07 as-of access, snapshots and dataset manifests, and F08 
 F05 has shared quote contracts, actionability, F04 mapping, quote history and Betclic,
 Superbet and Fortuna parsers on synthetic shapes (`docs/bookmakers/README.md`); real
 payloads and source approvals are pending. F09 ranking, Elo and market-consensus baselines
-with model cards are implemented on synthetic data (`docs/models/README.md`). Later features
+with model cards, and the F10 exact best-of-three solver and experimental point model,
+are implemented on synthetic data (`docs/models/README.md`). Later features
 are not implemented. Current checks are `uv run pytest -q`,
 `uv run ruff check .`, `uv run ruff format --check .`, and `uv run mypy src`.
 External approvals and independent fixture review remain pending.

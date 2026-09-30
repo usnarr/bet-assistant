@@ -43,3 +43,38 @@ only synthetic results. They are shadow candidates, not evidence that any model 
 market. F09.8 (with/without market inputs) waits for F11/F13 comparisons.
 
 See [MOD-01/SYS-09 evidence](evidence/F09.md).
+
+## F10 point model (`models/point/`)
+
+| Module | Purpose |
+|---|---|
+| `formats.py` | Versioned `MatchFormat`; `enabled()` returns only verified formats |
+| `exact.py` | Exact game, tiebreak, set and match distributions |
+| `simulate.py` | Independent point-by-point Monte Carlo with seed and standard error |
+| `model.py` | Regularized serve/return model, fit and `predict` with parameter draws |
+
+Enabled formats: `bo3-tb7-v1` (7-point tiebreak in every set) and `bo3-final-tb10-v1`
+(10-point tiebreak at 6-6 in the final set). `bo3-match-tb10-v1` and `bo5-final-tb10-v1`
+are defined but not verified; best-of-five stays gated by F17. Advantage final sets are
+rejected. A caller must pass the verified format of the tournament; `fmt=None` abstains.
+F04 does not store deciding-set rules yet, so a tournament format registry is still needed.
+
+Solver rules:
+
+- Deuce and tied tiebreak states use closed forms, so there is no truncation. A tie that
+  can never resolve (both players never lose serve) raises `NonConvergence`.
+- Tiebreak service order is A, B, B, A, A, ...; the next set starts with the other player
+  when the previous set had an odd number of games (a tiebreak counts as one game).
+- An unknown first server averages both options. Mass sums to one within `1e-12`.
+- Correct score, total games and game margin come from the same state model. They stay
+  internal until F17 qualifies more markets.
+
+Point model: `logit P(i wins a service point vs j) = mu[tour:surface] + s_i - r_j`, with
+recency weights (half-life 180 days) and an L2 prior on effects (precision 10). The fit uses
+only stats known at the training cutoff. `predict` returns the central probability and a
+seeded spread from diagonal Laplace draws, labelled as not a confidence interval. Sparse
+players (weighted points below `min_weighted_points`) abstain. The model is
+`EXPERIMENTAL`: F10.7 (held-out comparison with surface Elo) runs in F13 once the harness
+is wired, and failure keeps it experimental.
+
+See [MOD-02 evidence](evidence/MOD-02.md).
