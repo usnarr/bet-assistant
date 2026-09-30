@@ -13,6 +13,9 @@ Demonstrated on synthetic fixtures and isolated local services:
 - F15.4 versioned alert rules (`configs/operations/alert-rules.json`, status `PROPOSED`).
 - F15.4 deterministic controls: a critical alert stops the affected source, or turns the
   global stop on, through the F01 journal.
+- F15.1 job graph for the blueprint section 33.1 jobs, dependency and publication gates,
+  separate backfill capacity, and idempotent job runs.
+- F15.2 resource leases with expiry and fencing tokens (migration `0011_operations`).
 
 Pending or not implemented: see "Not implemented" at the end of this file.
 
@@ -104,6 +107,52 @@ uv run tennis-ops evaluate-alerts --signals var/signals.json --sources betclic-o
 
 Exit codes: 0 no alert, 1 at least one alert, 2 an input or storage error. An invalid
 signal file gives only the field locations, not the values.
+
+## Jobs and dependencies (F15.1)
+
+`tennis_engine.operations.jobs` holds the 20 jobs of blueprint section 33.1 and their
+dependencies (section 33.2). The graph has no cycle. A test checks this.
+
+- A job runs only when every dependency is `COMPLETE`. A missing status is `INCOMPLETE`.
+- `publish_recommendations` also needs the `identity`, `format`, `policy` and `quote`
+  inputs to be `COMPLETE`. Otherwise the attempt is `BLOCKED` with the reasons.
+- Backfills and replays use the `BACKFILL` capacity pool. Prospective jobs use the
+  `PROSPECTIVE` pool. A full backfill pool cannot take a prospective slot. The proposed
+  limits are 4 and 1 per process.
+
+A job run is identified by a SHA-256 key of the job, resource, cutoff and input versions.
+The scheduler is not trusted for exactly-once delivery:
+
+| Event | Behaviour |
+|---|---|
+| Duplicate delivery or scheduler restart | The same key finds the run. A run that succeeded returns `ALREADY_SUCCEEDED` and does nothing. |
+| Worker crash (exception) | A `FAILED` attempt is appended and the lease is released. A retry can succeed. |
+| Too many failures | After `max_attempts` failures the run is `EXHAUSTED`. |
+| Stale lock | See leases. The stale worker's success is refused. |
+
+`tennis.job_run` and `tennis.job_attempt` are append-only. A partial unique index allows
+one `SUCCEEDED` attempt per run. A `RUNNING` or `SUCCEEDED` attempt must carry a fencing
+token.
+
+The job graph and runner are ready for a scheduler. No scheduler runs them yet. ADR 0002
+selects Prefect, but it is not installed. It needs a concrete deployment first.
+
+## Leases and fencing (F15.2)
+
+A lease names one resource, for example `source:<source_id>:<resource>` or
+`job:<job>:<scope>` (blueprint section 33.3). Rules:
+
+- A lease lasts more than 0 seconds and at most one hour.
+- A new holder gets a larger fencing token. A renewal keeps the token. A trigger rejects a
+  token decrease.
+- An effect is valid only while its token is current and the lease has not expired. The
+  PostgreSQL store locks the lease row and writes the effect in one transaction.
+- A worker that loses its lease cannot record success. Its attempt becomes `FAILED` with
+  `LEASE_LOST`.
+
+A job's own effects must also be idempotent or fenced. For example, decision records use
+`ON CONFLICT DO NOTHING` on their ID. The runner fences the success record, not every
+write inside the work function.
 
 ## Not implemented
 
