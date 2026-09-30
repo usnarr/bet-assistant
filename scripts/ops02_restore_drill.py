@@ -37,6 +37,7 @@ from tennis_engine.governance.contracts import Principal, Role  # noqa: E402
 from tennis_engine.governance.store import GovernanceStore  # noqa: E402
 from tennis_engine.infrastructure.database import build_engine  # noqa: E402
 from tennis_engine.infrastructure.object_store import LocalObjectStore  # noqa: E402
+from tennis_engine.operations.backups import load_recovery_config  # noqa: E402
 from tennis_engine.operations.recovery import (  # noqa: E402
     Objectives,
     backup_journal,
@@ -60,6 +61,8 @@ def main() -> int:
     parser.add_argument("--rto-seconds", type=int)
     parser.add_argument("--rpo-seconds", type=int)
     args = parser.parse_args()
+    # The agreed objectives (user decision 2026-09-30) unless a flag overrides them.
+    agreed = load_recovery_config(ROOT / "configs/operations/recovery-objectives.json")
     source_url = os.environ["TEST_DATABASE_URL"]
     url = make_url(source_url)
     user, database = url.username or "", url.database or ""
@@ -111,7 +114,10 @@ def main() -> int:
             actual,
             journal=journals,
             extra_findings=findings,
-            objectives=Objectives(rto_seconds=args.rto_seconds, rpo_seconds=args.rpo_seconds),
+            objectives=Objectives(
+                rto_seconds=args.rto_seconds or agreed.rto_seconds,
+                rpo_seconds=args.rpo_seconds or agreed.rpo_seconds,
+            ),
             measured_restore_seconds=round(restore_seconds, 3),
             measured_data_loss_seconds=round(data_loss_seconds, 3),
         )

@@ -21,6 +21,7 @@ from tennis_engine.monitoring.prometheus import (
     threshold_expression,
     to_yaml,
 )
+from tennis_engine.operations import backups
 from tennis_engine.operations import cli as ops_cli
 from tennis_engine.operations.scheduler import SchedulerMetrics
 from tennis_engine.serving.auth import load_credentials, register_token, token_digest
@@ -82,6 +83,8 @@ def _families() -> set[str]:
     SchedulerMetrics(registry)
     names = set(registry.families)
     names |= {family.name for family in cadence.FAMILIES}
+    names |= {family.name for family in (backups.BACKUP_SUCCESS, backups.WAL_ARCHIVE)}
+    names.add(backups.WAL_COUNT.name)
     names |= {
         instruments.SOURCE_STATUS.name,
         instruments.SOURCE_AGE.name,

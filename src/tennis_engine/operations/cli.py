@@ -22,6 +22,7 @@ from tennis_engine.monitoring.controls import ControlAction, apply_controls
 from tennis_engine.monitoring.signals import Signal
 from tennis_engine.serving.postgres import PostgresDecisionStore
 
+from .backups import DEFAULT_RECOVERY_CONFIG, load_recovery_config
 from .incidents import Category, open_incident, verify_bundle
 from .recovery import (
     DatabaseFingerprint,
@@ -84,6 +85,7 @@ def parser() -> argparse.ArgumentParser:
     verify.add_argument("--expected", type=Path, required=True)
     verify.add_argument("--journal-source", type=Path)
     verify.add_argument("--journal-restored", type=Path)
+    verify.add_argument("--recovery-config", type=Path, default=DEFAULT_RECOVERY_CONFIG)
     verify.add_argument("--rto-seconds", type=int)
     verify.add_argument("--rpo-seconds", type=int)
     verify.add_argument("--measured-restore-seconds", type=float)
@@ -138,6 +140,12 @@ def parser() -> argparse.ArgumentParser:
     scheduler.add_argument(
         "--no-apply", action="store_true", help="Evaluate alerts but apply no control"
     )
+    scheduler.add_argument(
+        "--backup-root", type=Path, help="Backup volume for raw objects and journal snapshots"
+    )
+    scheduler.add_argument(
+        "--postgres-backup-root", type=Path, help="PostgreSQL backup volume (read-only)"
+    )
     return root
 
 
@@ -153,6 +161,8 @@ def scheduler_command(args: argparse.Namespace) -> int:
         rules=args.rules,
         signal_inbox=args.signal_inbox,
         apply_controls=not args.no_apply,
+        backup_root=args.backup_root,
+        postgres_backup_root=args.postgres_backup_root,
     )
     process = build_scheduler(settings, options)
     if args.once:
@@ -215,6 +225,8 @@ def recovery_command(args: argparse.Namespace) -> int:
             _print({"role": args.role, "granted": "SELECT"})
             return 0
         expected = DatabaseFingerprint.model_validate_json(args.expected.read_bytes())
+        # The agreed objectives (user decision 2026-09-30) unless a flag overrides them.
+        agreed = load_recovery_config(args.recovery_config)
         journals: tuple[JournalFingerprint, JournalFingerprint] | None = None
         if args.journal_source and args.journal_restored:
             journals = (
@@ -225,7 +237,10 @@ def recovery_command(args: argparse.Namespace) -> int:
             expected,
             database_fingerprint(engine, now),
             journal=journals,
-            objectives=Objectives(rto_seconds=args.rto_seconds, rpo_seconds=args.rpo_seconds),
+            objectives=Objectives(
+                rto_seconds=args.rto_seconds or agreed.rto_seconds,
+                rpo_seconds=args.rpo_seconds or agreed.rpo_seconds,
+            ),
             measured_restore_seconds=args.measured_restore_seconds,
             measured_data_loss_seconds=args.measured_data_loss_seconds,
         )

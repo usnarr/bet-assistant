@@ -22,6 +22,7 @@ from decimal import Decimal
 from pathlib import Path
 from types import FrameType
 
+from minio import Minio
 from sqlalchemy import Engine
 
 from tennis_engine.common.clock import Clock, SystemClock
@@ -29,6 +30,7 @@ from tennis_engine.governance.contracts import Principal, Purpose, Role
 from tennis_engine.governance.service import GovernanceService
 from tennis_engine.governance.store import GovernanceStore
 from tennis_engine.infrastructure.database import build_engine
+from tennis_engine.infrastructure.object_store import ImmutableObjectStore, S3ObjectStore
 from tennis_engine.infrastructure.settings import Settings
 from tennis_engine.monitoring.alerts import Alert, load_rules
 from tennis_engine.monitoring.cadence import AlertTask, read_signal_inbox
@@ -37,6 +39,15 @@ from tennis_engine.monitoring.exporter import AlertNotifications, MetricsServer
 from tennis_engine.monitoring.metrics import MetricsRegistry
 from tennis_engine.monitoring.signals import Signal, freshness_signals
 
+from .backups import (
+    DEFAULT_RECOVERY_CONFIG,
+    backup_objects,
+    journal_snapshots,
+    load_recovery_config,
+    register_backup_collector,
+    snapshot_journal,
+    wal_archiver,
+)
 from .jobs import CapacityLimits, CapacityPools, JobName, JobRunner
 from .leases import Lease, PostgresLeaseStore
 from .postgres import PostgresJobStore
@@ -63,6 +74,60 @@ class SchedulerOptions:
     register_every: timedelta = timedelta(minutes=5)
     apply_controls: bool = True
     extra_tasks: Sequence[OperationsTask] = field(default_factory=tuple)
+    # F15.7 backups. None turns the object and journal backups off.
+    backup_root: Path | None = None
+    # The PostgreSQL backup volume, read-only, for the base backup recovery point.
+    postgres_backup_root: Path | None = None
+    recovery_config: Path = DEFAULT_RECOVERY_CONFIG
+
+
+def backup_tasks(
+    settings: Settings,
+    options: SchedulerOptions,
+    journal: Path,
+    objects: ImmutableObjectStore,
+    clock: Clock,
+) -> tuple[OperationsTask, ...]:
+    """Object and journal backups on the agreed schedule (RPO 15 min)."""
+    if options.backup_root is None:
+        return ()
+    config = load_recovery_config(options.recovery_config)
+    object_dir = options.backup_root / "objects"
+    journal_dir = options.backup_root / "journal"
+    keep = int(config.retention.get("journal_snapshots_kept", 2016))
+
+    def objects_task(window: datetime) -> dict[str, str]:
+        report = backup_objects(objects, object_dir, clock.now())
+        if report.problems:
+            raise RuntimeError(f"object backup problems: {len(report.problems)}")
+        return {"listed": str(report.listed), "copied": str(report.copied)}
+
+    def journal_task(window: datetime) -> dict[str, str]:
+        snapshot_journal(journal, journal_dir, window, keep)
+        return {"snapshots": str(len(journal_snapshots(journal_dir)))}
+
+    return (
+        OperationsTask(
+            "backup_objects",
+            timedelta(seconds=config.schedule.object_backup_interval_seconds),
+            objects_task,
+        ),
+        OperationsTask(
+            "backup_journal",
+            timedelta(seconds=config.schedule.journal_backup_interval_seconds),
+            journal_task,
+        ),
+    )
+
+
+def s3_objects(settings: Settings) -> ImmutableObjectStore:
+    client = Minio(
+        settings.object_store_endpoint,
+        access_key=settings.object_store_access_key.get_secret_value(),
+        secret_key=settings.object_store_secret_key.get_secret_value(),
+        secure=settings.object_store_secure,
+    )
+    return S3ObjectStore(client, settings.object_store_bucket)
 
 
 def fetchable_sources(governance: GovernanceService, now: datetime) -> tuple[str, ...]:
@@ -135,6 +200,7 @@ def build_scheduler(
     *,
     clock: Clock | None = None,
     engine: Engine | None = None,
+    objects: ImmutableObjectStore | None = None,
 ) -> SchedulerProcess:
     from tennis_engine.serving.wiring import build_recommendation_service
 
@@ -171,10 +237,23 @@ def build_scheduler(
         clock=clock,
         registry=registry,
     )
+    backups: tuple[OperationsTask, ...] = ()
+    if options.backup_root is not None:
+        backups = backup_tasks(settings, options, journal, objects or s3_objects(settings), clock)
+        register_backup_collector(
+            registry,
+            postgres_base=(
+                options.postgres_backup_root / "base" if options.postgres_backup_root else None
+            ),
+            objects=options.backup_root / "objects",
+            journal=options.backup_root / "journal",
+            archiver=lambda: wal_archiver(engine),
+        )
     scheduler = Scheduler(
         runner=runner,
         handlers={JobName.SYNC_SOURCE_REGISTRY: register_handler(journal, options.register_every)},
         tasks=(OperationsTask("evaluate_alerts", options.alert_every, alert_task),)
+        + backups
         + tuple(options.extra_tasks),
         leases=leases,
         clock=clock,

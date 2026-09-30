@@ -21,12 +21,28 @@ services:
     image: postgres:17.11-alpine3.24@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
     # Start as the postgres user (UID 70). The entrypoint then never runs gosu.
     user: "70:70"
+    # F15.7 continuous WAL archiving to the backup volume (docs/operations/README.md).
+    command:
+      - postgres
+      - -c
+      - hba_file=/etc/tennis-postgres/pg_hba.conf
+      - -c
+      - wal_level=replica
+      - -c
+      - archive_mode=on
+      - -c
+      - archive_timeout=60
+      - -c
+      - archive_command=sh /etc/tennis-postgres/archive-wal.sh %p %f
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-tennis}
       POSTGRES_USER: ${POSTGRES_USER:-tennis}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-only}
+    secrets:
+      - postgres_backup_password
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      # TCP, not the socket: the first-start init server listens on the socket only.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 3s
       timeout: 3s
       retries: 20
@@ -34,6 +50,61 @@ services:
       - "127.0.0.1:5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      - postgres-backup:/backup
+      - ./deploy/postgres:/etc/tennis-postgres:ro
+      - ./deploy/postgres/initdb:/docker-entrypoint-initdb.d:ro
+    depends_on:
+      backup-init:
+        condition: service_completed_successfully
+
+  backup-init:
+    # Creates the backup directories with their owners: PostgreSQL (UID 70) writes the WAL
+    # archive and base backups; the scheduler (UID 10001) writes object and journal copies
+    # and reads the base backup markers. The base directory is setgid group 10001, so each
+    # backup directory inherits that group. Only the markers are group-readable.
+    image: postgres:17.11-alpine3.24@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+    user: "0:0"
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        install -d -o 70 -g 70 -m 0700 /pg-backup/wal
+        && install -d -o 70 -g 10001 -m 2750 /pg-backup/base
+        && install -d -o 10001 -g 10001 -m 0700 /app-backup/objects /app-backup/journal
+    volumes:
+      - postgres-backup:/pg-backup
+      - app-backup:/app-backup
+    restart: "no"
+
+  postgres-backup:
+    # F15.7 daily base backups with retention (deploy/postgres/base-backup.sh).
+    image: postgres:17.11-alpine3.24@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+    user: "70:70"
+    entrypoint: ["sh", "/etc/tennis-postgres/base-backup.sh"]
+    environment:
+      PGHOST: postgres
+      PGUSER: tennis_backup
+      PGDATABASE: ${POSTGRES_DB:-tennis}
+      PGPASSWORD_FILE: /run/secrets/postgres_backup_password
+      BACKUP_ROOT: /backup
+      BASE_BACKUP_INTERVAL_SECONDS: "86400"
+      BASE_BACKUP_KEEP: "7"
+    secrets:
+      - postgres_backup_password
+    volumes:
+      - postgres-backup:/backup
+      - ./deploy/postgres:/etc/tennis-postgres:ro
+    read_only: true
+    tmpfs:
+      - /tmp
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "find /backup/base -name COMPLETE -mmin -1560 | grep -q ."]
+      interval: 30s
+      timeout: 5s
+      retries: 20
+      start_period: 5m
 
   object-store:
     # SeaweedFS all-in-one server; only its S3 gateway is published.
@@ -107,11 +178,16 @@ services:
     command: >-
       tennis-ops scheduler --tick-seconds 60 --metrics-port 9101
       --signal-inbox /app/var/signals
+      --backup-root /backup/app --postgres-backup-root /backup/postgres
     environment: *app-environment
     # The journal mount is writable: a critical alert appends a stop. Nothing resumes.
+    # The scheduler copies raw objects and journal snapshots to the backup volume every
+    # 5 minutes and reads the PostgreSQL backup markers.
     volumes:
       - governance-data:/app/var/governance
       - signal-inbox:/app/var/signals
+      - app-backup:/backup/app
+      - postgres-backup:/backup/postgres:ro
     read_only: true
     tmpfs:
       - /tmp
@@ -119,6 +195,10 @@ services:
       migrate:
         condition: service_completed_successfully
       governance-init:
+        condition: service_completed_successfully
+      object-store-init:
+        condition: service_completed_successfully
+      backup-init:
         condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9101/health')"]
@@ -224,6 +304,9 @@ volumes:
   prometheus-data:
   alertmanager-data:
   grafana-data:
+  # F15.7 backup volumes. Keep them on a separate encrypted disk (see docs/operations/README.md).
+  postgres-backup:
+  app-backup:
 
 # Local files from `scripts/init_local_secrets.py`. Production supplies them from the
 # host's secret manager. The directory is ignored by Git and Docker.
@@ -232,3 +315,5 @@ secrets:
     file: ${TENNIS_SECRETS_DIR:-./secrets}/prometheus-api-token
   grafana_admin_password:
     file: ${TENNIS_SECRETS_DIR:-./secrets}/grafana-admin-password
+  postgres_backup_password:
+    file: ${TENNIS_SECRETS_DIR:-./secrets}/postgres-backup-password

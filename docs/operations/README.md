@@ -26,6 +26,10 @@ Demonstrated on synthetic fixtures and isolated local services:
   a source scan for unsafe deserialization.
 - F15.7 restore verification: database and journal fingerprints, raw-object and ledger
   reconciliation, and incident bundles with affected recommendation IDs.
+- F15.7 backups for the agreed recovery objectives (RTO 4 hours, RPO 15 minutes; user
+  decision 2026-09-30): continuous WAL archiving, daily base backups, object and journal
+  backups every 5 minutes, retention, backup metrics and alerts, and a point-in-time
+  restore drill (`scripts/ops02_pitr_drill.py`). See "Backup and restore (F15.7)".
 - F15.7 model rollback: the F11.8 registry and F13.9 audited champion switch, and a
   rollback drill (`scripts/ops02_rollback_drill.py`).
 - F15.8 runbooks: [runbooks.md](runbooks.md).
@@ -416,24 +420,74 @@ in [runbooks.md](runbooks.md).
 
 ## Backup and restore (F15.7)
 
-Back up three stores:
+### Recovery objectives
 
-| Store | Backup | Verify |
+User decision, 2026-09-30: the owner accepted these recovery objectives for the single
+private host (`configs/operations/recovery-objectives.json`, version
+`f15-recovery-objectives-v1`, status `ACCEPTED`):
+
+| Objective | Value | Meaning |
 |---|---|---|
-| PostgreSQL | `pg_dump -Fc` | `tennis-ops fingerprint` before, `tennis-ops verify-restore` after |
-| F01 journal | `tennis-ops backup-journal` (SQLite online backup) | journal fingerprint, hash of every row and document |
-| Raw objects | Copy or replicate the bucket | `reconcile_raw_objects`: each archived content exists and matches its SHA-256 |
+| RTO | 4 hours (14400 s) | The longest time from the start of a restore to a verified service. |
+| RPO | 15 minutes (900 s) | The longest window of acknowledged writes that a restore can lose. |
+
+The schedule in the same file is the implementation choice that meets the RPO. A test
+checks that the worst-case loss of each store is at or below the RPO.
+
+### Backups
+
+| Store | Backup | Worst-case loss | Retention |
+|---|---|---|---|
+| PostgreSQL | Continuous WAL archiving (`archive_timeout` 60 s, `deploy/postgres/archive-wal.sh`) and a daily base backup (`postgres-backup` service, `pg_basebackup`) | 60 s | 7 base backups; every WAL segment since the oldest kept base backup |
+| Raw objects | The scheduler task `backup_objects` copies each new key to the backup volume every 5 minutes. It never deletes. | 5 minutes | Every object (objects are immutable) |
+| F01 journal | The scheduler task `backup_journal` takes a SQLite online backup every 5 minutes. | 5 minutes | 2016 snapshots (7 days) |
+
+- The WAL archive command copies a segment to a temporary name, then renames it. The same
+  segment with the same bytes is a success. The same name with other bytes is a failure,
+  so PostgreSQL keeps the segment and retries.
+- The backup role `tennis_backup` has `REPLICATION` only. Its password is the Compose
+  secret `postgres_backup_password`. `pg_hba.conf` allows it only for replication.
+- Backups are on the volumes `postgres-backup` and `app-backup`. Keep them on a separate,
+  encrypted disk. There is no copy off the host, so a host loss is outside the objectives.
+
+Metrics and alerts (all critical, generated rules `f15-telemetry-rules-v2`):
+
+| Alert | Fires when |
+|---|---|
+| `TennisBackupStale` | The newest object or journal backup is older than the RPO (15 minutes). |
+| `TennisBaseBackupStale` | The newest base backup is older than 26 hours. |
+| `TennisBackupMissing` | A store has no recovery point for 30 minutes. |
+| `TennisWalArchiveFailing` | `pg_stat_archiver` counts a failed WAL segment in the last 15 minutes. |
+
+The scheduler reads the recovery points from the backup volumes at scrape time
+(`tennis_backup_last_success_timestamp_seconds`, `tennis_wal_archive_*`). A restart does
+not hide or invent a backup.
+
+### Restore and verification
+
+`deploy/postgres/restore-pitr.sh` restores into an empty data directory. It extracts the
+newest complete base backup, replays the WAL archive and promotes the server. It refuses
+a data directory that is not empty. `RECOVERY_TARGET_TIME` stops the replay earlier.
 
 `verify-restore` compares row counts and ordered-row digests of every `tennis` table, the
-Alembic revision and, when given, both journals. The ledger check confirms that every
+Alembic revision and, when given, both journals. `reconcile_raw_objects` checks that each
+archived content exists and matches its SHA-256. The ledger check confirms that every
 virtual ledger balances.
 
-Recovery objectives (RTO and RPO) are not agreed. Without them the report is `BLOCKED`,
-even when integrity passes. This blocks operational readiness, as F15 requires. Pass
-`--rto-seconds` and `--rpo-seconds` after the owner agrees them.
+A report compares the measured restore time and data-loss window with the agreed
+objectives. It is `PASS` or `FAIL`. A missing measurement is `FAIL`
+(`OBJECTIVES_NOT_MEASURED`). A call without objectives is still `BLOCKED`, so a missing
+objective never passes. `verify-restore` reads the objectives from the configuration file
+unless `--rto-seconds` or `--rpo-seconds` overrides them.
 
-The drill `scripts/ops02_restore_drill.py` runs the full cycle on a disposable test
-container. See [OPS-02](evidence/OPS-02.md).
+Drills:
+
+- `scripts/ops02_pitr_drill.py`: the full point-in-time restore on a disposable Compose
+  stack, after a SIGKILL of PostgreSQL. It measures the restore time and the data-loss
+  window of each store.
+- `scripts/ops02_restore_drill.py`: a logical `pg_dump` restore on a test container.
+
+Results: [OPS-02](evidence/OPS-02.md). The steps: [runbooks.md](runbooks.md).
 
 ### Model rollback
 
@@ -466,7 +520,8 @@ Runbooks: [runbooks.md](runbooks.md).
 - F15.6: a separate database role for agent writes. The agent store uses the main role.
 - F15.6: live tool backends for the agent roles. The agent guide lists which roles read
   live records. The other roles run on fixture backends only.
-- Agreed RTO and RPO. Continuous WAL archiving (point-in-time recovery).
+- A backup copy off the host. The backup volumes are on the same host, so a host loss is
+  outside the recovery objectives. Encryption of the backup disk depends on the host.
 - A serving path that loads the registry champion (no model serves decisions yet).
 - Separate writer roles per component, outbound allow lists and at-rest encryption
   settings. These depend on the deployment.

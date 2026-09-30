@@ -81,6 +81,8 @@ def test_restore_comparison_needs_agreed_objectives():
         measured_data_loss_seconds=0,
     )
     assert late.status == "FAIL" and "OBJECTIVES_NOT_MET" in late.findings
+    unmeasured = compare(fingerprint(a=1), fingerprint(a=1), objectives=objectives)
+    assert unmeasured.status == "FAIL" and "OBJECTIVES_NOT_MEASURED" in unmeasured.findings
     changed = compare(fingerprint(a=1, b=2), fingerprint(a=1, b=3))
     assert changed.status == "FAIL" and changed.findings == ("TABLE:b",)
 

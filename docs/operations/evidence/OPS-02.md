@@ -1,66 +1,83 @@
 # OPS-02 evidence — backup, restore and reconciliation drill
 
-Date: 2026-09-30. Status: **integrity PASS; readiness BLOCKED** (RTO and RPO are not agreed).
+Date: 2026-09-30. Status: **PASS** against the agreed recovery objectives.
 
-Scope: a disposable PostgreSQL 17.6 container, a temporary F01 journal and a temporary
-local object store. All data is synthetic. No production store was used.
+Recovery objectives (user decision 2026-09-30, `configs/operations/recovery-objectives.json`,
+version `f15-recovery-objectives-v1`): RTO 4 hours (14400 s), RPO 15 minutes (900 s).
 
-## Command
+All data is synthetic. No production store was used.
+
+## Point-in-time restore drill (F15.7)
+
+Scope: a disposable Compose stack (project `f15bk-smoke`, alternate host ports) built from
+this commit, with the real backup services: WAL archiving (`archive_timeout` 60 s), the
+`postgres-backup` base backup, and the scheduler tasks `backup_objects` and
+`backup_journal` (every 5 minutes). PostgreSQL 17.11, SeaweedFS S3 gateway.
 
 ```sh
-TEST_DATABASE_URL=postgresql+psycopg://tennis:test-only@127.0.0.1:55442/tennis_test \
-  MSYS_NO_PATHCONV=1 uv run python scripts/ops02_restore_drill.py --container f15-test-pg
+uv run python scripts/ops02_pitr_drill.py --project f15bk-smoke   --database-url postgresql+psycopg://tennis:local-only@127.0.0.1:55450/tennis   --object-endpoint 127.0.0.1:59020 --restore-port 55451
 ```
 
-## Bundle
-
-`tests/recovery_support.py::seed` writes through the real services:
-
-| Content | Count |
+| Step | Result |
 |---|---|
-| Raw content (F03 archive, gzip object) | 1 |
-| Stored decisions (BET, WATCH, NO_BET and 5 NO_BET copies) | 8 |
-| Virtual ledger with 2 virtual bets (F06) | 1 ledger |
-| Job run with a fenced success (F15) | 1 |
-| Journal records (global stop, source stop) | 2 |
+| Base backup at stack start (`postgres-backup`) | complete; `pg_basebackup` reported "all required WAL segments have been archived" |
+| Seed (`tests/recovery_support.py::seed`) | 1 raw content, 8 decisions, 1 job run, 1 ledger with 2 virtual bets |
+| Load: 1 database mark per second, 1 raw-object mark per 10 s, for 420 s | 42 object marks |
+| Stop the API and the scheduler, fingerprint the `tennis` schema | 54 tables, revision `0013_model_registry` |
+| More database marks for 90 s, then SIGKILL of PostgreSQL | 506 database marks written in total |
+| New container, empty volume, `restore-pitr.sh` | primary after 2.517 s |
+| Objects: backup copy into a new bucket | 13 objects restored |
+| Compare every table (row count and ordered-row MD5) | no difference |
+| Raw objects against the restored lineage | 1 of 1 verified |
+| Ledger reconciliation | 1 ledger balanced, closing 80.00 PLN |
+| Journal: live journal against the newest snapshot | equal chain (0 records: the stack journal was empty) |
+| Restore and verification duration | **3.099 s** (RTO 14400 s) |
 
-The database fingerprint covered 50 tables and 34 rows at revision `0011_operations`.
+Data-loss window of each store (last acknowledged write to newest recovered write):
 
-## Steps and results
+| Store | Recovered | Window | Expected worst case |
+|---|---|---|---|
+| PostgreSQL | mark 473 of 506 | 33.371 s | 60 s (`archive_timeout`) |
+| Raw objects | 12 of 42 marks | 303.112 s | 300 s (object backup interval) plus the task run time |
+| F01 journal | equal chain | 0.0 s | 300 s |
 
-| Step | Tool | Result |
-|---|---|---|
-| Fingerprint the source | `database_fingerprint` | 50 tables |
-| Back up the database | `pg_dump -Fc` in the container | done |
-| Back up the journal | SQLite online backup (`backup_journal`) | done |
-| Back up raw objects | directory copy | done |
-| Backup duration | | 0.247 s |
-| Restore into a new database | `createdb`, `pg_restore` | done |
-| Compare every table (row count and ordered-row MD5) | `compare` | no difference |
-| Compare the Alembic revision | `compare` | `0011_operations` both |
-| Compare journals (row hashes and chain) | `journal_fingerprint` | equal, no problem |
-| Raw objects against the restored lineage | `reconcile_raw_objects` | 1 of 1 verified |
-| Ledger reconciliation on the restored database | `reconcile_ledgers` | 1 ledger balanced, closing 80.00 PLN |
-| Restore and verification duration | | 1.079 s |
-| Data-loss window | | 0.0 s (no write after the backup) |
+Report: `integrity: PASS`, `status: PASS`, no finding. Measured data loss **303.112 s**
+(RPO 900 s), the largest window of the three stores.
 
-Report: `integrity: PASS`, `status: BLOCKED`, finding `OBJECTIVES_UNSET`.
+Interpretation:
 
-## Interpretation
+- The WAL archive restored every change up to the last archived segment. The SIGKILL lost
+  the unarchived tail (33 marks), as designed. The loss stays below `archive_timeout`.
+- The object window is about one backup interval. Every object older than the last
+  backup was restored. A 5-minute interval keeps the worst case below the RPO.
+- The journal check is weak evidence here: the drill journal had no records. The unit
+  tests (`tests/test_operations_backups.py`) cover snapshots of a journal with records.
+- The times are for a small synthetic data set on one development machine. They are not
+  an estimate of production restore time. A larger database needs a new drill.
 
-- The restore reproduced every table exactly, and the lineage from raw content to the
-  object store and the ledger balance survived the restore.
-- The measured times are for a tiny synthetic bundle on one development machine. They are
-  not an estimate of production recovery time.
-- The data-loss window is zero only because nothing wrote between the backup and the
-  failure point. A real RPO depends on the backup schedule. `pg_dump` is a point-in-time
-  copy; continuous WAL archiving is not configured.
-- Operational readiness stays blocked until the owner agrees RTO and RPO. Then rerun with
-  `--rto-seconds` and `--rpo-seconds`.
+## Logical restore drill (`pg_dump`)
+
+Scope: a disposable PostgreSQL 17.6 test container, a temporary F01 journal and a
+temporary local object store.
+
+```sh
+TEST_DATABASE_URL=postgresql+psycopg://tennis:test-only@127.0.0.1:55444/tennis_test   MSYS_NO_PATHCONV=1 uv run python scripts/ops02_restore_drill.py --container f15i-test-pg
+```
+
+The drill seeds the same synthetic bundle, backs up with `pg_dump -Fc`, the SQLite online
+backup and a directory copy, restores into a new database with `pg_restore`, then compares
+every table, the Alembic revision (`0013_model_registry`), both journals (2 records), raw
+objects (1 of 1 verified) and the ledger (balanced, closing 80.00 PLN).
+
+Report (rerun 2026-09-30 with the agreed objectives): `integrity: PASS`, `status: PASS`,
+no finding. Restore and verification 1.126 s. Data-loss window 0.0 s, because nothing
+wrote between the backup and the failure point. A `pg_dump` copy alone does not meet the
+RPO; the WAL archive does.
 
 ## Negative controls
 
-`tests/integration/test_recovery_persistence.py` and `tests/test_operations_recovery.py`:
+`tests/integration/test_recovery_persistence.py`, `tests/test_operations_recovery.py` and
+`tests/test_operations_backups.py`:
 
 | Change | Detected as |
 |---|---|
@@ -68,6 +85,10 @@ Report: `integrity: PASS`, `status: BLOCKED`, finding `OBJECTIVES_UNSET`.
 | A deleted raw object | `OBJECT_MISSING:<content_id>` |
 | A changed journal payload in the backup | `JOURNAL_HASH_MISMATCH:<revision>` and `JOURNAL:MISMATCH` |
 | Restore slower than the RTO | `OBJECTIVES_NOT_MET` |
+| No measured restore time or data loss | `OBJECTIVES_NOT_MEASURED` (`FAIL`) |
+| No objectives | `OBJECTIVES_UNSET` (`BLOCKED`) |
+| An object key with other bytes in the backup | `OBJECT_CONFLICT`; the old recovery point stays |
+| A schedule interval above the RPO | `SCHEDULE_EXCEEDS_RPO:<store>` |
 
 ## Model rollback drill (F11.8, F13.9)
 
@@ -106,6 +127,7 @@ per decision, a concurrent switch from the same champion gives one winner and on
 
 - Model rollback in a serving path: no model serves decisions yet, so no path loads the
   champion.
-- The S3 object store: the drill used a local object store copy. The reconciliation code
-  uses the same `ImmutableObjectStore` interface as the S3 store.
+- A copy off the host. The backup volumes are on the same host, so a host loss is
+  outside the objectives.
+- Restore with a `RECOVERY_TARGET_TIME`, and a base backup older than the newest one.
 - Staging or production volumes, and restore under load.

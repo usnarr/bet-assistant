@@ -131,7 +131,7 @@ Signals: HTTP 503 `DEPENDENCY_UNAVAILABLE`, `tennis_dependency_errors_total`, re
 1. F12 cannot reserve exposure, so it cannot publish a `BET`. F14 returns 503 when the
    decision store fails. No stale `BET` is served.
 2. Open a `RISK_STORE_OUTAGE` incident when the outage is longer than a short blip.
-3. Restore the database if needed (see "Backup and restore" in the README). Verify it with
+3. Restore the database if needed (see "Database loss" below). Verify it with
    `tennis-ops verify-restore`.
 4. Reconcile reservations and the ledger before new decisions.
 
@@ -164,3 +164,56 @@ recommendations.
    prompt, tools or verifier under a new role version.
 5. Run the agent evaluation again. Keep the role off until it passes.
 6. A reviewer resumes the role: `source-stop agent:ag-ex off --reason "<review>"`.
+
+## Backup failure
+
+Signals: `TennisBackupStale`, `TennisBaseBackupStale`, `TennisBackupMissing` or
+`TennisWalArchiveFailing`. The recovery objectives are RTO 4 hours and RPO 15 minutes
+(`configs/operations/recovery-objectives.json`, user decision 2026-09-30).
+
+1. A backup failure does not stop publication by itself. The RPO is at risk until the
+   backup runs again. Treat it as urgent.
+2. Find the failed store in the alert label `store`, or in the logs:
+   `docker compose logs postgres-backup scheduler postgres`.
+3. WAL archive: check `pg_stat_archiver` (`failed_count`, `last_failed_wal`) and the free
+   space of the `postgres-backup` volume. A segment name with other bytes in the archive
+   is a conflict. Do not delete or overwrite an archived segment; preserve both and open
+   an incident. PostgreSQL keeps each segment until it is archived, so a full data disk
+   is the next risk.
+4. Base backup: run one backup now, then check that a new `COMPLETE` marker exists:
+   `docker compose exec postgres-backup sh /etc/tennis-postgres/base-backup.sh --once`.
+5. Objects or journal: check the scheduler task outcome in the logs
+   (`backup_objects`, `backup_journal`). An `OBJECT_CONFLICT` means a key with other
+   bytes. Preserve both copies and open an incident.
+6. The alert clears when a new recovery point exists. Record the gap in the incident notes.
+
+## Database loss (point-in-time restore)
+
+Use this when the PostgreSQL data volume is lost or damaged. Do not start the damaged
+server again. Keep the damaged volume for evidence until the restore is verified.
+
+1. Turn the global stop on. Stop the API and the scheduler:
+   `docker compose stop api scheduler`.
+2. Record the start time. The RTO is 4 hours from here.
+3. Start a PostgreSQL container with an empty data volume, the `postgres-backup` volume at
+   `/backup` (read-only) and `deploy/postgres` at `/etc/tennis-postgres`. Use the
+   entrypoint `sh /etc/tennis-postgres/restore-pitr.sh`. It extracts the newest complete
+   base backup, replays the WAL archive and promotes the server. Set
+   `RECOVERY_TARGET_TIME` to stop before a known bad write. Set `BASE_BACKUP` to use an
+   older base backup.
+4. Wait until `SELECT pg_is_in_recovery()` returns `false`.
+5. Restore raw objects: copy the `app-backup` volume directory `objects` into the bucket.
+   Existing keys are kept. Restore the journal from the newest snapshot in `journal`.
+6. Verify: `tennis-ops verify-restore --expected <fingerprint> --journal-source <journal>
+   --journal-restored <snapshot> --measured-restore-seconds <s>
+   --measured-data-loss-seconds <s>`. Use the newest fingerprint that you have. Without
+   a fingerprint, check `reconcile_raw_objects` and the ledger balance.
+7. Point the Compose `postgres` service at the restored volume. Start the services.
+8. Reconcile reservations and the ledger before new decisions. A policy reviewer turns the
+   global stop off only after the report is `PASS`.
+9. Take a new base backup at once
+   (`docker compose exec postgres-backup sh /etc/tennis-postgres/base-backup.sh --once`).
+   The restored server starts a new timeline.
+
+The drill `scripts/ops02_pitr_drill.py` runs these steps on a disposable stack.
+Results: [OPS-02](evidence/OPS-02.md).

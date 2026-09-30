@@ -22,6 +22,7 @@ from pathlib import Path
 SECRETS: dict[str, int] = {
     "prometheus-api-token": 32,
     "grafana-admin-password": 24,
+    "postgres-backup-password": 24,
 }
 
 

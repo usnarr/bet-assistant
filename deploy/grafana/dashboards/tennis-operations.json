@@ -343,6 +343,74 @@
         "type": "prometheus",
         "uid": "tennis-prometheus"
       },
+      "description": "Age of the newest backup of each store. Objects and journal must stay below the RPO of 15 minutes; the base backup below 26 hours.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 36
+      },
+      "id": 11,
+      "options": {},
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tennis-prometheus"
+          },
+          "expr": "time() - tennis_backup_last_success_timestamp_seconds",
+          "legendFormat": "{{store}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Recovery point age",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tennis-prometheus"
+      },
+      "description": "Archived and failed WAL segments. A failed segment puts the RPO at risk.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 36
+      },
+      "id": 12,
+      "options": {},
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "tennis-prometheus"
+          },
+          "expr": "tennis_wal_archive_segments",
+          "legendFormat": "{{event}}",
+          "refId": "A"
+        }
+      ],
+      "title": "WAL segments (pg_stat_archiver)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tennis-prometheus"
+      },
       "description": "API requests per second by route template and status.",
       "fieldConfig": {
         "defaults": {
@@ -356,7 +424,7 @@
         "x": 12,
         "y": 28
       },
-      "id": 11,
+      "id": 13,
       "options": {},
       "targets": [
         {

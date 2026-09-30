@@ -297,7 +297,7 @@ groups:
         labels:
           severity: "critical"
           rule_id: "TennisScrapeTargetDown"
-          rule_set: "f15-telemetry-rules-v1"
+          rule_set: "f15-telemetry-rules-v2"
           reason: "TELEMETRY_MISSING"
           control: "NONE"
         annotations:
@@ -308,7 +308,7 @@ groups:
         labels:
           severity: "critical"
           rule_id: "TennisApiTargetAbsent"
-          rule_set: "f15-telemetry-rules-v1"
+          rule_set: "f15-telemetry-rules-v2"
           reason: "TELEMETRY_MISSING"
           control: "NONE"
         annotations:
@@ -319,7 +319,7 @@ groups:
         labels:
           severity: "critical"
           rule_id: "TennisSchedulerTargetAbsent"
-          rule_set: "f15-telemetry-rules-v1"
+          rule_set: "f15-telemetry-rules-v2"
           reason: "TELEMETRY_MISSING"
           control: "NONE"
         annotations:
@@ -330,7 +330,7 @@ groups:
         labels:
           severity: "critical"
           rule_id: "TennisSchedulerStale"
-          rule_set: "f15-telemetry-rules-v1"
+          rule_set: "f15-telemetry-rules-v2"
           reason: "TELEMETRY_MISSING"
           control: "NONE"
         annotations:
@@ -341,7 +341,7 @@ groups:
         labels:
           severity: "critical"
           rule_id: "TennisAlertEvaluationStale"
-          rule_set: "f15-telemetry-rules-v1"
+          rule_set: "f15-telemetry-rules-v2"
           reason: "TELEMETRY_MISSING"
           control: "NONE"
         annotations:
@@ -352,7 +352,7 @@ groups:
         labels:
           severity: "critical"
           rule_id: "TennisSignalExpectationsAbsent"
-          rule_set: "f15-telemetry-rules-v1"
+          rule_set: "f15-telemetry-rules-v2"
           reason: "TELEMETRY_MISSING"
           control: "NONE"
         annotations:
@@ -362,7 +362,7 @@ groups:
         labels:
           severity: "critical"
           rule_id: "TennisCollectorDown"
-          rule_set: "f15-telemetry-rules-v1"
+          rule_set: "f15-telemetry-rules-v2"
           reason: "TELEMETRY_MISSING"
           control: "NONE"
         annotations:
@@ -372,17 +372,58 @@ groups:
         labels:
           severity: "critical"
           rule_id: "TennisSignalProducerDown"
-          rule_set: "f15-telemetry-rules-v1"
+          rule_set: "f15-telemetry-rules-v2"
           reason: "TELEMETRY_MISSING"
           control: "NONE"
         annotations:
           summary: "A signal producer failed. Its signals are missing."
+      - alert: "TennisBackupStale"
+        expr: "time() - tennis_backup_last_success_timestamp_seconds{store=~\"objects|journal\"} > 900"
+        labels:
+          severity: "critical"
+          rule_id: "TennisBackupStale"
+          rule_set: "f15-telemetry-rules-v2"
+          reason: "TELEMETRY_MISSING"
+          control: "NONE"
+        annotations:
+          summary: "The newest object or journal backup is older than the RPO (15 minutes)."
+      - alert: "TennisBaseBackupStale"
+        expr: "time() - tennis_backup_last_success_timestamp_seconds{store=\"postgres_base\"} > 93600"
+        labels:
+          severity: "critical"
+          rule_id: "TennisBaseBackupStale"
+          rule_set: "f15-telemetry-rules-v2"
+          reason: "TELEMETRY_MISSING"
+          control: "NONE"
+        annotations:
+          summary: "The newest PostgreSQL base backup is older than 26 hours."
+      - alert: "TennisBackupMissing"
+        expr: "absent(tennis_backup_last_success_timestamp_seconds{store=\"postgres_base\"}) or absent(tennis_backup_last_success_timestamp_seconds{store=\"objects\"}) or absent(tennis_backup_last_success_timestamp_seconds{store=\"journal\"})"
+        for: "30m"
+        labels:
+          severity: "critical"
+          rule_id: "TennisBackupMissing"
+          rule_set: "f15-telemetry-rules-v2"
+          reason: "TELEMETRY_MISSING"
+          control: "NONE"
+        annotations:
+          summary: "A store has no recovery point. A missing backup is not healthy."
+      - alert: "TennisWalArchiveFailing"
+        expr: "increase(tennis_wal_archive_segments{event=\"failed\"}[15m]) > 0"
+        labels:
+          severity: "critical"
+          rule_id: "TennisWalArchiveFailing"
+          rule_set: "f15-telemetry-rules-v2"
+          reason: "TELEMETRY_MISSING"
+          control: "NONE"
+        annotations:
+          summary: "PostgreSQL failed to archive a WAL segment. The RPO is at risk."
       - alert: "TennisJobFailing"
         expr: "increase(tennis_job_outcomes_total{state=~\"FAILED|EXHAUSTED\"}[15m]) > 0"
         labels:
           severity: "warning"
           rule_id: "TennisJobFailing"
-          rule_set: "f15-telemetry-rules-v1"
+          rule_set: "f15-telemetry-rules-v2"
           reason: "TELEMETRY_MISSING"
           control: "NONE"
         annotations:
@@ -392,7 +433,7 @@ groups:
         labels:
           severity: "warning"
           rule_id: "TennisTaskFailing"
-          rule_set: "f15-telemetry-rules-v1"
+          rule_set: "f15-telemetry-rules-v2"
           reason: "TELEMETRY_MISSING"
           control: "NONE"
         annotations:

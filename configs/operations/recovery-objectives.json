@@ -1,0 +1,21 @@
+{
+  "version": "f15-recovery-objectives-v1",
+  "status": "ACCEPTED",
+  "accepted_on": "2026-09-30",
+  "accepted_by": "user (project owner)",
+  "note": "User decision: RTO 4 hours and RPO 15 minutes for the single private host. The schedule below is the implementation choice that meets the RPO.",
+  "rto_seconds": 14400,
+  "rpo_seconds": 900,
+  "schedule": {
+    "wal_archive_timeout_seconds": 60,
+    "base_backup_interval_seconds": 86400,
+    "object_backup_interval_seconds": 300,
+    "journal_backup_interval_seconds": 300
+  },
+  "retention": {
+    "base_backups_kept": 7,
+    "journal_snapshots_kept": 2016,
+    "wal": "every segment since the START_WAL of the oldest kept base backup",
+    "objects": "every archived object; objects are immutable and no raw object is deleted from the store yet, so the backup never deletes either"
+  }
+}

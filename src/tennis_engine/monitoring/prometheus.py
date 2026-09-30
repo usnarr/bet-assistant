@@ -22,11 +22,15 @@ from typing import Any
 
 from .alerts import AlertRule, AlertRuleSet, Control
 
-TELEMETRY_RULES_VERSION = "f15-telemetry-rules-v1"
+TELEMETRY_RULES_VERSION = "f15-telemetry-rules-v2"
 SCRAPE_JOBS = ("tennis-api", "tennis-scheduler", "prometheus", "alertmanager")
 # Seconds. A tick is 60 s and the alert task runs every minute.
 SCHEDULER_STALE_SECONDS = 300
 EVALUATION_STALE_SECONDS = 300
+# F15.7 backups (user decision 2026-09-30: RPO 15 min). A base backup runs daily.
+RPO_SECONDS = 900
+BASE_BACKUP_STALE_SECONDS = 26 * 3600
+BACKUP_STORES = ("postgres_base", "objects", "journal")
 
 
 def alert_name(rule_id: str) -> str:
@@ -163,6 +167,36 @@ def telemetry_group() -> dict[str, Any]:
             "tennis_signal_producer_up == 0",
             "critical",
             "A signal producer failed. Its signals are missing.",
+        ),
+        _fixed(
+            "TennisBackupStale",
+            f'time() - tennis_backup_last_success_timestamp_seconds{{store=~"objects|journal"}}'
+            f" > {RPO_SECONDS}",
+            "critical",
+            "The newest object or journal backup is older than the RPO (15 minutes).",
+        ),
+        _fixed(
+            "TennisBaseBackupStale",
+            f'time() - tennis_backup_last_success_timestamp_seconds{{store="postgres_base"}}'
+            f" > {BASE_BACKUP_STALE_SECONDS}",
+            "critical",
+            "The newest PostgreSQL base backup is older than 26 hours.",
+        ),
+        _fixed(
+            "TennisBackupMissing",
+            " or ".join(
+                f'absent(tennis_backup_last_success_timestamp_seconds{{store="{store}"}})'
+                for store in BACKUP_STORES
+            ),
+            "critical",
+            "A store has no recovery point. A missing backup is not healthy.",
+            "30m",
+        ),
+        _fixed(
+            "TennisWalArchiveFailing",
+            'increase(tennis_wal_archive_segments{event="failed"}[15m]) > 0',
+            "critical",
+            "PostgreSQL failed to archive a WAL segment. The RPO is at risk.",
         ),
         _fixed(
             "TennisJobFailing",

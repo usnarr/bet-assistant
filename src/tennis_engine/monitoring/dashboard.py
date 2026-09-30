@@ -129,6 +129,23 @@ PANELS: tuple[tuple[str, str, tuple[int, int, int, int], dict[str, Any], str, st
         "none",
     ),
     (
+        "Recovery point age",
+        "timeseries",
+        (0, 36, 12, 8),
+        _target("time() - tennis_backup_last_success_timestamp_seconds", "{{store}}"),
+        "Age of the newest backup of each store. Objects and journal must stay below the "
+        "RPO of 15 minutes; the base backup below 26 hours.",
+        "s",
+    ),
+    (
+        "WAL segments (pg_stat_archiver)",
+        "timeseries",
+        (12, 36, 12, 8),
+        _target("tennis_wal_archive_segments", "{{event}}"),
+        "Archived and failed WAL segments. A failed segment puts the RPO at risk.",
+        "none",
+    ),
+    (
         "HTTP requests",
         "timeseries",
         (12, 28, 12, 8),

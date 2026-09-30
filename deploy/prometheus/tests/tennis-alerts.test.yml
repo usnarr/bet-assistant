@@ -26,6 +26,9 @@ tests:
         values: "0x40"
       - series: 'up{job="tennis-api",instance="api:8000"}'
         values: "0x40"
+      # The last object backup at time 0: older than the RPO (900 s) after 15 minutes.
+      - series: 'tennis_backup_last_success_timestamp_seconds{store="objects"}'
+        values: "0x40"
     alert_rule_test:
       - eval_time: 1m
         alertname: TennisParserZeroEvents
@@ -88,7 +91,7 @@ tests:
               alertname: TennisScrapeTargetDown
               severity: critical
               rule_id: TennisScrapeTargetDown
-              rule_set: f15-telemetry-rules-v1
+              rule_set: f15-telemetry-rules-v2
               reason: TELEMETRY_MISSING
               control: NONE
               job: tennis-api
@@ -102,7 +105,7 @@ tests:
               alertname: TennisSchedulerTargetAbsent
               severity: critical
               rule_id: TennisSchedulerTargetAbsent
-              rule_set: f15-telemetry-rules-v1
+              rule_set: f15-telemetry-rules-v2
               reason: TELEMETRY_MISSING
               control: NONE
               job: tennis-scheduler
@@ -115,8 +118,24 @@ tests:
               alertname: TennisSchedulerStale
               severity: critical
               rule_id: TennisSchedulerStale
-              rule_set: f15-telemetry-rules-v1
+              rule_set: f15-telemetry-rules-v2
               reason: TELEMETRY_MISSING
               control: NONE
             exp_annotations:
               summary: "The scheduler has not completed a tick recently."
+      - eval_time: 10m
+        alertname: TennisBackupStale
+        exp_alerts: []
+      - eval_time: 16m
+        alertname: TennisBackupStale
+        exp_alerts:
+          - exp_labels:
+              alertname: TennisBackupStale
+              severity: critical
+              rule_id: TennisBackupStale
+              rule_set: f15-telemetry-rules-v2
+              reason: TELEMETRY_MISSING
+              control: NONE
+              store: objects
+            exp_annotations:
+              summary: "The newest object or journal backup is older than the RPO (15 minutes)."

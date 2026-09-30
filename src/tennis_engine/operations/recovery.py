@@ -10,7 +10,10 @@ module proves that a restored copy equals its source:
   store with the recorded SHA-256.
 - Ledger reconciliation checks that each virtual ledger balances.
 
-Recovery objectives (RTO, RPO) are not agreed. A report without them is `BLOCKED`.
+The owner agreed the recovery objectives on 2026-09-30: RTO 4 hours, RPO 15 minutes
+(`configs/operations/recovery-objectives.json`). A report compares the measured restore
+time and data-loss window with them and is `PASS` or `FAIL`. A caller that passes no
+objectives still gets `BLOCKED`, so a missing objective can never pass.
 """
 
 import gzip
@@ -234,10 +237,11 @@ def compare(
         if objectives.rto_seconds is None or objectives.rpo_seconds is None:
             status = "BLOCKED"
             findings.append("OBJECTIVES_UNSET")
+        elif measured_restore_seconds is None or measured_data_loss_seconds is None:
+            status = "FAIL"
+            findings.append("OBJECTIVES_NOT_MEASURED")
         elif (
-            measured_restore_seconds is None
-            or measured_data_loss_seconds is None
-            or measured_restore_seconds > objectives.rto_seconds
+            measured_restore_seconds > objectives.rto_seconds
             or measured_data_loss_seconds > objectives.rpo_seconds
         ):
             status = "FAIL"
