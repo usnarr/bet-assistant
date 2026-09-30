@@ -107,4 +107,4 @@ def test_agent_migration_downgrades_and_upgrades(engine):
     with engine.connect() as db:
         assert db.execute(text("SELECT to_regclass('tennis.agent_trace')")).scalar_one() is None
     command.upgrade(config, "head")
-    assert current_revision(engine) == EXPECTED_ALEMBIC_REVISION == "0012_agent_records"
+    assert current_revision(engine) == EXPECTED_ALEMBIC_REVISION

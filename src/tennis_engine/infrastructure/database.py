@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.engine import Connection
 
-EXPECTED_ALEMBIC_REVISION = "0012_agent_records"
+EXPECTED_ALEMBIC_REVISION = "0013_model_registry"
 
 
 def build_engine(

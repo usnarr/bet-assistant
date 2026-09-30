@@ -123,6 +123,10 @@ def parser() -> argparse.ArgumentParser:
     grafana.add_argument("--output", type=Path, default=GRAFANA_DASHBOARD)
     grafana.add_argument("--check", action="store_true", help="Exit 1 when the file differs")
 
+    from .registry_commands import add_parser as add_registry
+
+    add_registry(commands)
+
     scheduler = commands.add_parser(
         "scheduler", help="Run the F15 job graph and operations tasks on a cadence"
     )
@@ -280,6 +284,19 @@ def main(argv: Sequence[str] | None = None) -> int:
             return scheduler_command(args)
         if args.command in ("prometheus-rules", "grafana-dashboard"):
             return prometheus_command(args)
+        if args.command == "registry":
+            from tennis_engine.models.registry import RegistryRefused
+
+            from .registry_commands import run as run_registry
+
+            try:
+                result = run_registry(args)
+            except RegistryRefused as refused:
+                _print({"refused": list(refused.reasons)})
+                return 1
+            _print(result)
+            problems = result.get("problems")
+            return 1 if problems else 0
         return recovery_command(args)
     except ValidationError as error:
         # Do not echo input values; they can hold operational data.

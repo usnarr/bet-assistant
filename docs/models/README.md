@@ -133,8 +133,8 @@ Rules:
   before the match. The prediction names the calibrator that was used.
 
 F12 reads a `CalibratedPrediction` through `pricing/model_input.py`, so the calibration
-gate can pass. A promotion registry and the MOD-03/MOD-04 comparisons on real data are
-not implemented.
+gate can pass. The MOD-03/MOD-04 comparisons on real data are not implemented. The model
+registry is described in "F11.8 model registry and F13.9 champion switch".
 
 See [MOD-03 calibration evidence](evidence/MOD-03-calibration.md).
 
@@ -193,4 +193,58 @@ Rules:
 
 Limitations: the grid values, the fold count and the row minimums are candidate values.
 All results are synthetic; see [MOD-04 evidence](evidence/MOD-04-tabular.md). There is no
-promotion registry, no signed artifact, and no evaluation on approved real data.
+signed artifact and no evaluation on approved real data. The registry does not hold
+tabular or stacker bundles yet, because they have no stored file format.
+
+## F11.8 model registry and F13.9 champion switch (`models/registry.py`)
+
+A bundle is the unit of promotion and rollback. It holds these files under the artifact
+root, each with its SHA-256:
+
+| File | Source |
+|---|---|
+| `artifact.json`, `manifest.json`, `model-card.json` | F09 `write_baseline` |
+| `calibrator.json`, `manifest.json` (optional) | F11 `write_calibrator` |
+| Evaluation report | The F13 report of the candidate |
+
+The bundle also records the candidate name, the model and calibrator artifact hashes, the
+feature set and its hash, the code revision, the dependency lock hash (from the model
+card), the training cutoff, the rollback target, the registering author and the time. The
+bundle ID is a hash of this content. Paths are relative POSIX paths inside the artifact
+root.
+
+| Rule | Behaviour |
+|---|---|
+| Registration | Reads the files. The card must describe the artifact, the calibrator must name the same base artifact and training cutoff, and the feature sets must agree. A mixed bundle is refused (`CALIBRATOR_BELONGS_TO_ANOTHER_MODEL`). The rollback target must be registered in the same family. |
+| Champion switch | Needs a `PASS` F13 decision whose gates all pass, an approving reviewer who is not the author, a switching actor with the `policy_reviewer` role who is not the author, the decision's candidate and rollback target equal to the bundle's, and a verified bundle and rollback target. A decision promotes once. |
+| Rollback | An `operator` or `policy_reviewer` restores the declared rollback target, an earlier champion of the family, or `no-champion`. The target must verify. A changed or missing file refuses the rollback (`ROLLBACK_TARGET:HASH_MISMATCH:<file>`); the champion stays. |
+| Load | `ModelRegistry.active` verifies every hash again. A failure raises `RegistryRefused`, so scoring abstains. There is no fallback to another version. |
+| No champion | `active` returns None. Scoring abstains. |
+| Feature set | The runtime lists the feature sets that it can compute (`RUNTIME_FEATURE_SETS`, the core set). Another feature set is refused. |
+| Dependency lock | A lock that differs from the runtime lock is a recorded warning, not a refusal. |
+| History | `tennis.model_bundle` and `tennis.champion_event` are append-only (migration `0013_model_registry`). A switch appends under an advisory lock only when the champion is still the one that was checked. |
+
+Nothing promotes automatically. No scheduler job, API route or agent tool calls a switch.
+With the committed release configuration (`configs/evaluations/release.json`, thresholds
+not frozen), the real decision on the synthetic walk-forward run is `BLOCKED`, and the
+switch is refused with `DECISION_NOT_PASS:BLOCKED`.
+
+```powershell
+uv run tennis-ops registry register --family match-winner --version v1 `
+  --model-dir <artifact-root>/model/<id> --calibrator-dir <artifact-root>/model/<id> `
+  --evaluation-report <artifact-root>/evaluations/<report>.json
+uv run tennis-ops registry promote --bundle <bundle-id> --decision release-decision.json `
+  --reason "<review reference>"
+uv run tennis-ops registry rollback --family match-winner --reason "<incident reference>"
+uv run tennis-ops registry show --family match-winner
+uv run tennis-ops registry verify --bundle <bundle-id>
+```
+
+The actor comes from the local access file (`--access-file`, see the F01 guide). Exit
+codes: 0 done, 1 refused (the reasons are printed as codes), 2 an input error.
+
+Drill: `scripts/ops02_rollback_drill.py`. See [OPS-02](../operations/evidence/OPS-02.md).
+
+Limitations: bundles hold F09 baselines and F11 calibrators only. No model serves
+decisions yet, so no serving path loads the champion. Artifacts are hashed, not signed.
+All bundles are synthetic.

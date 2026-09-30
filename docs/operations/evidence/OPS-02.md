@@ -69,9 +69,43 @@ Report: `integrity: PASS`, `status: BLOCKED`, finding `OBJECTIVES_UNSET`.
 | A changed journal payload in the backup | `JOURNAL_HASH_MISMATCH:<revision>` and `JOURNAL:MISMATCH` |
 | Restore slower than the RTO | `OBJECTIVES_NOT_MET` |
 
+## Model rollback drill (F11.8, F13.9)
+
+Date: 2026-09-30. Status: **PASS**. Scope: an isolated PostgreSQL 17.6 test container
+and a temporary artifact root. Two synthetic bundles (F09 ranking baseline, F11 Platt
+calibrator, model card, evaluation report) trained on the fictional history of the tests.
+
+```sh
+TEST_DATABASE_URL=postgresql+psycopg://tennis:test-only@127.0.0.1:55444/tennis_test \
+  uv run python scripts/ops02_rollback_drill.py
+```
+
+| Step | Result |
+|---|---|
+| Real F13 decision on the synthetic walk-forward run, committed release configuration | `BLOCKED`; switch refused with `DECISION_NOT_PASS:BLOCKED` and the non-passing gates |
+| Champion after the refusal | none |
+| Mixed bundle (model v1 with calibrator v2) | refused, `CALIBRATOR_BELONGS_TO_ANOTHER_MODEL` |
+| Decision approved by its author | refused, `REVIEWER_IS_AUTHOR` |
+| Switch by the author | refused, `AUTHOR_CANNOT_SWITCH` |
+| Promote v1, then v2, with PASS decision fixtures (drill only, not model evidence) | done |
+| Rollback by an operator to the declared target v1, then load with every hash checked | v1 active; calibrator base hash equals the artifact hash; 0.022 s |
+| Promote v2 again, change one byte of the v1 calibrator, roll back | refused, `ROLLBACK_TARGET:HASH_MISMATCH:calibrator`; v2 stays champion |
+| Restore the file from the backup copy, roll back | v1 active; 0.024 s |
+| Event history | 1:PROMOTE, 2:PROMOTE, 3:ROLLBACK, 4:PROMOTE, 5:ROLLBACK |
+
+The PASS decisions in steps 4 to 7 are fixtures. They exercise the switch and rollback
+paths only. With the committed configuration, no real decision can be `PASS`, so nothing
+can be promoted. The times are for tiny files on one development machine.
+
+Tests: `tests/test_model_registry.py` (in memory) and
+`tests/integration/test_registry_persistence.py` (PostgreSQL: append-only tables, one use
+per decision, a concurrent switch from the same champion gives one winner and one
+`StaleChampion`, the CLI commands, migration downgrade and upgrade).
+
 ## Not covered
 
-- Model rollback: no model registry or serving model selection exists yet.
+- Model rollback in a serving path: no model serves decisions yet, so no path loads the
+  champion.
 - The S3 object store: the drill used a local object store copy. The reconciliation code
   uses the same `ImmutableObjectStore` interface as the S3 store.
 - Staging or production volumes, and restore under load.

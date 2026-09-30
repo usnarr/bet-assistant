@@ -26,6 +26,8 @@ Demonstrated on synthetic fixtures and isolated local services:
   a source scan for unsafe deserialization.
 - F15.7 restore verification: database and journal fingerprints, raw-object and ledger
   reconciliation, and incident bundles with affected recommendation IDs.
+- F15.7 model rollback: the F11.8 registry and F13.9 audited champion switch, and a
+  rollback drill (`scripts/ops02_rollback_drill.py`).
 - F15.8 runbooks: [runbooks.md](runbooks.md).
 - F15.6 agent tool scoping: a server-side tool gateway, an agent kill switch on the F01
   stops, append-only agent traces and proposals (migration `0012_agent_records`) and
@@ -435,9 +437,12 @@ container. See [OPS-02](evidence/OPS-02.md).
 
 ### Model rollback
 
-No model registry or serving model selection exists yet. F13 promotion decisions record a
-rollback reference, and model artifacts are hash-checked. A rollback drill is pending until
-a model serves decisions.
+The F11.8 registry (`tennis-ops registry`) holds complete model bundles. A champion switch
+needs a `PASS` F13 decision and a reviewer who is not the author. A rollback restores one
+complete, verified bundle or "no champion", and refuses a changed file. See
+[the model guide](../models/README.md#f118-model-registry-and-f139-champion-switch-modelsregistrypy).
+The drill `scripts/ops02_rollback_drill.py` passed; see [OPS-02](evidence/OPS-02.md). No
+model serves decisions yet, so no serving path loads the champion.
 
 ## Incidents (F15.7)
 
@@ -462,7 +467,7 @@ Runbooks: [runbooks.md](runbooks.md).
 - F15.6: live tool backends for the agent roles. The agent guide lists which roles read
   live records. The other roles run on fixture backends only.
 - Agreed RTO and RPO. Continuous WAL archiving (point-in-time recovery).
-- Model rollback drill (no model registry yet).
+- A serving path that loads the registry champion (no model serves decisions yet).
 - Separate writer roles per component, outbound allow lists and at-rest encryption
   settings. These depend on the deployment.
 - Staging drills, real data and production stores.

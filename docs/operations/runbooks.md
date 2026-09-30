@@ -115,6 +115,10 @@ Signals: a hash mismatch on a model artifact, a manifest or an incident bundle.
 2. Open a `COMPROMISED_ARTIFACT` incident.
 3. Do not load the artifact. `load_booster` refuses bytes that do not match their hash.
 4. Rebuild the artifact from its recorded inputs, or restore it from a verified backup.
+   When the artifact belongs to the champion model, roll back to a complete verified
+   bundle: `uv run tennis-ops registry rollback --family <family> --reason "<incident>"`.
+   A rollback target with a changed file is refused; restore the file first, then check
+   it with `tennis-ops registry verify --bundle <bundle-id>`.
 5. Rotate every credential that the attacker could read (`create-api-token --rotate`,
    database and object-store passwords).
 6. A reviewer resumes after the hashes and the evaluation match.
