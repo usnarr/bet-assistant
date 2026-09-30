@@ -258,6 +258,79 @@ def valid_number(text):
     return True
 
 
+# --- Fortuna synthetic shape: naive Europe/Warsaw local starts, comma decimal odds,
+# participants listed away first with explicit home/away positions, boolean states.
+FORTUNA_EVENT = {"PRE_MATCH": "NOT_STARTED", "STARTED": "IN_PLAY", "CANCELLED": "CANCELLED"}
+FORTUNA_MARKET = {"MW": "MATCH_RESULT", "TOTAL": "TOTAL_GAMES"}
+POSITION = {0: "home", 1: "away", None: None}
+
+
+def fortuna_flags(status, *, market):
+    if market:
+        return {"open": status != "CLOSED", "suspended": status == "SUSPENDED"}
+    return {"active": status != "CLOSED", "suspended": status == "SUSPENDED"}
+
+
+def fortuna(events):
+    competitions = {}
+    for item in events:
+        entry = {
+            "code": item["id"],
+            "state": FORTUNA_EVENT[item["state"]],
+            "format": None if item["best_of"] is None else f"BO{item['best_of']}",
+            "pair": item["doubles"],
+            # Away is listed first on purpose; position, not list order, decides sides.
+            "participants": [
+                {
+                    "position": "away",
+                    "id": f"fo-{item['players'][1][0]}",
+                    "name": item["players"][1][1],
+                },
+                {
+                    "position": "home",
+                    "id": f"fo-{item['players'][0][0]}",
+                    "name": item["players"][0][1],
+                },
+            ],
+            "markets": [
+                {
+                    "code": market["id"],
+                    "type": FORTUNA_MARKET[market["kind"]],
+                    **fortuna_flags(market["status"], market=True),
+                    "outcomes": [
+                        {
+                            "code": sel["id"],
+                            "label": sel["label"] or item["players"][sel["side"]][1],
+                            "position": POSITION[sel["side"]],
+                            "odds": sel["odds"].replace(".", ","),
+                            **fortuna_flags(sel["status"], market=False),
+                            "superOdds": sel["promo"],
+                        }
+                        for sel in market["selections"]
+                    ],
+                }
+                for market in item["markets"]
+            ],
+        }
+        if item["reject_event"] == "unknown-timezone":
+            entry["startLocal"] = "2026-10-25 02:30"  # Occurs twice in Warsaw (DST end).
+        elif item["start"] is not None:
+            entry["startLocal"] = item["start"].astimezone(WARSAW).strftime("%Y-%m-%d %H:%M")
+        competitions.setdefault((item["competition"], item["tour"]), []).append(entry)
+    return {
+        "version": "fortuna-synthetic-v1",
+        "sports": [
+            {
+                "sport": "tennis",
+                "competitions": [
+                    {"name": name, "category": tour, "events": entries}
+                    for (name, tour), entries in competitions.items()
+                ],
+            }
+        ],
+    }
+
+
 def write(name, payloads, comma_decimal=False):
     folder = ROOT / name
     folder.mkdir(exist_ok=True)
@@ -288,3 +361,4 @@ def encode(value):
 if __name__ == "__main__":
     write("betclic", betclic)
     write("superbet", superbet)
+    write("fortuna", fortuna, comma_decimal=True)

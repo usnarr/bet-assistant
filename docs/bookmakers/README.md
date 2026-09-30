@@ -11,9 +11,12 @@ adapter can collect real data yet.
 |---|---|---|---|
 | Betclic | `betclic-synthetic-v1` | `betclic-odds` (DRAFT, killed) | Parser, fixtures and end-to-end tests on a synthetic shape |
 | Superbet | `superbet-synthetic-v1` | `superbet-odds` (DRAFT, killed) | Parser, fixtures and end-to-end tests on a synthetic shape |
-| Fortuna | — | `fortuna-odds` (DRAFT, killed) | Not started |
+| Fortuna | `fortuna-synthetic-v1` | `fortuna-odds` (DRAFT, killed) | Parser, fixtures and end-to-end tests on a synthetic shape |
 
-The Betclic and Superbet payload shapes are invented. F05.1 requires an approved access path, quotas and a
+All three payload shapes are invented. Each parser keeps its own assumptions: Betclic
+uses ISO starts with an offset; Superbet uses epoch-millisecond UTC starts and bare JSON-number
+prices; Fortuna uses Warsaw wall-clock starts (a time that is repeated or skipped at a
+daylight-saving change is rejected), comma decimals and home/away positions. F05.1 requires an approved access path, quotas and a
 one-event comparison with the source presentation. Then the parser gets a new version for
 the real shape. Do not approve a source only to exercise an adapter.
 

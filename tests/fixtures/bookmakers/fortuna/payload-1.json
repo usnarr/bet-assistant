@@ -1,0 +1,1081 @@
+{
+ "version": "fortuna-synthetic-v1",
+ "sports": [
+  {
+   "sport": "tennis",
+   "competitions": [
+    {
+     "name": "Synthetic Open",
+     "category": "ATP",
+     "events": [
+      {
+       "code": "ev-01",
+       "state": "NOT_STARTED",
+       "format": "BO3",
+       "pair": false,
+       "participants": [
+        {
+         "position": "away",
+         "id": "fo-p-02",
+         "name": "Lukasz Wojcik"
+        },
+        {
+         "position": "home",
+         "id": "fo-p-01",
+         "name": "Jan Kowalski"
+        }
+       ],
+       "markets": [
+        {
+         "code": "ev-01-mw",
+         "type": "MATCH_RESULT",
+         "open": true,
+         "suspended": false,
+         "outcomes": [
+          {
+           "code": "ev-01-s1",
+           "label": "Jan Kowalski",
+           "position": "home",
+           "odds": "1,62",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          },
+          {
+           "code": "ev-01-s2",
+           "label": "Lukasz Wojcik",
+           "position": "away",
+           "odds": "2,30",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          }
+         ]
+        }
+       ],
+       "startLocal": "2026-09-21 13:00"
+      },
+      {
+       "code": "ev-03",
+       "state": "NOT_STARTED",
+       "format": "BO3",
+       "pair": false,
+       "participants": [
+        {
+         "position": "away",
+         "id": "fo-p-06",
+         "name": "Tomasz Kaminski"
+        },
+        {
+         "position": "home",
+         "id": "fo-p-05",
+         "name": "Piotr Lewandowski"
+        }
+       ],
+       "markets": [
+        {
+         "code": "ev-03-mw",
+         "type": "MATCH_RESULT",
+         "open": true,
+         "suspended": false,
+         "outcomes": [
+          {
+           "code": "ev-03-s1",
+           "label": "Piotr Lewandowski",
+           "position": "home",
+           "odds": "1,85",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          },
+          {
+           "code": "ev-03-s2",
+           "label": "Tomasz Kaminski",
+           "position": "away",
+           "odds": "1,95",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          }
+         ]
+        }
+       ],
+       "startLocal": "2026-09-21 15:00"
+      },
+      {
+       "code": "ev-05",
+       "state": "NOT_STARTED",
+       "format": "BO3",
+       "pair": false,
+       "participants": [
+        {
+         "position": "away",
+         "id": "fo-p-03",
+         "name": "Anna Nowak"
+        },
+        {
+         "position": "home",
+         "id": "fo-p-01",
+         "name": "Jan Kowalski"
+        }
+       ],
+       "markets": [
+        {
+         "code": "ev-05-mw",
+         "type": "MATCH_RESULT",
+         "open": true,
+         "suspended": false,
+         "outcomes": [
+          {
+           "code": "ev-05-s1",
+           "label": "Jan Kowalski",
+           "position": "home",
+           "odds": "1,85",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          },
+          {
+           "code": "ev-05-s2",
+           "label": "Anna Nowak",
+           "position": "away",
+           "odds": "1,95",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          }
+         ]
+        }
+       ],
+       "startLocal": "2026-09-21 17:00"
+      },
+      {
+       "code": "ev-07",
+       "state": "NOT_STARTED",
+       "format": "BO3",
+       "pair": false,
+       "participants": [
+        {
+         "position": "away",
+         "id": "fo-p-07",
+         "name": "Ewa Wisniewska"
+        },
+        {
+         "position": "home",
+         "id": "fo-p-05",
+         "name": "Piotr Lewandowski"
+        }
+       ],
+       "markets": [
+        {
+         "code": "ev-07-mw",
+         "type": "MATCH_RESULT",
+         "open": true,
+         "suspended": false,
+         "outcomes": [
+          {
+           "code": "ev-07-s1",
+           "label": "Piotr Lewandowski",
+           "position": "home",
+           "odds": "1,85",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          },
+          {
+           "code": "ev-07-s2",
+           "label": "Ewa Wisniewska",
+           "position": "away",
+           "odds": "1,95",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          }
+         ]
+        }
+       ],
+       "startLocal": "2026-09-21 19:00"
+      },
+      {
+       "code": "ev-09",
+       "state": "NOT_STARTED",
+       "format": "BO3",
+       "pair": false,
+       "participants": [
+        {
+         "position": "away",
+         "id": "fo-p-01",
+         "name": "Jan Kowalski"
+        },
+        {
+         "position": "home",
+         "id": "fo-p-02",
+         "name": "Lukasz Wojcik"
+        }
+       ],
+       "markets": [
+        {
+         "code": "ev-09-mw",
+         "type": "MATCH_RESULT",
+         "open": true,
+         "suspended": false,
+         "outcomes": [
+          {
+           "code": "ev-09-s1",
+           "label": "Lukasz Wojcik",
+           "position": "home",
+           "odds": "2,30",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          },
+          {
+           "code": "ev-09-s2",
+           "label": "Jan Kowalski",
+           "position": "away",
+           "odds": "1,62",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          }
+         ]
+        }
+       ],
+       "startLocal": "2026-09-21 21:00"
+      },
+      {
+       "code": "ev-10",
+       "state": "NOT_STARTED",
+       "format": "BO3",
+       "pair": false,
+       "participants": [
+        {
+         "position": "away",
+         "id": "fo-p-05",
+         "name": "Piotr Lewandowski"
+        },
+        {
+         "position": "home",
+         "id": "fo-p-03",
+         "name": "Anna Nowak"
+        }
+       ],
+       "markets": [
+        {
+         "code": "ev-10-mw",
+         "type": "MATCH_RESULT",
+         "open": true,
+         "suspended": false,
+         "outcomes": [
+          {
+           "code": "ev-10-s1",
+           "label": "Anna Nowak",
+           "position": "home",
+           "odds": "1,85",
+           "active": true,
+           "suspended": true,
+           "superOdds": false
+          },
+          {
+           "code": "ev-10-s2",
+           "label": "Piotr Lewandowski",
+           "position": "away",
+           "odds": "1,95",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          }
+         ]
+        }
+       ],
+       "startLocal": "2026-09-21 22:00"
+      },
+      {
+       "code": "ev-12",
+       "state": "NOT_STARTED",
+       "format": "BO3",
+       "pair": false,
+       "participants": [
+        {
+         "position": "away",
+         "id": "fo-p-01",
+         "name": "Jan Kowalski"
+        },
+        {
+         "position": "home",
+         "id": "fo-p-07",
+         "name": "Ewa Wisniewska"
+        }
+       ],
+       "markets": [
+        {
+         "code": "ev-12-mw",
+         "type": "MATCH_RESULT",
+         "open": true,
+         "suspended": false,
+         "outcomes": [
+          {
+           "code": "ev-12-s1",
+           "label": "Ewa Wisniewska",
+           "position": "home",
+           "odds": "1,85",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          },
+          {
+           "code": "ev-12-s2",
+           "label": "Jan Kowalski",
+           "position": "away",
+           "odds": "1,95",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          }
+         ]
+        }
+       ],
+       "startLocal": "2026-09-22 00:00"
+      },
+      {
+       "code": "ev-14",
+       "state": "NOT_STARTED",
+       "format": "BO3",
+       "pair": false,
+       "participants": [
+        {
+         "position": "away",
+         "id": "fo-p-04",
+         "name": "Maria Zielinska"
+        },
+        {
+         "position": "home",
+         "id": "fo-p-01",
+         "name": "Jan Kowalski"
+        }
+       ],
+       "markets": [
+        {
+         "code": "ev-14-mw",
+         "type": "MATCH_RESULT",
+         "open": true,
+         "suspended": false,
+         "outcomes": [
+          {
+           "code": "ev-14-s1",
+           "label": "Jan Kowalski",
+           "position": "home",
+           "odds": "1,85",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          },
+          {
+           "code": "ev-14-s2",
+           "label": "Maria Zielinska",
+           "position": "away",
+           "odds": "1,95",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "code": "ev-15",
+       "state": "NOT_STARTED",
+       "format": "BO3",
+       "pair": false,
+       "participants": [
+        {
+         "position": "away",
+         "id": "fo-p-06",
+         "name": "Tomasz Kaminski"
+        },
+        {
+         "position": "home",
+         "id": "fo-p-03",
+         "name": "Anna Nowak"
+        }
+       ],
+       "markets": [
+        {
+         "code": "ev-15-mw",
+         "type": "MATCH_RESULT",
+         "open": true,
+         "suspended": false,
+         "outcomes": [
+          {
+           "code": "ev-15-s1",
+           "label": "Anna Nowak",
+           "position": "home",
+           "odds": "1,85",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          },
+          {
+           "code": "ev-15-s2",
+           "label": "Tomasz Kaminski",
+           "position": "away",
+           "odds": "1,95",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          }
+         ]
+        },
+        {
+         "code": "ev-15-tg",
+         "type": "TOTAL_GAMES",
+         "open": true,
+         "suspended": false,
+         "outcomes": [
+          {
+           "code": "ev-15-o",
+           "label": "Over 22.5",
+           "position": null,
+           "odds": "1,90",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          },
+          {
+           "code": "ev-15-u",
+           "label": "Under 22.5",
+           "position": null,
+           "odds": "1,90",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          }
+         ]
+        }
+       ],
+       "startLocal": "2026-09-22 03:00"
+      },
+      {
+       "code": "ev-16",
+       "state": "NOT_STARTED",
+       "format": "BO3",
+       "pair": true,
+       "participants": [
+        {
+         "position": "away",
+         "id": "fo-p-08",
+         "name": "Karolina Dabrowska"
+        },
+        {
+         "position": "home",
+         "id": "fo-p-05",
+         "name": "Piotr Lewandowski"
+        }
+       ],
+       "markets": [
+        {
+         "code": "ev-16-mw",
+         "type": "MATCH_RESULT",
+         "open": true,
+         "suspended": false,
+         "outcomes": [
+          {
+           "code": "ev-16-s1",
+           "label": "Piotr Lewandowski",
+           "position": "home",
+           "odds": "1,85",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          },
+          {
+           "code": "ev-16-s2",
+           "label": "Karolina Dabrowska",
+           "position": "away",
+           "odds": "1,95",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          }
+         ]
+        }
+       ],
+       "startLocal": "2026-09-22 04:00"
+      },
+      {
+       "code": "ev-17",
+       "state": "NOT_STARTED",
+       "format": "BO5",
+       "pair": false,
+       "participants": [
+        {
+         "position": "away",
+         "id": "fo-p-07",
+         "name": "Ewa Wisniewska"
+        },
+        {
+         "position": "home",
+         "id": "fo-p-02",
+         "name": "Lukasz Wojcik"
+        }
+       ],
+       "markets": [
+        {
+         "code": "ev-17-mw",
+         "type": "MATCH_RESULT",
+         "open": true,
+         "suspended": false,
+         "outcomes": [
+          {
+           "code": "ev-17-s1",
+           "label": "Lukasz Wojcik",
+           "position": "home",
+           "odds": "1,85",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          },
+          {
+           "code": "ev-17-s2",
+           "label": "Ewa Wisniewska",
+           "position": "away",
+           "odds": "1,95",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          }
+         ]
+        }
+       ],
+       "startLocal": "2026-09-22 05:00"
+      },
+      {
+       "code": "ev-19",
+       "state": "CANCELLED",
+       "format": "BO3",
+       "pair": false,
+       "participants": [
+        {
+         "position": "away",
+         "id": "fo-p-06",
+         "name": "Tomasz Kaminski"
+        },
+        {
+         "position": "home",
+         "id": "fo-p-01",
+         "name": "Jan Kowalski"
+        }
+       ],
+       "markets": [
+        {
+         "code": "ev-19-mw",
+         "type": "MATCH_RESULT",
+         "open": true,
+         "suspended": false,
+         "outcomes": [
+          {
+           "code": "ev-19-s1",
+           "label": "Jan Kowalski",
+           "position": "home",
+           "odds": "1,85",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          },
+          {
+           "code": "ev-19-s2",
+           "label": "Tomasz Kaminski",
+           "position": "away",
+           "odds": "1,95",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          }
+         ]
+        }
+       ],
+       "startLocal": "2026-09-22 07:00"
+      },
+      {
+       "code": "ev-21",
+       "state": "NOT_STARTED",
+       "format": "BO3",
+       "pair": false,
+       "participants": [
+        {
+         "position": "away",
+         "id": "fo-p-02",
+         "name": "Lukasz Wojcik"
+        },
+        {
+         "position": "home",
+         "id": "fo-p-06",
+         "name": "Tomasz Kaminski"
+        }
+       ],
+       "markets": [
+        {
+         "code": "ev-21-mw",
+         "type": "MATCH_RESULT",
+         "open": true,
+         "suspended": false,
+         "outcomes": [
+          {
+           "code": "ev-21-s1",
+           "label": "Tomasz Kaminski",
+           "position": "home",
+           "odds": "2,10",
+           "active": true,
+           "suspended": false,
+           "superOdds": true
+          },
+          {
+           "code": "ev-21-s2",
+           "label": "Lukasz Wojcik",
+           "position": "away",
+           "odds": "1,72",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          }
+         ]
+        }
+       ],
+       "startLocal": "2026-09-22 09:00"
+      }
+     ]
+    },
+    {
+     "name": "Synthetic Open",
+     "category": "WTA",
+     "events": [
+      {
+       "code": "ev-02",
+       "state": "NOT_STARTED",
+       "format": "BO3",
+       "pair": false,
+       "participants": [
+        {
+         "position": "away",
+         "id": "fo-p-04",
+         "name": "Maria Zielinska"
+        },
+        {
+         "position": "home",
+         "id": "fo-p-03",
+         "name": "Anna Nowak"
+        }
+       ],
+       "markets": [
+        {
+         "code": "ev-02-mw",
+         "type": "MATCH_RESULT",
+         "open": true,
+         "suspended": false,
+         "outcomes": [
+          {
+           "code": "ev-02-s1",
+           "label": "Anna Nowak",
+           "position": "home",
+           "odds": "2,05",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          },
+          {
+           "code": "ev-02-s2",
+           "label": "Maria Zielinska",
+           "position": "away",
+           "odds": "1,75",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          }
+         ]
+        }
+       ],
+       "startLocal": "2026-09-21 14:00"
+      },
+      {
+       "code": "ev-04",
+       "state": "NOT_STARTED",
+       "format": "BO3",
+       "pair": false,
+       "participants": [
+        {
+         "position": "away",
+         "id": "fo-p-08",
+         "name": "Karolina Dabrowska"
+        },
+        {
+         "position": "home",
+         "id": "fo-p-07",
+         "name": "Ewa Wisniewska"
+        }
+       ],
+       "markets": [
+        {
+         "code": "ev-04-mw",
+         "type": "MATCH_RESULT",
+         "open": true,
+         "suspended": false,
+         "outcomes": [
+          {
+           "code": "ev-04-s1",
+           "label": "Ewa Wisniewska",
+           "position": "home",
+           "odds": "1,40",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          },
+          {
+           "code": "ev-04-s2",
+           "label": "Karolina Dabrowska",
+           "position": "away",
+           "odds": "2,90",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          }
+         ]
+        }
+       ],
+       "startLocal": "2026-09-21 16:00"
+      },
+      {
+       "code": "ev-06",
+       "state": "NOT_STARTED",
+       "format": "BO3",
+       "pair": false,
+       "participants": [
+        {
+         "position": "away",
+         "id": "fo-p-04",
+         "name": "Maria Zielinska"
+        },
+        {
+         "position": "home",
+         "id": "fo-p-02",
+         "name": "Lukasz Wojcik"
+        }
+       ],
+       "markets": [
+        {
+         "code": "ev-06-mw",
+         "type": "MATCH_RESULT",
+         "open": true,
+         "suspended": false,
+         "outcomes": [
+          {
+           "code": "ev-06-s1",
+           "label": "Lukasz Wojcik",
+           "position": "home",
+           "odds": "1,85",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          },
+          {
+           "code": "ev-06-s2",
+           "label": "Maria Zielinska",
+           "position": "away",
+           "odds": "1,95",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          }
+         ]
+        }
+       ],
+       "startLocal": "2026-09-21 18:00"
+      },
+      {
+       "code": "ev-08",
+       "state": "NOT_STARTED",
+       "format": "BO3",
+       "pair": false,
+       "participants": [
+        {
+         "position": "away",
+         "id": "fo-p-08",
+         "name": "Karolina Dabrowska"
+        },
+        {
+         "position": "home",
+         "id": "fo-p-06",
+         "name": "Tomasz Kaminski"
+        }
+       ],
+       "markets": [
+        {
+         "code": "ev-08-mw",
+         "type": "MATCH_RESULT",
+         "open": true,
+         "suspended": false,
+         "outcomes": [
+          {
+           "code": "ev-08-s1",
+           "label": "Tomasz Kaminski",
+           "position": "home",
+           "odds": "1,85",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          },
+          {
+           "code": "ev-08-s2",
+           "label": "Karolina Dabrowska",
+           "position": "away",
+           "odds": "1,95",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          }
+         ]
+        }
+       ],
+       "startLocal": "2026-09-21 20:00"
+      },
+      {
+       "code": "ev-11",
+       "state": "NOT_STARTED",
+       "format": "BO3",
+       "pair": false,
+       "participants": [
+        {
+         "position": "away",
+         "id": "fo-p-06",
+         "name": "Tomasz Kaminski"
+        },
+        {
+         "position": "home",
+         "id": "fo-p-04",
+         "name": "Maria Zielinska"
+        }
+       ],
+       "markets": [
+        {
+         "code": "ev-11-mw",
+         "type": "MATCH_RESULT",
+         "open": true,
+         "suspended": true,
+         "outcomes": [
+          {
+           "code": "ev-11-s1",
+           "label": "Maria Zielinska",
+           "position": "home",
+           "odds": "1,85",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          },
+          {
+           "code": "ev-11-s2",
+           "label": "Tomasz Kaminski",
+           "position": "away",
+           "odds": "1,95",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          }
+         ]
+        }
+       ],
+       "startLocal": "2026-09-21 23:00"
+      },
+      {
+       "code": "ev-13",
+       "state": "NOT_STARTED",
+       "format": "BO3",
+       "pair": false,
+       "participants": [
+        {
+         "position": "away",
+         "id": "fo-p-02",
+         "name": "Lukasz Wojcik"
+        },
+        {
+         "position": "home",
+         "id": "fo-p-08",
+         "name": "Karolina Dabrowska"
+        }
+       ],
+       "markets": [
+        {
+         "code": "ev-13-mw",
+         "type": "MATCH_RESULT",
+         "open": true,
+         "suspended": false,
+         "outcomes": [
+          {
+           "code": "ev-13-s1",
+           "label": "Karolina Dabrowska",
+           "position": "home",
+           "odds": "1,00",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          },
+          {
+           "code": "ev-13-s2",
+           "label": "Lukasz Wojcik",
+           "position": "away",
+           "odds": "7,50",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          }
+         ]
+        }
+       ],
+       "startLocal": "2026-09-22 01:00"
+      },
+      {
+       "code": "ev-18",
+       "state": "IN_PLAY",
+       "format": "BO3",
+       "pair": false,
+       "participants": [
+        {
+         "position": "away",
+         "id": "fo-p-08",
+         "name": "Karolina Dabrowska"
+        },
+        {
+         "position": "home",
+         "id": "fo-p-04",
+         "name": "Maria Zielinska"
+        }
+       ],
+       "markets": [
+        {
+         "code": "ev-18-mw",
+         "type": "MATCH_RESULT",
+         "open": true,
+         "suspended": false,
+         "outcomes": [
+          {
+           "code": "ev-18-s1",
+           "label": "Maria Zielinska",
+           "position": "home",
+           "odds": "1,85",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          },
+          {
+           "code": "ev-18-s2",
+           "label": "Karolina Dabrowska",
+           "position": "away",
+           "odds": "1,95",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          }
+         ]
+        }
+       ],
+       "startLocal": "2026-09-22 06:00"
+      },
+      {
+       "code": "ev-20",
+       "state": "NOT_STARTED",
+       "format": "BO3",
+       "pair": false,
+       "participants": [
+        {
+         "position": "away",
+         "id": "fo-p-07",
+         "name": "Ewa Wisniewska"
+        },
+        {
+         "position": "home",
+         "id": "fo-p-03",
+         "name": "Anna Nowak"
+        }
+       ],
+       "markets": [
+        {
+         "code": "ev-20-mw",
+         "type": "MATCH_RESULT",
+         "open": false,
+         "suspended": false,
+         "outcomes": [
+          {
+           "code": "ev-20-s1",
+           "label": "Anna Nowak",
+           "position": "home",
+           "odds": "1,85",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          },
+          {
+           "code": "ev-20-s2",
+           "label": "Ewa Wisniewska",
+           "position": "away",
+           "odds": "1,95",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          }
+         ]
+        }
+       ],
+       "startLocal": "2026-09-22 08:00"
+      },
+      {
+       "code": "ev-22",
+       "state": "NOT_STARTED",
+       "format": "BO3",
+       "pair": false,
+       "participants": [
+        {
+         "position": "away",
+         "id": "fo-p-04",
+         "name": "Maria Zielinska"
+        },
+        {
+         "position": "home",
+         "id": "fo-p-07",
+         "name": "Ewa Wisniewska"
+        }
+       ],
+       "markets": [
+        {
+         "code": "ev-22-mw",
+         "type": "MATCH_RESULT",
+         "open": true,
+         "suspended": false,
+         "outcomes": [
+          {
+           "code": "ev-22-s1",
+           "label": "Ewa Wisniewska",
+           "position": "home",
+           "odds": "1,85",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          },
+          {
+           "code": "ev-22-s2",
+           "label": "Maria Zielinska",
+           "position": "away",
+           "odds": "1,95",
+           "active": true,
+           "suspended": false,
+           "superOdds": false
+          }
+         ]
+        }
+       ],
+       "startLocal": "2026-10-25 02:30"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

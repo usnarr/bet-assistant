@@ -153,7 +153,9 @@ ADAPTERS_BY_SOURCE = {adapter.source_id: adapter for adapter in ADAPTERS.values(
 @pytest.mark.parametrize("bookmaker", BOOKMAKERS)
 def test_drift_metrics_flag_invalid_records_and_volume_changes(bookmaker):
     metrics = snapshot_metrics(snapshot(bookmaker, 1))
-    assert metrics.events == 20 and metrics.rejected_records == 4
+    _, expected = load(bookmaker, 1)
+    rejected = len(expected["rejected_selections"]) + len(expected["rejected_events"])
+    assert metrics.events == 20 and metrics.rejected_records == rejected
     assert metrics.unknown_market_labels == 2
     alerts = drift_alerts(metrics, None, DriftThresholds())
     # Two malformed selections out of about fifty: above the proposed 1% limit.
@@ -306,3 +308,14 @@ def test_end_to_end_parse_map_and_actionability(bookmaker):
         history["ev-01-s1"], at=POLL_2 + timedelta(seconds=60), policy=policy
     )
     assert ActionabilityReason.QUOTE_STALE in late.reasons
+
+
+def test_fortuna_local_times_reject_daylight_saving_gaps_and_repeats():
+    from tennis_engine.ingestion.bookmakers.fortuna import local_start
+
+    assert local_start("2026-09-21 13:00") == datetime(2026, 9, 21, 11, tzinfo=UTC)
+    assert local_start("2026-12-21 13:00") == datetime(2026, 12, 21, 12, tzinfo=UTC)
+    with pytest.raises(ValueError, match="ambiguous"):
+        local_start("2026-10-25 02:30")
+    with pytest.raises(ValueError, match="nonexistent"):
+        local_start("2026-03-29 02:30")

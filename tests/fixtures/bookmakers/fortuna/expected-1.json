@@ -1,0 +1,520 @@
+{
+ "events": {
+  "ev-01": {
+   "start": "2026-09-21T11:00:00+00:00",
+   "state": "PRE_MATCH",
+   "participants": [
+    "Jan Kowalski",
+    "Lukasz Wojcik"
+   ],
+   "doubles": false,
+   "best_of": 3,
+   "tour": "ATP"
+  },
+  "ev-02": {
+   "start": "2026-09-21T12:00:00+00:00",
+   "state": "PRE_MATCH",
+   "participants": [
+    "Anna Nowak",
+    "Maria Zielinska"
+   ],
+   "doubles": false,
+   "best_of": 3,
+   "tour": "WTA"
+  },
+  "ev-03": {
+   "start": "2026-09-21T13:00:00+00:00",
+   "state": "PRE_MATCH",
+   "participants": [
+    "Piotr Lewandowski",
+    "Tomasz Kaminski"
+   ],
+   "doubles": false,
+   "best_of": 3,
+   "tour": "ATP"
+  },
+  "ev-04": {
+   "start": "2026-09-21T14:00:00+00:00",
+   "state": "PRE_MATCH",
+   "participants": [
+    "Ewa Wisniewska",
+    "Karolina Dabrowska"
+   ],
+   "doubles": false,
+   "best_of": 3,
+   "tour": "WTA"
+  },
+  "ev-05": {
+   "start": "2026-09-21T15:00:00+00:00",
+   "state": "PRE_MATCH",
+   "participants": [
+    "Jan Kowalski",
+    "Anna Nowak"
+   ],
+   "doubles": false,
+   "best_of": 3,
+   "tour": "ATP"
+  },
+  "ev-06": {
+   "start": "2026-09-21T16:00:00+00:00",
+   "state": "PRE_MATCH",
+   "participants": [
+    "Lukasz Wojcik",
+    "Maria Zielinska"
+   ],
+   "doubles": false,
+   "best_of": 3,
+   "tour": "WTA"
+  },
+  "ev-07": {
+   "start": "2026-09-21T17:00:00+00:00",
+   "state": "PRE_MATCH",
+   "participants": [
+    "Piotr Lewandowski",
+    "Ewa Wisniewska"
+   ],
+   "doubles": false,
+   "best_of": 3,
+   "tour": "ATP"
+  },
+  "ev-08": {
+   "start": "2026-09-21T18:00:00+00:00",
+   "state": "PRE_MATCH",
+   "participants": [
+    "Tomasz Kaminski",
+    "Karolina Dabrowska"
+   ],
+   "doubles": false,
+   "best_of": 3,
+   "tour": "WTA"
+  },
+  "ev-09": {
+   "start": "2026-09-21T19:00:00+00:00",
+   "state": "PRE_MATCH",
+   "participants": [
+    "Lukasz Wojcik",
+    "Jan Kowalski"
+   ],
+   "doubles": false,
+   "best_of": 3,
+   "tour": "ATP"
+  },
+  "ev-10": {
+   "start": "2026-09-21T20:00:00+00:00",
+   "state": "PRE_MATCH",
+   "participants": [
+    "Anna Nowak",
+    "Piotr Lewandowski"
+   ],
+   "doubles": false,
+   "best_of": 3,
+   "tour": "ATP"
+  },
+  "ev-11": {
+   "start": "2026-09-21T21:00:00+00:00",
+   "state": "PRE_MATCH",
+   "participants": [
+    "Maria Zielinska",
+    "Tomasz Kaminski"
+   ],
+   "doubles": false,
+   "best_of": 3,
+   "tour": "WTA"
+  },
+  "ev-12": {
+   "start": "2026-09-21T22:00:00+00:00",
+   "state": "PRE_MATCH",
+   "participants": [
+    "Ewa Wisniewska",
+    "Jan Kowalski"
+   ],
+   "doubles": false,
+   "best_of": 3,
+   "tour": "ATP"
+  },
+  "ev-13": {
+   "start": "2026-09-21T23:00:00+00:00",
+   "state": "PRE_MATCH",
+   "participants": [
+    "Karolina Dabrowska",
+    "Lukasz Wojcik"
+   ],
+   "doubles": false,
+   "best_of": 3,
+   "tour": "WTA"
+  },
+  "ev-15": {
+   "start": "2026-09-22T01:00:00+00:00",
+   "state": "PRE_MATCH",
+   "participants": [
+    "Anna Nowak",
+    "Tomasz Kaminski"
+   ],
+   "doubles": false,
+   "best_of": 3,
+   "tour": "ATP"
+  },
+  "ev-16": {
+   "start": "2026-09-22T02:00:00+00:00",
+   "state": "PRE_MATCH",
+   "participants": [
+    "Piotr Lewandowski",
+    "Karolina Dabrowska"
+   ],
+   "doubles": true,
+   "best_of": 3,
+   "tour": "ATP"
+  },
+  "ev-17": {
+   "start": "2026-09-22T03:00:00+00:00",
+   "state": "PRE_MATCH",
+   "participants": [
+    "Lukasz Wojcik",
+    "Ewa Wisniewska"
+   ],
+   "doubles": false,
+   "best_of": 5,
+   "tour": "ATP"
+  },
+  "ev-18": {
+   "start": "2026-09-22T04:00:00+00:00",
+   "state": "STARTED",
+   "participants": [
+    "Maria Zielinska",
+    "Karolina Dabrowska"
+   ],
+   "doubles": false,
+   "best_of": 3,
+   "tour": "WTA"
+  },
+  "ev-19": {
+   "start": "2026-09-22T05:00:00+00:00",
+   "state": "CANCELLED",
+   "participants": [
+    "Jan Kowalski",
+    "Tomasz Kaminski"
+   ],
+   "doubles": false,
+   "best_of": 3,
+   "tour": "ATP"
+  },
+  "ev-20": {
+   "start": "2026-09-22T06:00:00+00:00",
+   "state": "PRE_MATCH",
+   "participants": [
+    "Anna Nowak",
+    "Ewa Wisniewska"
+   ],
+   "doubles": false,
+   "best_of": 3,
+   "tour": "WTA"
+  },
+  "ev-21": {
+   "start": "2026-09-22T07:00:00+00:00",
+   "state": "PRE_MATCH",
+   "participants": [
+    "Tomasz Kaminski",
+    "Lukasz Wojcik"
+   ],
+   "doubles": false,
+   "best_of": 3,
+   "tour": "ATP"
+  }
+ },
+ "quotes": {
+  "ev-01-s1": {
+   "odds": "1.62",
+   "state": "OPEN",
+   "participant_index": 0,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-01-s2": {
+   "odds": "2.30",
+   "state": "OPEN",
+   "participant_index": 1,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-02-s1": {
+   "odds": "2.05",
+   "state": "OPEN",
+   "participant_index": 0,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-02-s2": {
+   "odds": "1.75",
+   "state": "OPEN",
+   "participant_index": 1,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-03-s1": {
+   "odds": "1.85",
+   "state": "OPEN",
+   "participant_index": 0,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-03-s2": {
+   "odds": "1.95",
+   "state": "OPEN",
+   "participant_index": 1,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-04-s1": {
+   "odds": "1.40",
+   "state": "OPEN",
+   "participant_index": 0,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-04-s2": {
+   "odds": "2.90",
+   "state": "OPEN",
+   "participant_index": 1,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-05-s1": {
+   "odds": "1.85",
+   "state": "OPEN",
+   "participant_index": 0,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-05-s2": {
+   "odds": "1.95",
+   "state": "OPEN",
+   "participant_index": 1,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-06-s1": {
+   "odds": "1.85",
+   "state": "OPEN",
+   "participant_index": 0,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-06-s2": {
+   "odds": "1.95",
+   "state": "OPEN",
+   "participant_index": 1,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-07-s1": {
+   "odds": "1.85",
+   "state": "OPEN",
+   "participant_index": 0,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-07-s2": {
+   "odds": "1.95",
+   "state": "OPEN",
+   "participant_index": 1,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-08-s1": {
+   "odds": "1.85",
+   "state": "OPEN",
+   "participant_index": 0,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-08-s2": {
+   "odds": "1.95",
+   "state": "OPEN",
+   "participant_index": 1,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-09-s1": {
+   "odds": "2.30",
+   "state": "OPEN",
+   "participant_index": 0,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-09-s2": {
+   "odds": "1.62",
+   "state": "OPEN",
+   "participant_index": 1,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-10-s1": {
+   "odds": "1.85",
+   "state": "SUSPENDED",
+   "participant_index": 0,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-10-s2": {
+   "odds": "1.95",
+   "state": "OPEN",
+   "participant_index": 1,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-11-s1": {
+   "odds": "1.85",
+   "state": "SUSPENDED",
+   "participant_index": 0,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-11-s2": {
+   "odds": "1.95",
+   "state": "SUSPENDED",
+   "participant_index": 1,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-12-s1": {
+   "odds": "1.85",
+   "state": "OPEN",
+   "participant_index": 0,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-12-s2": {
+   "odds": "1.95",
+   "state": "OPEN",
+   "participant_index": 1,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-13-s2": {
+   "odds": "7.50",
+   "state": "OPEN",
+   "participant_index": 1,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-15-s1": {
+   "odds": "1.85",
+   "state": "OPEN",
+   "participant_index": 0,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-15-s2": {
+   "odds": "1.95",
+   "state": "OPEN",
+   "participant_index": 1,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-15-o": {
+   "odds": "1.90",
+   "state": "OPEN",
+   "participant_index": null,
+   "supported": false,
+   "promotion": false
+  },
+  "ev-15-u": {
+   "odds": "1.90",
+   "state": "OPEN",
+   "participant_index": null,
+   "supported": false,
+   "promotion": false
+  },
+  "ev-16-s1": {
+   "odds": "1.85",
+   "state": "OPEN",
+   "participant_index": 0,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-16-s2": {
+   "odds": "1.95",
+   "state": "OPEN",
+   "participant_index": 1,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-17-s1": {
+   "odds": "1.85",
+   "state": "OPEN",
+   "participant_index": 0,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-17-s2": {
+   "odds": "1.95",
+   "state": "OPEN",
+   "participant_index": 1,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-18-s1": {
+   "odds": "1.85",
+   "state": "OPEN",
+   "participant_index": 0,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-18-s2": {
+   "odds": "1.95",
+   "state": "OPEN",
+   "participant_index": 1,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-19-s1": {
+   "odds": "1.85",
+   "state": "OPEN",
+   "participant_index": 0,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-19-s2": {
+   "odds": "1.95",
+   "state": "OPEN",
+   "participant_index": 1,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-20-s1": {
+   "odds": "1.85",
+   "state": "CLOSED",
+   "participant_index": 0,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-20-s2": {
+   "odds": "1.95",
+   "state": "CLOSED",
+   "participant_index": 1,
+   "supported": true,
+   "promotion": false
+  },
+  "ev-21-s1": {
+   "odds": "2.10",
+   "state": "OPEN",
+   "participant_index": 0,
+   "supported": true,
+   "promotion": true
+  },
+  "ev-21-s2": {
+   "odds": "1.72",
+   "state": "OPEN",
+   "participant_index": 1,
+   "supported": true,
+   "promotion": false
+  }
+ },
+ "rejected_selections": [
+  "ev-13-s1"
+ ],
+ "rejected_events": [
+  "ev-14",
+  "ev-22"
+ ]
+}
