@@ -43,7 +43,11 @@ only. The F13
 walk-forward harness, metrics, block bootstrap, economic summary and gated promotion
 decision are implemented on synthetic data (`docs/backtesting/README.md`). Its execution
 replay (F13.2 to F13.5) runs F05 quote history, F12 decisions and F06 settlement on
-synthetic history; no execution-grade replay on real data exists. Later features
+synthetic history; no execution-grade replay on real data exists. F14 read-only API,
+server-rendered dashboard, token roles, read-time rechecks, deterministic explanations
+and the PostgreSQL decision store (migration 0010) run on synthetic fixtures
+(`docs/serving/README.md`); the optional F14.6 agent, production wiring, a browser
+accessibility review and redistribution approvals are pending. Later features
 are not implemented. Current checks are `uv run pytest -q`,
 `uv run ruff check .`, `uv run ruff format --check .`, and `uv run mypy src`.
 External approvals and independent fixture review remain pending.
