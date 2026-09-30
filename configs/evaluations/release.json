@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "version": "release-study-draft-2026-09-30",
+  "reason": "Draft. Thresholds must be frozen on development data before any final test.",
+  "primary_metric": "log_loss",
+  "baseline": "baseline-surface-elo",
+  "confidence_level": null,
+  "bootstrap_draws": null,
+  "bootstrap_seed": null,
+  "min_test_rows": null,
+  "min_blocks": null,
+  "min_segment_rows": null,
+  "consensus_calibration_margin": null,
+  "calibration_slope_bounds": null,
+  "calibration_intercept_limit": null,
+  "min_winning_fold_fraction": null,
+  "candidate_search_budget": null,
+  "minimum_roi_lower_bound": null,
+  "segment_keys": ["tour", "surface", "cutoff"],
+  "frozen_at": null
+}
