@@ -13,6 +13,8 @@ Demonstrated on synthetic fixtures:
 - F14.2 token authentication and server-side role permissions.
 - F14.3 and F14.4 server-rendered dashboard: list, match detail and audit pages.
 - F14.5 deterministic explanations.
+- F14.6 explanation agent interface and verifier, with deterministic fallback (see
+  "Explanation agent"). No real model is connected, and the role is not enabled.
 - F14.7 responsible-use status and the manual quote-confirmation notice.
 - F14.8 read-time rechecks of expiry, supersession, kill switches and quote state.
 - PostgreSQL decision store (migration `0010_decision_records`).
@@ -20,7 +22,9 @@ Demonstrated on synthetic fixtures:
 
 Not implemented or pending:
 
-- F14.6 explanation agent. It depends on F18 and its evaluation gates.
+- F14.6 in production: no language-model provider adapter exists. Production wiring
+  passes no narrator, so the explanation route serves the deterministic text. The
+  AG-EX role needs a passing evaluation with a real model and human review first.
 - A browser and assistive-technology review of the dashboard. Only automated structure
   checks exist.
 - Redistribution approvals. No source has a reviewed redistribution right.
@@ -37,6 +41,7 @@ All F14 routes are `GET` only. Each route needs a token. Each route sets
 | `GET /v1/tennis/recommendations` | read recommendations | Current or historical views |
 | `GET /v1/tennis/matches/{match_id}/analysis` | read analysis | Comparison, components, decisions, quotes, explanations |
 | `GET /v1/audit/recommendations/{id}` | read audit | Stored record and context, unchanged |
+| `GET /v1/tennis/recommendations/{id}/explanation` | read analysis | F14.5 statements and an optional verified F14.6 narrative |
 | `GET /v1/tennis/source-health` | read recommendations | Source state and quote freshness |
 | `GET /dashboard` | read recommendations | HTML list with filters |
 | `GET /dashboard/matches/{match_id}` | read analysis | HTML match detail |
@@ -182,6 +187,48 @@ exact stored `Decimal` string. Each sentence has a kind:
 
 The templates make no claim about motivation, injuries, certainty or profit. A `BET`
 sentence says to confirm the quote manually and says that the system places no bets.
+
+## Explanation agent (F14.6)
+
+`GET /v1/tennis/recommendations/{id}/explanation` returns an `ExplanationView`:
+
+- `statements`: the deterministic F14.5 explanation. It is always present.
+- `narrative`: sentences from the F18 AG-EX role, each with the indexes of the statements
+  that it cites. It is present only when the agent output passed verification.
+- `source`: `AGENT` or `DETERMINISTIC`. `fallback_reason` names the reason for the
+  deterministic text, for example `AGENT_NOT_CONFIGURED`, `DISABLED`, `TIMEOUT`,
+  `REJECTED` or `MODEL_UNAVAILABLE`.
+- `agent`: role version, prompt SHA-256, model ID, trace ID and run status.
+- `decision`, `actionable` and `read_time_reasons` come from the read-time view. A
+  narrative cannot make a record actionable. The closing decision statements stay
+  deterministic.
+
+The route uses the same permission (`read_analysis`) and redistribution rules as the
+analysis route. The agent receives only the statements that the viewer may see. So a
+withheld value never reaches the agent, and a number that the viewer may not see cannot
+pass the verifier.
+
+The verifier (`tennis_engine.agents.explanation.verify_narrative`) runs in addition to
+the F18 output verifier. It rejects a sentence when:
+
+| Code | Rule |
+|---|---|
+| `UNSUPPORTED_NUMBER` | A number is not in a cited statement |
+| `SWAPPED_ORIENTATION` | A number is next to another player than in the statement |
+| `NEGATION_CHANGED` | A negation is added or dropped |
+| `UNSUPPORTED_WORD` | A word is not in the statements and not an approved connective |
+| `UNSUPPORTED_COMPARISON` | A comparison that the statement does not make verbatim |
+| `DECISION_MISMATCH` | Another decision label, or another decision in the output |
+| `FABRICATED_EVIDENCE` | A citation of a statement that does not exist |
+
+The F18 verifier also rejects certainty, motivation, injury and action claims, and a
+changed stake. The word list makes new facts, causes, sources and citations impossible.
+The rules are conservative, so they can reject a correct rephrasing. A rejection only
+means that the deterministic text serves.
+
+`RecommendationService.narrator` is `None` by default. Tests use scripted fake models.
+The narrator runs the kill switch, budgets and trace storage of F18 and F15.6. Each run
+adds `tennis_agent_*` metrics. See [the agent guide](../agents/README.md).
 
 ## Dashboard (F14.3, F14.4)
 

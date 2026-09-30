@@ -22,6 +22,9 @@ Demonstrated on synthetic fixtures with deterministic fake agents:
 - F18.7 offline evaluation harness, scorers, human-review queue, reports and the
   `tennis-agent-eval` command.
 - F18.8 role flags (`RoleFlags`). Every role is off by default.
+- F14.6 explanation agent: the AG-EX role behind `GET /v1/tennis/recommendations/{id}/explanation`,
+  with a strict narrative verifier and deterministic fallback. See the
+  [serving guide](../serving/README.md#explanation-agent-f146).
 - F15.6 kill switch, audited traces and agent metrics. See the
   [operations guide](../operations/README.md#agent-tool-scoping-f156).
 
@@ -178,5 +181,6 @@ cannot certify money or identity correctness.
   small, so the intervals are wide.
 - Shadow comparison against manual review and reviewer-effort measurement (F18.7).
 - Live tool backends for AG-DI, AG-ID, AG-RF, AG-MA, AG-VR and AG-MO. They run on
-  fixture backends only.
+  fixture backends only. Only AG-EX reads live records: the stored decision and its
+  deterministic statements.
 - Any approval to enable a role. Every role stays off.

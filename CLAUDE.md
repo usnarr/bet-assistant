@@ -46,16 +46,22 @@ replay (F13.2 to F13.5) runs F05 quote history, F12 decisions and F06 settlement
 synthetic history; no execution-grade replay on real data exists. F14 read-only API,
 server-rendered dashboard, token roles, read-time rechecks, deterministic explanations
 and the PostgreSQL decision store (migration 0010) run on synthetic fixtures
-(`docs/serving/README.md`); the optional F14.6 agent, a browser accessibility review and
-redistribution approvals are pending. F14 production wiring builds the service from typed
+(`docs/serving/README.md`); a browser accessibility review and redistribution approvals
+are pending. The F14.6 explanation route serves a verified F18 AG-EX narrative or the
+deterministic text; no model is connected and the role is off. F14 production wiring builds the service from typed
 settings (`create_production_app`, read-only journal, fail-closed start-up) and Compose
 uses it; the `decision` filter matches the served decision. F15 metrics (`GET /metrics`),
 monitoring signals, proposed versioned alert rules with automatic source/global stops,
 the job graph with idempotent runs, fenced leases (migration 0011), a SELECT-only API
 database role, restore verification and incident bundles run on synthetic data and
 isolated services (`docs/operations/README.md`, runbooks and OPS-01/OPS-02 evidence);
-a scheduler, a Prometheus server, F15.6 agent scoping, agreed RTO/RPO and a model
-rollback drill are pending. Later features are not implemented. Current checks are
+a scheduler, a Prometheus server, agreed RTO/RPO and a model rollback drill are
+pending. F18 agent roles, the server-side tool gateway, output verification, bounded runs,
+the F15.6 kill switch on the F01 stops, append-only agent traces and proposals (migration
+0012) and the offline evaluation harness (`tennis-agent-eval`, 45 synthetic cases) run
+with deterministic fake agents only (`docs/agents/README.md`, AG-EVAL-01). No real model,
+human adjudication, frozen gate, sealed release set or role approval exists; every role
+is off. Later features are not implemented. Current checks are
 `uv run pytest -q`,
 `uv run ruff check .`, `uv run ruff format --check .`, and `uv run mypy src`.
 External approvals and independent fixture review remain pending.

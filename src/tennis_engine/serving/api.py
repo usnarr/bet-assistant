@@ -29,11 +29,21 @@ from tennis_engine.infrastructure.health import (
     ready,
 )
 from tennis_engine.infrastructure.settings import Settings
-from tennis_engine.monitoring.instruments import ServingMetrics, register_serving_collector
+from tennis_engine.monitoring.instruments import (
+    AgentMetrics,
+    ServingMetrics,
+    register_serving_collector,
+)
 from tennis_engine.monitoring.metrics import MetricsRegistry
 
 from .auth import Permission, TokenAuthenticator, allowed
-from .contracts import AuditView, MatchAnalysis, RecommendationPage, SourceHealth
+from .contracts import (
+    AuditView,
+    ExplanationView,
+    MatchAnalysis,
+    RecommendationPage,
+    SourceHealth,
+)
 from .dashboard import register_dashboard
 from .service import ApiError, RecommendationFilter, RecommendationService
 
@@ -74,6 +84,8 @@ def create_app(
         service = serving.recommendations
         if service.metrics is None:
             service.metrics = instruments
+        if service.narrator is not None and service.narrator.metrics is None:
+            service.narrator.metrics = AgentMetrics(registry)
         register_serving_collector(
             registry,
             service.source_health,
@@ -207,6 +219,14 @@ def create_app(
         match_id: UUID, dependencies: ServingDep, principal: PrincipalDep
     ) -> MatchAnalysis:
         return dependencies.recommendations.analysis(principal, match_id)
+
+    @application.get(
+        "/v1/tennis/recommendations/{recommendation_id}/explanation", tags=["recommendations"]
+    )
+    def explanation(
+        recommendation_id: UUID, dependencies: ServingDep, principal: PrincipalDep
+    ) -> ExplanationView:
+        return dependencies.recommendations.explanation(principal, recommendation_id)
 
     @application.get("/v1/audit/recommendations/{recommendation_id}", tags=["audit"])
     def audit(

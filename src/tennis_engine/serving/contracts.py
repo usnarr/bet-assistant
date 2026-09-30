@@ -187,6 +187,42 @@ class Statement(Contract):
     source_id: str | None = None
 
 
+class NarrativeSentence(Contract):
+    """One F14.6 agent sentence and the indexes of the statements that it cites."""
+
+    text: str
+    statement_indexes: tuple[int, ...]
+
+
+class AgentProvenance(Contract):
+    role_version: str
+    prompt_sha256: str
+    model_id: str
+    trace_id: UUID
+    status: str
+
+
+class ExplanationView(Contract):
+    """F14.6 explanation. `statements` is always the deterministic F14.5 text.
+
+    `narrative` exists only when the explanation agent passed verification. The decision
+    fields come from the read-time view, so a narrative cannot make a record actionable.
+    """
+
+    recommendation_id: UUID
+    generated_at: datetime
+    recorded_decision: RecommendationStatus
+    decision: RecommendationStatus
+    actionable: bool
+    read_time_reasons: tuple[str, ...]
+    statements: tuple[Statement, ...]
+    source: Literal["AGENT", "DETERMINISTIC"]
+    narrative: tuple[NarrativeSentence, ...] | None
+    fallback_reason: str | None
+    agent: AgentProvenance | None
+    notice: str
+
+
 class FormatView(Contract):
     tour: Tour
     draw_type: Literal["SINGLES"]

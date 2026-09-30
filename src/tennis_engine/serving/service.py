@@ -25,6 +25,7 @@ from .checks import ReadChecks, RedistributionPolicy, source_health
 from .contracts import (
     AuditView,
     ComparisonRow,
+    ExplanationView,
     FormatView,
     MatchAnalysis,
     Mode,
@@ -40,6 +41,7 @@ from .explain import NO_PLACEMENT, explain, reasons
 from .store import DecisionQuery, DecisionStore
 
 if TYPE_CHECKING:
+    from tennis_engine.agents.explanation import ExplanationNarrator
     from tennis_engine.monitoring.instruments import ServingMetrics
 
 DEFAULT_BOOKMAKERS = frozenset({"betclic", "superbet", "fortuna"})
@@ -136,6 +138,8 @@ class RecommendationService:
     stale_after_seconds: int = 300
     # F15.3 counters. None means no metrics are recorded.
     metrics: "ServingMetrics | None" = None
+    # F14.6 optional explanation agent. None serves the deterministic text only.
+    narrator: "ExplanationNarrator | None" = None
 
     # Filters -----------------------------------------------------------------------
 
@@ -387,6 +391,47 @@ class RecommendationService:
                 str(item.record.decision_id): explain(item, withhold) for item in latest_items
             },
             source_health=self.source_health(now),
+        )
+
+    def explanation(self, principal: Principal, recommendation_id: UUID) -> ExplanationView:
+        """F14.6: the deterministic explanation, and a verified agent narrative if any.
+
+        The same permission and redistribution rules as the analysis route apply. The
+        agent sees only the statements that this viewer may see.
+        """
+        if not allowed(principal, Permission.READ_ANALYSIS):
+            raise ApiError(403, "PERMISSION_DENIED", "This role cannot read explanations.")
+        stored = self.store.get(recommendation_id)
+        if stored is None:
+            raise ApiError(404, "RECOMMENDATION_NOT_FOUND", "The recommendation does not exist.")
+        now = require_aware(self.clock.now())
+        withhold = self._withhold(principal, now)
+        view = self.view(stored, now, withhold, current=True)
+        statements = explain(stored, withhold)
+        source: Literal["AGENT", "DETERMINISTIC"] = "DETERMINISTIC"
+        narrative = None
+        fallback: str | None = "AGENT_NOT_CONFIGURED"
+        agent = None
+        if self.narrator is not None:
+            result = self.narrator.narrate(stored, statements)
+            source = "AGENT" if result.source == "AGENT" else "DETERMINISTIC"
+            narrative, fallback, agent = result.narrative, result.fallback_reason, result.agent
+        return ExplanationView(
+            recommendation_id=stored.record.decision_id,
+            generated_at=now,
+            recorded_decision=stored.record.status,
+            decision=view.decision,
+            actionable=view.actionable,
+            read_time_reasons=view.read_time_reasons,
+            statements=statements,
+            source=source,
+            narrative=narrative,
+            fallback_reason=fallback,
+            agent=agent,
+            notice=(
+                "Shadow mode. The statements are the deterministic explanation. A narrative "
+                f"is an AI rephrasing, checked against them. {NO_PLACEMENT}"
+            ),
         )
 
     def audit(self, principal: Principal, recommendation_id: UUID) -> AuditView:
