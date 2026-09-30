@@ -8,9 +8,15 @@ shadow records; no code path places a bet.
 
 - Implemented: value arithmetic, capacity and stake search, exposure reservations,
   the ordered gate sequence, decision records and the publication recheck.
-- Not wired: F09/F11 model output. The engine reads a `ModelAssessment` contract, so a
-  missing model fails the model gates. F09 must supply `in_supported_domain`, `calibrated`
-  and `disagreement`; unknown values fail.
+- F09 wiring (`pricing/model_input.py`): `assessment_from_baselines` maps a primary F09
+  baseline plus the other baselines to a `ModelAssessment`. The selected player's
+  probability follows canonical order. The conservative probability is the lower edge of
+  the model's bootstrap spread, a model-spread proxy and not a confidence bound.
+  Disagreement is the largest gap to another supported baseline. F09 baselines are raw
+  (`calibrated = False`) and trained on sporting results (`SPORTING_WIN`), so they always
+  fail the calibration gate: **no F09 baseline can produce a `BET`**. That needs calibrated
+  F11 output. `consensus_for_selection` confirms a large edge only from a SUPPORTED
+  consensus (more than one bookmaker).
 - The repository decision policy (`configs/risk/decision-policy.json`) and the
   responsible-use policy are drafts. Both block every `BET` until a reviewer approves them.
 
