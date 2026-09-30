@@ -26,6 +26,11 @@ The first PostgreSQL migrations create a `tennis` schema, immutable artifact man
 append-only governance revisions, evidence metadata, stop history, and audit events. Raw
 evidence bytes belong in object storage; PostgreSQL stores hashes and object keys. The
 migration inserts a global disabled state so a new database cannot publish recommendations.
+Update 2026-09-30: MinIO no longer publishes public container images, so CI could not
+start the object store. Local Compose and CI now use SeaweedFS (`chrislusf/seaweedfs`,
+pinned by tag and digest) as the S3-compatible server. The application still uses the
+`minio` Python client, which talks to any S3-compatible endpoint.
+
 The existing F01 SQLite store remains the offline administrative reference during the
 transition; F03 will route new ingestion through PostgreSQL and object storage.
 

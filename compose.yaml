@@ -3,7 +3,7 @@ name: tennis-engine
 x-app-environment: &app-environment
   TENNIS_ENVIRONMENT: ${TENNIS_ENVIRONMENT:-development}
   TENNIS_DATABASE_URL: ${TENNIS_DATABASE_URL:-postgresql+psycopg://tennis:local-only@postgres:5432/tennis}
-  TENNIS_OBJECT_STORE_ENDPOINT: ${TENNIS_OBJECT_STORE_ENDPOINT:-minio:9000}
+  TENNIS_OBJECT_STORE_ENDPOINT: ${TENNIS_OBJECT_STORE_ENDPOINT:-object-store:9000}
   TENNIS_OBJECT_STORE_ACCESS_KEY: ${TENNIS_OBJECT_STORE_ACCESS_KEY:-local-development}
   TENNIS_OBJECT_STORE_SECRET_KEY: ${TENNIS_OBJECT_STORE_SECRET_KEY:-change-me-before-use}
   TENNIS_OBJECT_STORE_BUCKET: ${TENNIS_OBJECT_STORE_BUCKET:-tennis-raw}
@@ -29,17 +29,17 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
-  minio:
-    image: quay.io/minio/minio:RELEASE.2025-07-23T15-54-02Z
-    command: server /data --console-address :9001
+  object-store:
+    # SeaweedFS all-in-one server; only its S3 gateway is published.
+    image: chrislusf/seaweedfs:4.47@sha256:ce9e796f1fe6f06968f4c04bdaf8f678dad9c8acdfef3d244133d71bfa6bf882
+    command: mini -dir=/data -s3.port=9000
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-local-development}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change-me-before-use}
+      AWS_ACCESS_KEY_ID: ${TENNIS_OBJECT_STORE_ACCESS_KEY:-local-development}
+      AWS_SECRET_ACCESS_KEY: ${TENNIS_OBJECT_STORE_SECRET_KEY:-change-me-before-use}
     ports:
       - "127.0.0.1:9000:9000"
-      - "127.0.0.1:9001:9001"
     volumes:
-      - minio-data:/data
+      - object-store-data:/data
 
   migrate:
     build: .
@@ -54,7 +54,7 @@ services:
     build: .
     command: tennis-platform init-object-store
     environment: *app-environment
-    depends_on: [minio]
+    depends_on: [object-store]
     restart: on-failure
 
   api:
@@ -83,4 +83,4 @@ services:
 
 volumes:
   postgres-data:
-  minio-data:
+  object-store-data:

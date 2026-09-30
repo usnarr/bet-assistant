@@ -42,11 +42,12 @@ jobs:
           enable-cache: true
       - name: Start isolated object store
         run: >-
-          docker run --detach --rm --name tennis-minio
+          docker run --detach --rm --name tennis-object-store
           --publish 9000:9000
-          --env MINIO_ROOT_USER=test-access
-          --env MINIO_ROOT_PASSWORD=test-secret-key
-          quay.io/minio/minio:RELEASE.2025-07-23T15-54-02Z server /data
+          --env AWS_ACCESS_KEY_ID=test-access
+          --env AWS_SECRET_ACCESS_KEY=test-secret-key
+          chrislusf/seaweedfs:4.47@sha256:ce9e796f1fe6f06968f4c04bdaf8f678dad9c8acdfef3d244133d71bfa6bf882
+          mini -dir=/data -s3.port=9000
       - run: uv sync --frozen
       - run: uv run ruff format --check .
       - run: uv run ruff check .

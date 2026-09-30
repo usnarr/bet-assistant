@@ -22,7 +22,7 @@ Invoke-RestMethod http://127.0.0.1:8000/health/ready
 ```
 
 `/health/live` confirms only that the API process runs. `/health/ready` returns HTTP 503
-until PostgreSQL is reachable at the head migration (`EXPECTED_ALEMBIC_REVISION`) and the MinIO bucket exists.
+until PostgreSQL is reachable at the head migration (`EXPECTED_ALEMBIC_REVISION`) and the object-store bucket exists.
 The worker waits at the same gate. `migrate` and `object-store-init` complete before Compose
 starts the API.
 
@@ -41,7 +41,7 @@ uv run python scripts/check_migrations.py
 uv run pip-audit
 ```
 
-Tests need no live credentials. PostgreSQL and MinIO integration tests run only when the
+Tests need no live credentials. PostgreSQL and object-store integration tests run only when the
 `TEST_DATABASE_URL` and `TEST_OBJECT_STORE_*` variables identify isolated services. CI
 supplies both services and tests migration upgrade, downgrade, re-upgrade, append-only
 history, and immutable object round trips.

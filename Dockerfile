@@ -27,9 +27,13 @@ COPY --from=builder /app/.venv ./.venv
 COPY --from=builder /app/migrations ./migrations
 COPY --from=builder /app/alembic.ini ./
 
+# Apply released Debian security fixes. The base image can lag behind them.
 # Runtime containers do not install packages. Removing pip/ensurepip also removes
 # their vendored build libraries from the attack surface and vulnerability scan.
-RUN rm -rf \
+RUN apt-get update \
+    && apt-get upgrade --yes --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf \
       /usr/local/lib/python3.13/ensurepip \
       /usr/local/lib/python3.13/site-packages/pip \
       /usr/local/lib/python3.13/site-packages/pip-*.dist-info \
