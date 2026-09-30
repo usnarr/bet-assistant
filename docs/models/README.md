@@ -1,4 +1,4 @@
-# F09 baselines and F10 point model guide
+# F09 baselines, F10 point model and F11 guide
 
 ## F09 baselines (`models/baselines/`)
 
@@ -86,9 +86,8 @@ See [MOD-02 evidence](evidence/MOD-02.md).
 
 ## F11 calibration slice (`models/calibration/`)
 
-This slice implements calibration only (F11.5, F11.7 and part of F11.6/F11.8). The
-gradient-boosting model, the stacker and nested tuning (F11.1 to F11.4) are not
-implemented. They need the F13 harness and a selected tabular library.
+This slice implements calibration (F11.5, F11.6, F11.7 and part of F11.8). The tabular
+model and the stacker are described in the next section.
 
 | Module | Purpose |
 |---|---|
@@ -138,3 +137,60 @@ gate can pass. A promotion registry and the MOD-03/MOD-04 comparisons on real da
 not implemented.
 
 See [MOD-03 calibration evidence](evidence/MOD-03-calibration.md).
+
+## F11 tabular model and stacker (`models/tabular/`)
+
+Library: `xgboost-cpu` 3.4.1, the CPU-only XGBoost build (about 5 MB, no CUDA). The full
+`xgboost` wheel pulls NCCL on Linux. `xgboost-cpu` has no macOS wheel; macOS builds from
+the source distribution.
+
+| Module | Purpose |
+|---|---|
+| `folds.py` | Chronological inner folds inside one training period, grouped by match |
+| `schema.py` | Feature schema, missing flags, text-code indicators, market input |
+| `booster.py` | `train_tabular` with nested tuning, `predict_tabular`, `TabularArtifact` |
+| `stacker.py` | Stacker fit on out-of-fold rows, leakage check, `stack` |
+
+Harness adapters are in `backtesting/ensemble.py`: `TabularCandidate` and
+`StackedCandidate`.
+
+Rules:
+
+- **Target and rows (F11.1):** canonical player one wins. The harness passes only
+  completed, retired and defaulted results whose label was known at the training cutoff.
+  A row or label after the cutoff, mixed feature sets, or fewer than 40 matches (candidate
+  value) give `BLOCKED`.
+- **Schema (F11.1):** built from training rows only. Numbers become columns, and a missing
+  number is NaN. A feature missing in any training row also gets a `missing:<name>` flag.
+  Text codes such as `match.tour` get one indicator per level seen in training.
+- **Player swap (F11.3):** every training row is also added in the reversed orientation
+  (`swap_values`) with the reversed label. Prediction averages both orientations:
+  `(f(x) + 1 - f(swap(x))) / 2`. A swap therefore gives exactly `1 - p`.
+- **Nested tuning (F11.2):** in each outer walk-forward fold, every grid entry is scored on
+  three inner folds of that fold's training rows. An inner fold trains only on rows with a
+  cutoff before its block and labels known by then. Log loss is the objective. Brier and
+  a calibration slope are diagnostics. The lowest mean log loss wins; a tie keeps the
+  earlier entry. The grid may not exceed `search_budget`, and every trial is stored.
+  ROI is not an objective.
+- **Monotone constraints (F11.3):** the grid has each shape with and without
+  non-decreasing constraints on `diff.elo`, `diff.surface_elo`, `diff.form` and the market
+  input. The comparison is recorded; nothing assumes the constraint helps.
+- **Market input (F09.8):** optional `market(match_id, as_of)` gives the consensus
+  probability known at the cutoff. It enters as `diff.market_logit` with a missing flag.
+  Run the model with and without it in one harness run to measure what the market adds.
+- **Stacker (F11.4):** `p = sigmoid(sum_i w_i * logit(p_i))` with no intercept and an L2
+  penalty. Its rows come only from inner folds: each component is fitted before the inner
+  cutoff and predicts later matches. A component that is `BLOCKED` in an inner fold, or
+  unsupported at scoring time, counts as missing (`logit = 0`), and the stack output is
+  then `SPARSE`. `fit_stacker` raises `StackingLeakage` for a row whose component saw the
+  match, was fitted after the row's cutoff, or whose cutoff is after the training cutoff.
+- **Reproducibility (F11.8, part):** training uses one thread and a fixed seed, so a refit
+  gives the same booster bytes. The artifact stores the booster JSON, its SHA-256, the
+  library version, the schema, the selected parameters and every trial. `load_booster`
+  refuses bytes that do not match the hash.
+- **Uncertainty:** the tabular output has no spread. F12 needs a spread, so pass the output
+  through a calibrator with a bootstrap (F11.6). Without one, F12 gives no assessment.
+
+Limitations: the grid values, the fold count and the row minimums are candidate values.
+All results are synthetic; see [MOD-04 evidence](evidence/MOD-04-tabular.md). There is no
+promotion registry, no signed artifact, and no evaluation on approved real data.

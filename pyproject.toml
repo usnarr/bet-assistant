@@ -8,6 +8,7 @@ dependencies = [
   "fastapi>=0.116,<1",
   "httpx>=0.28,<1",
   "minio>=7.2,<8",
+  "numpy>=2.3,<3",
   "orjson>=3.11,<4",
   "psycopg[binary]>=3.2,<4",
   "pydantic>=2.12,<3",
@@ -15,6 +16,7 @@ dependencies = [
   "sqlalchemy>=2.0,<3",
   "tzdata>=2026.1",
   "uvicorn>=0.35,<1",
+  "xgboost-cpu>=3.4.1,<4",
 ]
 
 [project.scripts]

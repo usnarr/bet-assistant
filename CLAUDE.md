@@ -37,7 +37,9 @@ are implemented on synthetic data (`docs/models/README.md`). F12 value, sizing,
 reservations, gates and publication recheck are implemented on synthetic inputs
 (`docs/pricing/README.md`); raw F09 baselines cannot BET; policy approvals are pending.
 F11 symmetric Platt/isotonic calibration on a disjoint window feeds F12 calibrated input
-(`docs/models/README.md`); the F11 tabular model and stacker are not implemented. The F13
+(`docs/models/README.md`). F11 tour calibrators, a calibrator bootstrap, the XGBoost
+(`xgboost-cpu`) tabular model with nested tuning and the stacker run on synthetic data
+only. The F13
 walk-forward harness, metrics, block bootstrap, economic summary and gated promotion
 decision are implemented on synthetic data (`docs/backtesting/README.md`). Its execution
 replay (F13.2 to F13.5) runs F05 quote history, F12 decisions and F06 settlement on
