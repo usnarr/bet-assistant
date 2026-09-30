@@ -18,7 +18,7 @@ from tennis_engine.normalization.backfill import (
 )
 from tennis_engine.normalization.contracts import ResolutionPolicy
 from tennis_engine.normalization.resolver import DEFAULT_POLICY, EvidenceResolver
-from tennis_engine.normalization.store import MemoryIdentityStore
+from tennis_engine.normalization.store import IdentityStore, MemoryIdentityStore
 from tennis_engine.normalization.warehouse import SportsWarehouse
 
 FIXTURES = Path(__file__).parent / "fixtures" / "identity" / "synthetic-warehouse-v1"
@@ -68,7 +68,7 @@ class World:
     clock: FrozenClock
     ingestion: MemoryIngestionStore
     service: IngestionService
-    store: MemoryIdentityStore
+    store: IdentityStore
     resolver: EvidenceResolver
     warehouse: SportsWarehouse
     backfill: Backfill
@@ -95,7 +95,12 @@ class World:
         return alias.match_id
 
 
-def world(tmp_path: Path, *, payloads: tuple[str, ...] = ("payload-1.json",)) -> World:
+def world(
+    tmp_path: Path,
+    *,
+    payloads: tuple[str, ...] = ("payload-1.json",),
+    store: IdentityStore | None = None,
+) -> World:
     clock = FrozenClock(FIRST_OBSERVATION)
     ingestion = MemoryIngestionStore()
     service = IngestionService(ingestion, LocalObjectStore(tmp_path / "objects"), clock)
@@ -103,7 +108,7 @@ def world(tmp_path: Path, *, payloads: tuple[str, ...] = ("payload-1.json",)) ->
     for name in payloads:
         archive_payload(service, clock, name, observed[name])
     clock.instant = max(observed[name] for name in payloads) + timedelta(hours=1)
-    store = MemoryIdentityStore()
+    store = MemoryIdentityStore() if store is None else store
     resolver = EvidenceResolver(store, POLICY)
     warehouse = SportsWarehouse(store, resolver, clock)
     return World(
