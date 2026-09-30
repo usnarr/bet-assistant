@@ -33,3 +33,16 @@ Other behavior covered by `tests/test_identity_warehouse.py`:
 - Agent or system actors cannot approve a review; a remap lists matches to revalidate.
 
 Command: `uv run pytest tests/test_identity_contracts.py tests/test_identity_resolution.py tests/test_identity_warehouse.py -q`.
+
+
+## Deciding-set rules and PostgreSQL store (2026-09-30)
+
+| Check | Test | Result |
+|---|---|---|
+| Rule applies to its edition, stage and best-of format from its observation time | `tests/test_identity_formats.py` | pass |
+| Repeat is idempotent; a change is version 2 with `corrects_version = 1` | `tests/test_identity_formats.py` | pass |
+| `UNKNOWN` rule, unverified format or no rule makes the point model abstain | `tests/test_identity_formats.py` | pass |
+| Unresolved edition or unknown scope opens a `RECORD` review | `tests/test_identity_formats.py` | pass |
+| PostgreSQL store gives the same players, aliases, matches, facts, reviews, audit and rules as the reference store | `tests/integration/test_identity_persistence.py` | pass (isolated `tennis_track_2`) |
+| Append-only triggers, version gaps and checkpoint rewind are rejected | `tests/integration/test_identity_persistence.py` | pass (isolated `tennis_track_2`) |
+| Six concurrent alias writers create exactly one new version | `tests/integration/test_identity_persistence.py` | pass (isolated `tennis_track_2`) |

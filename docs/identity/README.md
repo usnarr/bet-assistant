@@ -29,6 +29,11 @@ cases to a human review queue, and stores every changing fact as a new version.
 - A missing stat count stays `None`. It never becomes zero performance.
 - Unknown best-of format and doubles are flagged, not guessed. Invalid scores, winners or
   states go to review as `RECORD` items.
+- Deciding-set rules (`EditionFormatVersion`) are versions per edition, draw stage and
+  best-of format. `ingest_format` appends a version only when the rule or its reference
+  changes. A rule for an unresolved edition, or for an unknown stage or format, goes to
+  review. `deciding_set_known_at` returns only a rule observed by the cutoff; a missing or
+  `UNKNOWN` rule returns `None`, and the F10 point model then abstains.
 
 ## Main entry points
 
@@ -39,7 +44,10 @@ cases to a human review queue, and stores every changing fact as a new version.
 | `normalization/warehouse.py` | `SportsWarehouse`: ingest records, review decisions, remaps |
 | `normalization/backfill.py` | Resumable backfill from F03 derived records and coverage reports |
 | `normalization/store.py` | `IdentityStore` protocol and the in-memory reference store |
+| `normalization/postgres.py` | `PostgresIdentityStore`, the same behavior on PostgreSQL |
+| `normalization/formats.py` | Point-in-time deciding-set rule lookup |
 | `migrations/versions/0004_identity.py` | PostgreSQL schema with append-only triggers |
+| `migrations/versions/0009_identity_formats.py` | Format rule versions and the name-key index |
 
 F05 adapters call `resolve_event(EventQuery, at=...)`. A result with
 `blocks_recommendations == True` must stop every recommendation for that event.
@@ -55,8 +63,12 @@ historical replay (F07).
 
 ## Limitations
 
-- The PostgreSQL identity repository is not implemented yet. The migration compiles
-  offline; it has not been applied to a live database in this environment.
+- `PostgresIdentityStore` takes an advisory lock per versioned key, so concurrent writers
+  cannot skip or duplicate a version. Each method is its own transaction, as in the
+  reference store; a warehouse operation that writes several rows is not one transaction.
+  It passed against an isolated PostgreSQL database; it has no production run.
+- Name candidates use the `player_name_key` index. Keys come from the canonical name and
+  every alias name.
 - Tournament identity is per source alias. Cross-source tournament and match linking needs
   a reviewed mapping step; it is not automatic.
 - The resolver scans all matches for schedule context. This is acceptable for fixtures,

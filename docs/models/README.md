@@ -57,7 +57,8 @@ Enabled formats: `bo3-tb7-v1` (7-point tiebreak in every set) and `bo3-final-tb1
 (10-point tiebreak at 6-6 in the final set). `bo3-match-tb10-v1` and `bo5-final-tb10-v1`
 are defined but not verified; best-of-five stays gated by F17. Advantage final sets are
 rejected. A caller must pass the verified format of the tournament; `fmt=None` abstains.
-F04 does not store deciding-set rules yet, so a tournament format registry is still needed.
+`match_format(store, match_id, as_of)` reads the F04 deciding-set rule known at the cutoff
+and returns the verified format, or raises `UnsupportedFormat` so the caller abstains.
 
 Solver rules:
 

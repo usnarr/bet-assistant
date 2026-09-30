@@ -23,8 +23,8 @@ S3-compatible immutable storage, versioned shared contracts, health API, worker 
 Compose stack, artifact manifests, governance-gated HTTP/file fetching, immutable response
 observations, strict parsing/dead letters, replay/reconciliation, and CI. See
 `docs/governance/README.md`, `docs/platform/README.md`, and `docs/ingestion/README.md`.
-F04 identity/warehouse is implemented on synthetic fixtures (`docs/identity/README.md`);
-its PostgreSQL repository is pending. F06 payout rules, match-winner settlement and the
+F04 identity/warehouse, deciding-set rules and the PostgreSQL identity store are
+implemented on synthetic fixtures (`docs/identity/README.md`). F06 payout rules, match-winner settlement and the
 virtual ledger are implemented on synthetic rules (`docs/settlement/README.md`); real rule
 reviews are pending. F07 as-of access, snapshots and dataset manifests, and F08 core features
 (Elo, form, serve/return, workload, quality gates, gated environment/travel proxy) are
