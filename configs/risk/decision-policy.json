@@ -1,0 +1,21 @@
+{
+  "version": "decision-policy-draft-2026-09-30",
+  "owner": "product-risk-reviewer:unassigned",
+  "effective_from": "2026-09-30T00:00:00Z",
+  "effective_until": "2027-09-30T00:00:00Z",
+  "reviewer": null,
+  "reviewed_at": null,
+  "review_due_at": null,
+  "evidence": [],
+  "state": "PENDING_REVIEW",
+  "kelly_fraction": "0.10",
+  "minimum_conservative_roi": "0.03",
+  "max_model_disagreement": "0.05",
+  "max_unconfirmed_edge": "0.08",
+  "consensus_tolerance": "0.03",
+  "max_bookmaker_exposure": "0.00",
+  "max_open_bets": 0,
+  "reservation_ttl_seconds": 60,
+  "no_bet_ttl_seconds": 60,
+  "void_stress_probability": null
+}
