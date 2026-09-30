@@ -126,6 +126,43 @@ class LedgerReconciliation(Contract):
     balanced: bool
 
 
+class LedgerView(Contract):
+    account: LedgerAccount
+    entries: tuple[LedgerEntry, ...]
+    bets: tuple[VirtualBet, ...]
+    open_bet_ids: frozenset[UUID]
+
+    @property
+    def balance(self) -> Decimal:
+        return self.entries[-1].balance_after.amount if self.entries else Decimal("0.00")
+
+    def equity_history(self) -> tuple[Decimal, ...]:
+        """Cash plus open stakes at cost after each entry."""
+        stakes = {bet.bet_id: bet.stake.amount for bet in self.bets}
+        open_stakes: dict[UUID, Decimal] = {}
+        history = []
+        for entry in self.entries:
+            bet_id = entry.bet_id
+            if bet_id is None:
+                pass
+            elif entry.entry_type in (EntryType.STAKE_DEBIT, EntryType.REVERSAL):
+                # A reversal reopens the bet until its replacement credit follows.
+                open_stakes[bet_id] = stakes[bet_id]
+            elif entry.entry_type == EntryType.SETTLEMENT_CREDIT:
+                open_stakes.pop(bet_id, None)
+            history.append(entry.balance_after.amount + sum(open_stakes.values(), Decimal(0)))
+        return tuple(history)
+
+    @property
+    def equity(self) -> Decimal:
+        history = self.equity_history()
+        return history[-1] if history else Decimal("0.00")
+
+    @property
+    def peak_equity(self) -> Decimal:
+        return max(self.equity_history(), default=Decimal("0.00"))
+
+
 class LedgerUnit(Protocol):
     """One transaction that holds an exclusive lock on one ledger."""
 
@@ -389,6 +426,17 @@ class VirtualLedgerService:
                 )
             )
             return tuple(created)
+
+    def view(self, ledger_id: str) -> LedgerView:
+        """A consistent read of one virtual ledger, for F12 exposure calculations."""
+        with self.store.unit(ledger_id) as unit:
+            account = self._require_account(unit, ledger_id)
+            entries = tuple(unit.entries())
+            bets = tuple(unit.bets())
+            open_ids = frozenset(
+                bet.bet_id for bet in bets if _active_settlement(entries, bet.bet_id) is None
+            )
+            return LedgerView(account=account, entries=entries, bets=bets, open_bet_ids=open_ids)
 
     def reconcile(self, ledger_id: str) -> LedgerReconciliation:
         with self.store.unit(ledger_id) as unit:

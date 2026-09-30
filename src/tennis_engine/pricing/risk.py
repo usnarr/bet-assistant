@@ -67,8 +67,9 @@ class PeriodUsage(Contract):
 class ExposureState(Contract):
     """Current virtual bankroll and exposure, including active reservations."""
 
-    bankroll: Amount
-    peak_bankroll: Amount
+    bankroll: Amount  # Available cash after open stakes and active reservations.
+    equity: Amount  # Cash plus open stakes at cost; drawdown is measured on equity.
+    peak_bankroll: Amount  # Highest equity so far.
     open_exposure: Amount
     event_exposure: Amount
     bookmaker_exposure: Amount
@@ -109,7 +110,7 @@ def capacity(
     if state.bankroll <= 0:
         reasons.append(CapacityReason.EMPTY_BANKROLL)
     if state.peak_bankroll > 0:
-        drawdown = (state.peak_bankroll - state.bankroll) / state.peak_bankroll
+        drawdown = (state.peak_bankroll - state.equity) / state.peak_bankroll
         if responsible.drawdown_stop <= 0 or drawdown >= responsible.drawdown_stop:
             reasons.append(CapacityReason.DRAWDOWN_STOP)
     if state.open_bets >= policy.max_open_bets:

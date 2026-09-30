@@ -71,6 +71,7 @@ def exposure(bankroll="1000.00", **overrides):
     return ExposureState.model_validate(
         {
             "bankroll": bankroll,
+            "equity": bankroll,
             "peak_bankroll": bankroll,
             "open_exposure": "0.00",
             "event_exposure": "0.00",
@@ -205,7 +206,10 @@ def test_empty_bankroll_drawdown_and_count_limits_remove_capacity():
     empty = capacity(decision_policy(), responsible(), exposure("0.00"), RULES)
     assert CapacityReason.EMPTY_BANKROLL in empty.reasons
     drawdown = capacity(
-        decision_policy(), responsible(), exposure("790.00", peak_bankroll="1000.00"), RULES
+        decision_policy(),
+        responsible(),
+        exposure("790.00", equity="790.00", peak_bankroll="1000.00"),
+        RULES,
     )
     assert CapacityReason.DRAWDOWN_STOP in drawdown.reasons
     counted = capacity(
