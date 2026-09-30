@@ -4,6 +4,7 @@ A label uses the latest corrected result. It never flows back into a feature sna
 so a correction after a cutoff cannot change what the model saw.
 """
 
+from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
@@ -24,7 +25,20 @@ class MatchLabel(Contract):
 
 def final_label(store: IdentityStore, match_id: UUID) -> MatchLabel | None:
     """Latest result for evaluation. ``None`` means no label exists yet."""
-    results = store.results(match_id)
+    return _label(store, match_id, None)
+
+
+def label_known_at(store: IdentityStore, match_id: UUID, at: datetime) -> MatchLabel | None:
+    """Label as our own observations knew it at ``at``; used to fit models chronologically."""
+    return _label(store, match_id, at)
+
+
+def _label(store: IdentityStore, match_id: UUID, at: datetime | None) -> MatchLabel | None:
+    results = [
+        item
+        for item in store.results(match_id)
+        if at is None or item.availability.observed_at <= at
+    ]
     if not results:
         return None
     latest = results[-1]
