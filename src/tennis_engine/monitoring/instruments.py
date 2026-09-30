@@ -6,11 +6,15 @@ They never hold tokens, raw paths with IDs, payloads or personal data.
 
 from collections.abc import Callable, Iterable
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from tennis_engine.contracts.domain import RecommendationStatus
 from tennis_engine.serving.contracts import ResponsibleUseStatus, SourceHealth
 
 from .metrics import Family, MetricsRegistry, Sample
+
+if TYPE_CHECKING:
+    from tennis_engine.agents.trace import AgentTrace
 
 SOURCE_STATUS = Family(
     "tennis_source_status",
@@ -107,3 +111,44 @@ def register_serving_collector(
     registry.register_collector(
         "serving", collect, (SOURCE_STATUS, SOURCE_AGE, RECOMMENDATIONS_ALLOWED)
     )
+
+
+class AgentMetrics:
+    """F15.3 and F15.6 agent budgets and errors. Labels hold codes and catalog names only."""
+
+    def __init__(self, registry: MetricsRegistry) -> None:
+        self.runs = registry.counter(
+            "tennis_agent_runs_total", "Agent runs by role and typed outcome.", ("role", "status")
+        )
+        self.tool_calls = registry.counter(
+            "tennis_agent_tool_calls_total",
+            "Agent tool attempts by role, tool label and gateway outcome.",
+            ("role", "tool", "outcome"),
+        )
+        self.critical = registry.counter(
+            "tennis_agent_critical_attempts_total",
+            "Denied forbidden, unknown, cross-role or out-of-scope attempts, by reason.",
+            ("role", "reason"),
+        )
+        self.tokens = registry.counter(
+            "tennis_agent_tokens_total", "Model tokens used by agent runs.", ("role", "direction")
+        )
+        self.fallbacks = registry.counter(
+            "tennis_agent_fallbacks_total",
+            "Runs whose output was not used, so the deterministic path served.",
+            ("role",),
+        )
+
+    def record(self, trace: "AgentTrace") -> None:
+        role = trace.role.value
+        self.runs.inc(role=role, status=trace.status)
+        for event in trace.events:
+            if event.kind == "TOOL_CALL":
+                tool = event.detail.get("tool", "unknown")
+                self.tool_calls.inc(role=role, tool=str(tool), outcome=event.outcome)
+        for attempt in trace.critical_attempts:
+            self.critical.inc(role=role, reason=attempt.split(":")[0])
+        self.tokens.inc(trace.input_tokens, role=role, direction="input")
+        self.tokens.inc(trace.output_tokens, role=role, direction="output")
+        if trace.fallback_used:
+            self.fallbacks.inc(role=role)

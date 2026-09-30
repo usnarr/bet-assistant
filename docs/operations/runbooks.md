@@ -141,3 +141,22 @@ Signals: `stale-publication` (critical, automatic global stop).
 4. Find why the F12 publication recheck or the F14 read check did not block it. Add a
    regression test.
 5. A reviewer turns the global stop off after the fix is deployed.
+
+## Agent incident
+
+Signals: `tennis_agent_critical_attempts_total` increases, a verifier finding such as
+`FABRICATED_EVIDENCE` or `HARD_GATE_OVERRIDE`, or a report of a wrong agent text.
+Deterministic decisions do not depend on an agent, so this stop does not stop
+recommendations.
+
+1. Stop the role. The stop key is `agent:<prefix>`, for example `agent:ag-ex`:
+   `uv run tennis-governance source-stop agent:ag-ex on --reason "<incident reason>"`.
+   The next tool call and the next run of that role return `DISABLED`. F14 then serves
+   the deterministic explanation.
+2. Preserve the traces. `tennis.agent_trace` and `tennis.agent_proposal` are append-only.
+   A trace holds codes, IDs and hashes, not evidence text.
+3. Identify the affected traces, proposals and recommendation IDs from the trace IDs.
+4. Add the case to the development fixtures (not to a sealed release set). Change the
+   prompt, tools or verifier under a new role version.
+5. Run the agent evaluation again. Keep the role off until it passes.
+6. A reviewer resumes the role: `source-stop agent:ag-ex off --reason "<review>"`.

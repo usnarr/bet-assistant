@@ -10,7 +10,11 @@ from operations_support import START, capacity_drill, drills
 from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError, IntegrityError
 
-from tennis_engine.infrastructure.database import build_engine, current_revision
+from tennis_engine.infrastructure.database import (
+    EXPECTED_ALEMBIC_REVISION,
+    build_engine,
+    current_revision,
+)
 from tennis_engine.operations.leases import PostgresLeaseStore
 from tennis_engine.operations.postgres import PostgresJobStore
 
@@ -86,4 +90,4 @@ def test_operations_migration_downgrades_and_upgrades(engine, monkeypatch):
     with engine.connect() as db:
         assert db.execute(text("SELECT to_regclass('tennis.job_run')")).scalar_one() is None
     command.upgrade(config, "head")
-    assert current_revision(engine) == "0011_operations"
+    assert current_revision(engine) == EXPECTED_ALEMBIC_REVISION

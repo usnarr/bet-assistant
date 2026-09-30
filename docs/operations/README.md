@@ -22,6 +22,9 @@ Demonstrated on synthetic fixtures and isolated local services:
 - F15.7 restore verification: database and journal fingerprints, raw-object and ledger
   reconciliation, and incident bundles with affected recommendation IDs.
 - F15.8 runbooks: [runbooks.md](runbooks.md).
+- F15.6 agent tool scoping: a server-side tool gateway, an agent kill switch on the F01
+  stops, append-only agent traces and proposals (migration `0012_agent_records`) and
+  agent metrics. See "Agent tool scoping (F15.6)" and [the agent guide](../agents/README.md).
 
 Evidence: [OPS-01](evidence/OPS-01.md) and [OPS-02](evidence/OPS-02.md).
 
@@ -44,6 +47,14 @@ serving, the route returns 503. The response is not cacheable.
 | `tennis_source_observation_age_seconds` | gauge | `source_id` |
 | `tennis_recommendations_allowed` | gauge | `account_scope` |
 | `tennis_metrics_collector_up` | gauge | `collector` |
+| `tennis_agent_runs_total` | counter | `role`, `status` |
+| `tennis_agent_tool_calls_total` | counter | `role`, `tool` (catalog name or `unknown`), `outcome` |
+| `tennis_agent_critical_attempts_total` | counter | `role`, `reason` |
+| `tennis_agent_tokens_total` | counter | `role`, `direction` |
+| `tennis_agent_fallbacks_total` | counter | `role` |
+
+`AgentMetrics.record(trace)` adds the agent samples. A tool name outside the catalog and
+the forbidden list becomes `unknown`, so a model cannot put free text in a label.
 
 Rules for labels:
 
@@ -225,6 +236,56 @@ Encryption at rest and in transit depends on the deployment (disk encryption, TL
 PostgreSQL). Production requires TLS for object storage. Outbound network allow lists are
 a deployment control; no rule is in the repository yet.
 
+## Agent tool scoping (F15.6)
+
+The F18 gateway (`tennis_engine.agents.gateway.ToolGateway`) runs on the server. It checks
+each tool attempt in this order: tool budget, deadline, kill switch, tool name and role
+allowlist, argument schema, authorized subject IDs and cited evidence.
+
+| Rule | Behaviour |
+|---|---|
+| Tool catalog | Read tools and review-queue proposal tools only. No SQL, shell, network, bet, policy, merge, approval or re-enable tool exists. |
+| Forbidden or unknown name | Denied. Recorded as a critical attempt, for example `FORBIDDEN_ACTION:place_bet`. |
+| Tool of another role | Denied. Recorded as `TOOL_NOT_ALLOWED:<tool>`. |
+| Subject outside the run scope | Denied. Recorded as `OUT_OF_SCOPE:<tool>`. |
+| Proposal that cites evidence the run did not receive | Denied. Recorded as `UNSEEN_EVIDENCE:<tool>`. |
+| Secret record | Never returned to an agent. |
+| Record not available at the cutoff | Never returned to an agent. |
+| Restricted record | Returned without values and text, marked `withheld`. |
+| Evidence text | Delivered as data. The prompt says that it never gives instructions. Authority comes only from the role allowlist. |
+
+A run with a critical attempt is `REJECTED`, even when its final output is valid. The
+gateway protection and the agent behaviour are reported separately.
+
+### Kill switch
+
+The agent kill switch uses the existing F01 stops. It adds no new mechanism:
+
+| Stop | Effect |
+|---|---|
+| Global stop on | Every agent role is `DISABLED`. An empty journal has the global stop on. |
+| `source-stop agent:<prefix> on` | One role is `DISABLED`, for example `agent:ag-ex`. |
+| Journal unreadable | The role is `DISABLED` with `SWITCH_UNAVAILABLE`. |
+
+The runner checks the switch before the first model call. The gateway checks it before
+each tool call, so a stop takes effect during a run. An operator can stop a role. Only a
+policy reviewer can resume it. F18.8 role flags (`RoleFlags`) also keep every role off
+until it is explicitly enabled.
+
+### Audited traces
+
+An `AgentTrace` holds codes, IDs, hashes and counts only: the tool label, the argument
+hash, the subject, returned evidence IDs, the gateway outcome and the denial reason. It
+holds no evidence text, no evidence value, no prompt and no model prose. A test checks
+that a secret value does not appear in a trace or in the metrics.
+
+`PostgresAgentStore` writes traces to `tennis.agent_trace` and proposals to
+`tennis.agent_proposal`. Both tables are append-only (trigger). A proposal has state
+`PROPOSED` only (check constraint). There is no apply column. A retry with the same
+idempotency key stores nothing new, also under concurrent writers. A run whose trace
+cannot be stored returns no output, so the caller falls back. Runbook: "Agent incident"
+in [runbooks.md](runbooks.md).
+
 ## Backup and restore (F15.7)
 
 Back up three stores:
@@ -269,7 +330,9 @@ Runbooks: [runbooks.md](runbooks.md).
 
 - A scheduler that runs the jobs, the signal producers and `evaluate-alerts` on a cadence.
 - A Prometheus server, dashboards and an alert manager.
-- F15.6 agent tool scoping. It depends on F18.
+- F15.6: a separate database role for agent writes. The agent store uses the main role.
+- F15.6: live tool backends for the agent roles. The agent guide lists which roles read
+  live records. The other roles run on fixture backends only.
 - Agreed RTO and RPO. Continuous WAL archiving (point-in-time recovery).
 - Model rollback drill (no model registry yet).
 - Separate writer roles per component, outbound allow lists and at-rest encryption

@@ -16,7 +16,11 @@ from sqlalchemy.exc import DBAPIError
 from tennis_engine.common.clock import FrozenClock
 from tennis_engine.governance.contracts import Principal, Role
 from tennis_engine.governance.store import GovernanceStore
-from tennis_engine.infrastructure.database import build_engine, database_ready
+from tennis_engine.infrastructure.database import (
+    EXPECTED_ALEMBIC_REVISION,
+    build_engine,
+    database_ready,
+)
 from tennis_engine.infrastructure.object_store import LocalObjectStore
 from tennis_engine.infrastructure.settings import Settings
 from tennis_engine.operations.recovery import (
@@ -60,7 +64,7 @@ def test_fingerprint_and_reconciliation_detect_changes(engine, tmp_path):
     seeded = seed(engine, objects)
     first = database_fingerprint(engine, NOW)
     assert first == database_fingerprint(engine, NOW)
-    assert first.revision == "0011_operations"
+    assert first.revision == EXPECTED_ALEMBIC_REVISION
     assert first.tables["decision_record"].rows == seeded["decisions"]
     assert compare(first, database_fingerprint(engine, NOW)).integrity == "PASS"
 
@@ -97,7 +101,7 @@ def test_reader_role_can_read_but_not_write_and_serves_the_api(engine, tmp_path,
             grant_serving_reader(engine, "bad name; DROP")
         grant_serving_reader(engine, READER)
         seed(engine, LocalObjectStore(tmp_path / "objects"))
-        assert database_ready(reader) == (True, "0011_operations")
+        assert database_ready(reader) == (True, EXPECTED_ALEMBIC_REVISION)
         with reader.connect() as db:
             assert db.execute(text("SELECT count(*) FROM tennis.decision_record")).scalar_one()
         for statement in (
