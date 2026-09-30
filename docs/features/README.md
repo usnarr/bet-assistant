@@ -83,6 +83,23 @@ A hard component that is `FAIL` or `UNKNOWN` sets `usable = False`. The soft sco
 coverage) is informative only. Odds and rules stay `UNKNOWN` until F05/F06 provide them,
 so the report blocks recommendations by default.
 
+## F08.6 environment set `core-env-v1` (P1, gated)
+
+`features/environment.py` `environment_set(forecasts, config)` adds an `environment` group
+to `core-v1`: indoor flag, weather applicability, forecast temperature, wind,
+precipitation and age, `env.weather_missing`, per-player `timezone_shift_hours` and
+`env.travel_is_proxy`.
+
+- Weather uses only forecasts from `EnvironmentConfig.permitted_sources`, issued by the
+  cutoff, observed (or archived with evidence, per mode) by the cutoff, and valid at the
+  start time known at the cutoff. Realized weather is rejected.
+- The permitted set is empty by default. No weather source is approved in the F01 register
+  (all entries are `DRAFT` with the kill switch on), so weather stays missing and flagged.
+- Travel is the UTC-offset change between the previous completed match's edition and this
+  edition. Arrival times are unknown, so `env.travel_is_proxy` is always `True`.
+- Do not use `core-env-v1` in a promoted model before F13 ablations (F08.8) show value by
+  tour and surface.
+
 ## Limitations
 
 - Snapshots and datasets are stored in memory and as immutable files. The PostgreSQL
@@ -90,6 +107,6 @@ so the report blocks recommendations by default.
 - F05 quotes and F06 policies do not have as-of readers yet. Quote features wait for F05.
 - `AsOfView` scans all matches, and each snapshot replays Elo from the start. This is
   acceptable for fixtures, not for a full warehouse; an incremental rating cache is needed.
-- F08.6 travel/weather features and F08.8 ablations are not implemented yet.
+- F08.8 ablations wait for the F13 harness. Weather ingestion waits for an approved source.
 
 See [SYS-07 evidence](evidence/SYS-07.md) and [SYS-08 evidence](evidence/SYS-08.md).

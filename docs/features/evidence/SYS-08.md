@@ -29,6 +29,11 @@ Behavior checks:
 - Lineage: every input `observed_at` is at or before the cutoff; stats inputs appear.
 - SYS-07 also checks that `core-v1` ignores the target result and later matches.
 
-Not yet covered: F08.6 travel/weather, F08.8 ablations through F13, and fitted priors.
+F08.6 (`tests/test_environment_features.py`): with no permitted source, weather is missing
+and flagged; a permitted forecast issued before the cutoff is used; late, realized,
+late-archived and unapproved forecasts are ignored and leave the snapshot unchanged;
+indoor venues need no weather; Warsaw to New York in September gives a 6-hour proxy shift.
+
+Not yet covered: F08.8 ablations through F13, and fitted priors.
 
 Command: `uv run pytest tests/test_tennis_features.py -q`.

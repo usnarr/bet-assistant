@@ -27,7 +27,8 @@ F04 identity/warehouse is implemented on synthetic fixtures (`docs/identity/READ
 its PostgreSQL repository is pending. F06 payout rules, match-winner settlement and the
 virtual ledger are implemented on synthetic rules (`docs/settlement/README.md`); real rule
 reviews are pending. F07 as-of access, snapshots and dataset manifests, and F08 core features
-(Elo, form, serve/return, workload, quality gates) are implemented (`docs/features/README.md`).
+(Elo, form, serve/return, workload, quality gates, gated environment/travel proxy) are
+implemented (`docs/features/README.md`).
 F05 has shared quote contracts, actionability, F04 mapping, quote history and Betclic,
 Superbet and Fortuna parsers on synthetic shapes (`docs/bookmakers/README.md`); real
 payloads and source approvals are pending. F09 ranking, Elo and market-consensus baselines
