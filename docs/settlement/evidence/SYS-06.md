@@ -14,7 +14,7 @@ Date: 2026-09-29. Scope: synthetic fixtures only. Reviewer approval of real rule
 | Every synthetic settlement branch, missing branches, draft real rules stay `PENDING` | `tests/test_settlement_engine.py` | pass |
 | Ledger idempotency, corrections, pending exposure, concurrency, reconciliation property | `tests/test_settlement_ledger.py` | pass |
 | Migration compiles offline with one head | `tests/test_foundation_migrations.py`, `scripts/check_migrations.py` | pass |
-| PostgreSQL append-only triggers and advisory-lock serialization | `tests/integration/test_settlement_persistence.py` | **skipped**: no isolated PostgreSQL was available |
+| PostgreSQL append-only triggers and advisory-lock serialization | `tests/integration/test_settlement_persistence.py` | pass (2026-09-30, isolated `tennis_track_2`) |
 
 ## Synthetic payout golden cases
 

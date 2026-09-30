@@ -78,3 +78,44 @@ players (weighted points below `min_weighted_points`) abstain. The model is
 is wired, and failure keeps it experimental.
 
 See [MOD-02 evidence](evidence/MOD-02.md).
+
+## F11 calibration slice (`models/calibration/`)
+
+This slice implements calibration only (F11.5, F11.7 and part of F11.6/F11.8). The
+gradient-boosting model, the stacker and nested tuning (F11.1 to F11.4) are not
+implemented. They need the F13 harness and a selected tabular library.
+
+| Module | Purpose |
+|---|---|
+| `contracts.py` | `CalibratorArtifact`, `CalibrationTrial` and `CalibratedPrediction` |
+| `calibrate.py` | `fit_calibrator`, `apply` and `calibrate` |
+| `storage.py` | Immutable `calibrator.json` with a manifest; `read_bundle` checks the base hash |
+
+Rules:
+
+- Two symmetric methods: `PLATT_SYMMETRIC` (`sigmoid(a * logit(p))`, no intercept) and
+  `ISOTONIC_SYMMETRIC` (pool-adjacent-violators on the rows and their mirror images).
+  Both give `f(1 - p) = 1 - f(p)`, because player order is arbitrary. A symmetric beta
+  calibration equals symmetric Platt, so it is not a separate method.
+- The window starts after the base training cutoff. Otherwise the fit is rejected as
+  leakage. The fit part ends at `validation_start` and uses only labels observed by then.
+  The validation part uses labels observed by `window_end`.
+- Every method is scored on the validation part and recorded as a trial. The lowest
+  validation log loss wins (tie: Platt). The winner is refitted on the whole window.
+- Only `SUPPORTED` rows are used. Duplicate matches, rows outside the window, labels known
+  at prediction time and mixed base artifacts are rejected. Too few rows give `BLOCKED`
+  (defaults: 50 fit and 30 validation rows; candidate values).
+- Output is clipped to `[0.01, 0.99]` (candidate value).
+- `calibrate` refuses a prediction from another base artifact or training cutoff, and a
+  prediction inside the calibration window. The caller must then abstain; there is no
+  silent fallback to the raw probability.
+- A `CalibratedPrediction` sets `calibrated = True`. Its spread is the base bootstrap
+  spread mapped through the calibrator. It excludes calibrator fit uncertainty and it is
+  not a confidence interval for the true probability. Its `model_ref` names the
+  calibrator version and hash, which include the base artifact hash.
+
+F12 reads a `CalibratedPrediction` through `pricing/model_input.py`, so the calibration
+gate can pass. Tour-specific calibrators, calibrator bootstrap, a promotion registry and
+the MOD-03/MOD-04 comparisons on real data are not implemented.
+
+See [MOD-03 calibration evidence](evidence/MOD-03-calibration.md).

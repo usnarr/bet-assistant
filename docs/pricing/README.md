@@ -14,9 +14,10 @@ shadow records; no code path places a bet.
   the model's bootstrap spread, a model-spread proxy and not a confidence bound.
   Disagreement is the largest gap to another supported baseline. F09 baselines are raw
   (`calibrated = False`) and trained on sporting results (`SPORTING_WIN`), so they always
-  fail the calibration gate: **no F09 baseline can produce a `BET`**. That needs calibrated
-  F11 output. `consensus_for_selection` confirms a large edge only from a SUPPORTED
-  consensus (more than one bookmaker).
+  fail the calibration gate: **no raw F09 baseline can produce a `BET`**. An F11
+  `CalibratedPrediction` sets `calibrated = True`, so it can pass that gate. Its model
+  reference is the calibrator version and hash. `consensus_for_selection` confirms a
+  large edge only from a SUPPORTED consensus (more than one bookmaker).
 - The repository decision policy (`configs/risk/decision-policy.json`) and the
   responsible-use policy are drafts. Both block every `BET` until a reviewer approves them.
 

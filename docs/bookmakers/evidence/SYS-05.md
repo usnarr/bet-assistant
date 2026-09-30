@@ -26,7 +26,7 @@ best of five, a started event, a cancelled event, a closed market and a promotio
 | Property: an actionable quote is fresh, confirmed, pre-start and expires later | `tests/test_bookmaker_quotes.py` | pass |
 | Later observations cannot make an earlier decision fresh | `tests/test_bookmaker_quotes.py`, `tests/test_bookmaker_history.py` | pass |
 | Idempotent append-only history | `tests/test_bookmaker_history.py` | pass |
-| PostgreSQL history store | `tests/integration/test_bookmaker_history_persistence.py` | **skipped**: no isolated PostgreSQL |
+| PostgreSQL history store | `tests/integration/test_bookmaker_history_persistence.py` | pass (2026-09-30, isolated `tennis_track_2`) |
 
 ## Not demonstrated
 

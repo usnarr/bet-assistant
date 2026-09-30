@@ -35,8 +35,9 @@ payloads and source approvals are pending. F09 ranking, Elo and market-consensus
 with model cards, and the F10 exact best-of-three solver and experimental point model,
 are implemented on synthetic data (`docs/models/README.md`). F12 value, sizing,
 reservations, gates and publication recheck are implemented on synthetic inputs
-(`docs/pricing/README.md`); F09 baselines are wired but uncalibrated, so no BET until
-F11; policy approvals are pending. Later features
+(`docs/pricing/README.md`); raw F09 baselines cannot BET; policy approvals are pending.
+F11 symmetric Platt/isotonic calibration on a disjoint window feeds F12 calibrated input
+(`docs/models/README.md`); the F11 tabular model and stacker are not implemented. Later features
 are not implemented. Current checks are `uv run pytest -q`,
 `uv run ruff check .`, `uv run ruff format --check .`, and `uv run mypy src`.
 External approvals and independent fixture review remain pending.
