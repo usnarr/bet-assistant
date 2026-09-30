@@ -29,6 +29,7 @@ See the [F01 operator guide](docs/governance/README.md),
 [F03 ingestion guide](docs/ingestion/README.md),
 [F05 bookmaker guide](docs/bookmakers/README.md),
 [F06 settlement guide](docs/settlement/README.md),
+[F12 pricing guide](docs/pricing/README.md),
 [provider comparison](docs/governance/provider-comparison.md),
 [architecture decisions](docs/adr/0001-f01-governance.md), and
 [evaluation evidence](docs/governance/evidence/SYS-01.md).

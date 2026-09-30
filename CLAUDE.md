@@ -33,7 +33,9 @@ F05 has shared quote contracts, actionability, F04 mapping, quote history and Be
 Superbet and Fortuna parsers on synthetic shapes (`docs/bookmakers/README.md`); real
 payloads and source approvals are pending. F09 ranking, Elo and market-consensus baselines
 with model cards, and the F10 exact best-of-three solver and experimental point model,
-are implemented on synthetic data (`docs/models/README.md`). Later features
+are implemented on synthetic data (`docs/models/README.md`). F12 value, sizing,
+reservations, gates and publication recheck are implemented on synthetic inputs
+(`docs/pricing/README.md`); F09 model wiring and policy approvals are pending. Later features
 are not implemented. Current checks are `uv run pytest -q`,
 `uv run ruff check .`, `uv run ruff format --check .`, and `uv run mypy src`.
 External approvals and independent fixture review remain pending.
