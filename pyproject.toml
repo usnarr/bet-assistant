@@ -22,6 +22,7 @@ dependencies = [
 [project.scripts]
 tennis-governance = "tennis_engine.governance.cli:main"
 tennis-ingestion = "tennis_engine.ingestion.cli:main"
+tennis-ops = "tennis_engine.operations.cli:main"
 tennis-platform = "tennis_engine.infrastructure.cli:main"
 
 [build-system]

@@ -54,6 +54,12 @@ def parser() -> argparse.ArgumentParser:
     disable = commands.add_parser("global-disable")
     disable.add_argument("state", choices=["on", "off"])
     disable.add_argument("--reason", required=True)
+    source_stop = commands.add_parser(
+        "source-stop", help="Stop one source (operator) or resume it (reviewer only)"
+    )
+    source_stop.add_argument("source_id")
+    source_stop.add_argument("state", choices=["on", "off"])
+    source_stop.add_argument("--reason", required=True)
     commands.add_parser("expire-raw")
     return root
 
@@ -93,6 +99,12 @@ def main() -> int:
             result = {"revision": revision, "sha256": sha256, "review_status": "PENDING_REVIEW"}
         elif args.command == "global-disable":
             result = {"revision": store.set_global_disable(args.state == "on", reason=args.reason)}
+        elif args.command == "source-stop":
+            result = {
+                "revision": store.set_source_stop(
+                    args.source_id, args.state == "on", reason=args.reason
+                )
+            }
         elif args.command == "expire-raw":
             result = {"deleted_objects": RetentionService(store).expire_due()}
         else:

@@ -29,6 +29,8 @@ class Permission(StrEnum):
     READ_AUDIT = "read_audit"
     # See source values even when the source does not permit redistribution.
     READ_RESTRICTED_SOURCE_VALUES = "read_restricted_source_values"
+    # F15 metrics and other operations telemetry.
+    READ_OPERATIONS = "read_operations"
 
 
 VIEWER = frozenset({Permission.READ_RECOMMENDATIONS, Permission.READ_ANALYSIS})

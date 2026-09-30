@@ -57,6 +57,16 @@ uv run tennis-governance check-source betclic-odds production
 uv run tennis-governance global-disable on --reason "Incident under investigation"
 ```
 
+A source stop (F15) stops one source without a new reviewed policy version:
+
+```powershell
+uv run tennis-governance source-stop betclic-odds on --reason "Parser drift incident"
+```
+
+`can_fetch` then denies the source with `SOURCE_STOPPED`. F15 critical alerts use the same
+operation. An operator may turn a source stop on. Only a reviewer can turn it off. Turning
+it off does not override the source policy, its kill switch or its review state.
+
 An operator may turn the global stop on. Only a reviewer can turn it off. Turning
 it off does not override source, payout, account, review expiry or cooling-off
 checks. Agent and ordinary dashboard roles cannot alter policies or evidence.

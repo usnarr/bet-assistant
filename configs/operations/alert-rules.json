@@ -1,0 +1,135 @@
+{
+  "version": "f15-alert-rules-proposed-v1",
+  "status": "PROPOSED",
+  "max_signal_age_seconds": 900,
+  "rules": [
+    {
+      "rule_id": "parser-zero-events",
+      "signal": "parser_events",
+      "scope": "source",
+      "comparison": "<=",
+      "threshold": "0",
+      "severity": "CRITICAL",
+      "control": "SOURCE_STOP",
+      "description": "The parser returned zero events. Blueprint section 34.5, critical."
+    },
+    {
+      "rule_id": "parser-invalid-records",
+      "signal": "parser_valid_rate",
+      "scope": "source",
+      "comparison": "<",
+      "threshold": "0.99",
+      "severity": "CRITICAL",
+      "control": "SOURCE_STOP",
+      "description": "Schema drift or malformed records. Proposed F05 parser-drift threshold."
+    },
+    {
+      "rule_id": "parser-duplicate-selections",
+      "signal": "parser_duplicate_selection_ids",
+      "scope": "source",
+      "comparison": ">",
+      "threshold": "0",
+      "severity": "CRITICAL",
+      "control": "SOURCE_STOP",
+      "description": "Duplicate selection IDs make quote identity ambiguous."
+    },
+    {
+      "rule_id": "parser-unknown-labels",
+      "signal": "parser_unknown_label_rate",
+      "scope": "source",
+      "comparison": ">",
+      "threshold": "0.02",
+      "severity": "WARNING",
+      "description": "Unknown market labels. Proposed F05 parser-drift threshold."
+    },
+    {
+      "rule_id": "parser-volume-change",
+      "signal": "parser_volume_change",
+      "scope": "source",
+      "comparison": ">",
+      "threshold": "0.50",
+      "severity": "WARNING",
+      "description": "Event count changed by more than half against the baseline."
+    },
+    {
+      "rule_id": "source-stale",
+      "signal": "source_observation_age_seconds",
+      "scope": "source",
+      "comparison": ">",
+      "threshold": "600",
+      "severity": "WARNING",
+      "description": "One source is temporarily unavailable. F14 read checks already block stale quotes."
+    },
+    {
+      "rule_id": "stale-publication",
+      "signal": "stale_publication_count",
+      "scope": "global",
+      "comparison": ">",
+      "threshold": "0",
+      "severity": "CRITICAL",
+      "control": "GLOBAL_STOP",
+      "missing_applies_control": false,
+      "description": "A recommendation was published from stale odds. Blueprint section 34.5, critical."
+    },
+    {
+      "rule_id": "settlement-mismatch",
+      "signal": "settlement_mismatch_count",
+      "scope": "global",
+      "comparison": ">",
+      "threshold": "0",
+      "severity": "CRITICAL",
+      "control": "GLOBAL_STOP",
+      "missing_applies_control": false,
+      "description": "Incorrect settlement or an unbalanced virtual ledger."
+    },
+    {
+      "rule_id": "future-leakage",
+      "signal": "leakage_test_failures",
+      "scope": "global",
+      "comparison": ">",
+      "threshold": "0",
+      "severity": "CRITICAL",
+      "control": "GLOBAL_STOP",
+      "missing_applies_control": false,
+      "description": "A future-data leakage test failed."
+    },
+    {
+      "rule_id": "payout-inconsistency",
+      "signal": "payout_inconsistency_count",
+      "scope": "global",
+      "comparison": ">",
+      "threshold": "0",
+      "severity": "CRITICAL",
+      "control": "GLOBAL_STOP",
+      "missing_applies_control": false,
+      "description": "The tax or payout engine gave inconsistent results."
+    },
+    {
+      "rule_id": "identity-review-queue",
+      "signal": "identity_review_queue_size",
+      "scope": "global",
+      "comparison": ">",
+      "threshold": "50",
+      "severity": "WARNING",
+      "description": "The identity review queue is growing."
+    },
+    {
+      "rule_id": "feature-missingness",
+      "signal": "feature_missing_rate",
+      "scope": "global",
+      "comparison": ">",
+      "threshold": "0.20",
+      "severity": "WARNING",
+      "description": "Feature missingness increased."
+    },
+    {
+      "rule_id": "model-probability-drift",
+      "signal": "model_probability_psi",
+      "scope": "global",
+      "comparison": ">",
+      "threshold": "0.25",
+      "severity": "WARNING",
+      "description": "The model probability distribution shifted (population stability index)."
+    }
+  ]
+}

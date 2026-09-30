@@ -259,6 +259,24 @@ class GovernanceStore:
         with self.transaction():
             return self._append("global_disable", "all", {"disabled": disabled}, reason)
 
+    def set_source_stop(self, source_id: str, stopped: bool, *, reason: str) -> int:
+        """Stop one source now, without a new reviewed policy version.
+
+        Like the global stop: an operator may stop a source; only a reviewer may resume it.
+        Resuming does not override the source policy, its kill switch or its review state.
+        """
+        self.require_role(Role.OPERATOR, Role.POLICY_REVIEWER)
+        if not stopped:
+            self.require_role(Role.POLICY_REVIEWER)
+        if not source_id.strip():
+            raise ValueError("A source ID is required")
+        with self.transaction():
+            return self._append("source_stop", source_id, {"stopped": stopped}, reason)
+
+    def source_stopped(self, source_id: str, now: datetime) -> bool:
+        row = self.latest("source_stop", source_id, now)
+        return row is not None and bool(json.loads(row["payload"])["stopped"])
+
     def global_disabled(self, now: datetime) -> bool:
         row = self.latest("global_disable", "all", now)
         return True if row is None else bool(json.loads(row["payload"])["disabled"])

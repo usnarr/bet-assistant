@@ -57,6 +57,8 @@ class GovernanceService:
         reason = None
         if policy.kill_switch:
             reason = "SOURCE_DISABLED"
+        elif self.store.source_stopped(source_id, now):
+            reason = "SOURCE_STOPPED"
         elif policy.state == Lifecycle.SUSPENDED:
             reason = "SOURCE_SUSPENDED"
         elif policy.state == Lifecycle.DRAFT:

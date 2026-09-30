@@ -12,7 +12,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 from uuid import UUID
 
 from tennis_engine.common.clock import Clock, require_aware
@@ -38,6 +38,9 @@ from .contracts import (
 )
 from .explain import NO_PLACEMENT, explain, reasons
 from .store import DecisionQuery, DecisionStore
+
+if TYPE_CHECKING:
+    from tennis_engine.monitoring.instruments import ServingMetrics
 
 DEFAULT_BOOKMAKERS = frozenset({"betclic", "superbet", "fortuna"})
 MARKET_ALIASES = {
@@ -131,6 +134,8 @@ class RecommendationService:
     account_scope: str = "shadow"
     bookmakers: frozenset[str] = field(default_factory=lambda: DEFAULT_BOOKMAKERS)
     stale_after_seconds: int = 300
+    # F15.3 counters. None means no metrics are recorded.
+    metrics: "ServingMetrics | None" = None
 
     # Filters -----------------------------------------------------------------------
 
@@ -202,6 +207,8 @@ class RecommendationService:
         if current and blocked and status != RecommendationStatus.NO_BET:
             status = RecommendationStatus.NO_BET
         actionable = status == RecommendationStatus.BET and not blocked
+        if current and self.metrics is not None:
+            self.metrics.record_view(record.status, status, read_reasons)
         match = context.match
         selected = match.player(record.selection_player_id)
         odds_withheld = context.quote_source_id is not None and withhold(context.quote_source_id)

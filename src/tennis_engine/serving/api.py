@@ -7,6 +7,7 @@ after an expiry or a hard stop.
 
 import logging
 import sqlite3
+import time
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -15,7 +16,7 @@ from uuid import UUID
 
 from fastapi import Depends, FastAPI, Header, Query, Request, Response, status
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from sqlalchemy.exc import SQLAlchemyError
 
 from tennis_engine import __version__
@@ -28,8 +29,10 @@ from tennis_engine.infrastructure.health import (
     ready,
 )
 from tennis_engine.infrastructure.settings import Settings
+from tennis_engine.monitoring.instruments import ServingMetrics, register_serving_collector
+from tennis_engine.monitoring.metrics import MetricsRegistry
 
-from .auth import TokenAuthenticator
+from .auth import Permission, TokenAuthenticator, allowed
 from .contracts import AuditView, MatchAnalysis, RecommendationPage, SourceHealth
 from .dashboard import register_dashboard
 from .service import ApiError, RecommendationFilter, RecommendationService
@@ -62,8 +65,21 @@ def create_app(
     settings: Settings | None = None,
     probe: ReadinessProbe | None = None,
     serving: Serving | None = None,
+    metrics: MetricsRegistry | None = None,
 ) -> FastAPI:
     resolved_settings = settings or Settings()
+    registry = metrics or MetricsRegistry()
+    instruments = ServingMetrics(registry)
+    if serving is not None:
+        service = serving.recommendations
+        if service.metrics is None:
+            service.metrics = instruments
+        register_serving_collector(
+            registry,
+            service.source_health,
+            service.responsible_use,
+            lambda: service.clock.now(),
+        )
     resolved_probe = probe or InfrastructureProbe(resolved_settings)
     application = FastAPI(
         title="Tennis Engine",
@@ -80,6 +96,7 @@ def create_app(
         return error_response(error)
 
     async def dependency_error(request: Request, error: Exception) -> JSONResponse:
+        instruments.dependency_errors.inc(error=type(error).__name__)
         logger.error(
             "serving dependency unavailable",
             extra={"context": {"path": request.url.path, "error": type(error).__name__}},
@@ -102,8 +119,14 @@ def create_app(
     async def read_only_headers(
         request: Request, call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
+        started = time.perf_counter()
         response = await call_next(request)
-        if request.url.path.startswith(PROTECTED_PREFIXES):
+        route = getattr(request.scope.get("route"), "path", "unmatched")
+        instruments.requests.inc(
+            route=route, method=request.method, status=str(response.status_code)
+        )
+        instruments.latency.observe(time.perf_counter() - started, route=route)
+        if request.url.path.startswith(PROTECTED_PREFIXES) or request.url.path == "/metrics":
             response.headers["Cache-Control"] = "no-store"
             response.headers["X-Content-Type-Options"] = "nosniff"
             response.headers["Referrer-Policy"] = "no-referrer"
@@ -196,5 +219,11 @@ def create_app(
         dependencies: ServingDep, principal: PrincipalDep
     ) -> tuple[SourceHealth, ...]:
         return dependencies.recommendations.source_health_for(principal)
+
+    @application.get("/metrics", tags=["operations"], include_in_schema=False)
+    def metrics_text(principal: PrincipalDep) -> PlainTextResponse:
+        if not allowed(principal, Permission.READ_OPERATIONS):
+            raise ApiError(403, "PERMISSION_DENIED", "This role cannot read metrics.")
+        return PlainTextResponse(registry.render(), media_type="text/plain; version=0.0.4")
 
     return application
