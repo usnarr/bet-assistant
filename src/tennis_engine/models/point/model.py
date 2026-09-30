@@ -169,6 +169,20 @@ def fit(
         for player in sorted(returns, key=str):
             step, h = sweep_parameter(returns, player, -1.0, "returner", config.effect_penalty)
             largest, hessians[("return", player)] = max(largest, step), h
+        # The likelihood is flat when every mean moves by t and every serve effect by -t
+        # (or every return effect by +t); only the priors curve it. Coordinate steps are
+        # slow along those two directions, so take the exact quadratic step on each.
+        for table, sign in ((serve, -1.0), (returns, 1.0)):
+            gradient = config.mean_penalty * sum(means.values()) + sign * (
+                config.effect_penalty * sum(table.values())
+            )
+            curvature = config.mean_penalty * len(means) + config.effect_penalty * len(table)
+            shift = -gradient / curvature
+            for group in means:
+                means[group] += shift
+            for key in table:
+                table[key] += sign * shift
+            largest = max(largest, abs(shift))
         if largest < config.tolerance:
             converged = True
             break

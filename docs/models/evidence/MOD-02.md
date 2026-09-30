@@ -27,5 +27,9 @@ Other checks in `tests/test_point_model.py`:
 - The point model uses only stats known at the training cutoff, is deterministic, recovers
   the ordering of the strongest and weakest synthetic servers, and abstains for an
   unverified format or sparse players.
+- The fit converges on a 180-match history in fewer than 50 sweeps. The F13 harness found
+  that plain coordinate steps did not converge within 500 sweeps above about 110 matches,
+  because the likelihood is flat along the mean/effect shift. Each sweep now takes the
+  exact prior-only step along those two directions.
 
 Command: `uv run pytest tests/test_point_model.py -q`.

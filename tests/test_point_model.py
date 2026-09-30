@@ -234,3 +234,15 @@ def test_point_model_predictions_support_rules_and_draws(stats_world):
         predict(
             h.store, match_id, artifact, as_of=cutoff - timedelta(days=1), fmt=BEST_OF_3_STANDARD
         )
+
+
+def test_point_model_converges_on_a_larger_history():
+    # Regression: plain coordinate steps needed more than 500 sweeps once the history
+    # passed about 110 matches, because the likelihood is flat along the mean/effect shift.
+    from backtest_support import world
+
+    state = world(count=180)
+    cutoff = state.matches[-1][1] + timedelta(days=1)
+    artifact = fit(state.h.store, training_cutoff=cutoff, config=PointModelConfig(draws=0))
+    assert artifact.converged and artifact.observations == 360
+    assert artifact.sweeps < 50
