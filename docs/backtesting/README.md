@@ -1,7 +1,8 @@
 # F13 walk-forward evaluation and promotion guide
 
 Package: `src/tennis_engine/backtesting/`. Status: the P0 baseline harness is implemented
-on synthetic data. The P1 execution replay (F13.2 to F13.5) is not implemented.
+on synthetic data. The P1 execution replay (F13.2 to F13.5) is implemented on
+synthetic quote history, rules and results. No real quote history exists yet.
 
 | Module | Purpose |
 |---|---|
@@ -11,6 +12,7 @@ on synthetic data. The P1 execution replay (F13.2 to F13.5) is not implemented.
 | `metrics.py` | Log loss, Brier, calibration, accuracy, AUC, segments, matched pairs |
 | `bootstrap.py` | Paired tournament-week block bootstrap (F13.8) |
 | `economics.py` | Profit, ROI, drawdown, losing streak, CLV and coverage of settled bets |
+| `replay.py` | Execution replay with F05 quotes, F12 decisions and F06 settlement |
 | `promotion.py` | Machine-readable release decision with every gate (F13.9) |
 | `bundle.py` | Immutable run directory with hashed files and a manifest |
 | `studies.py` | Feature-set ablation on matched cutoffs (F08.8) |
@@ -67,6 +69,42 @@ on synthetic data. The P1 execution replay (F13.2 to F13.5) is not implemented.
   a named comparability policy. Missing closing data is counted as missing, not as zero.
 - Assumptions: a replay that is not execution-grade must name its assumptions.
 
+## Execution replay
+
+`replay(cases, services, scenario, run_id=..., opening_balance=...)` in `replay.py` runs
+the production F05, F06 and F12 code on recorded history (F13.2 to F13.5).
+
+- **State at the cutoff (F13.2):** each `ReplayCase` is one decision. The replay reads
+  only what was known at the cutoff: the latest event mapping, the quote observations and
+  their actionability, the settlement rule, payout policy, publication and responsible-use
+  decisions in effect, and the exposure of the replay ledger. It then runs F12 `decide`.
+  A model output generated after the cutoff is rejected.
+- **Latency (F13.3):** a BET is executed at the first quote observed at or after
+  `cutoff + latency_seconds`. The replay runs `decide` again at that time with the same
+  policy. A price, risk or capacity change resizes or cancels the bet. This later quote
+  evaluates execution only; the prediction and its features stay those of the cutoff.
+  `prepare_publication` then rechecks the volatile gates and reserves the stake.
+- **Accepted-stake caps (F13.4):** an `AcceptedStakeCap` observed by the execution time
+  becomes the bookmaker maximum in `StakeRules`, so F12 sizes within it and recomputes the
+  payout. A cap of zero is an observed rejection. The latest observation wins; a
+  match-specific cap wins a tie.
+- **Scenarios (F13.4):** `ExecutionScenario` sets the latency and these stress settings:
+  an odds haircut, a deterministic suspension rate, a capacity fraction, and an assumed cap
+  for bets without an observed cap. Each stress setting is an assumption.
+- **Settlement (F13.5):** F06 `settle` settles each struck bet against every result
+  version, at the time that version was observed. A different final result becomes a
+  ledger correction. A later pending version does not undo a final result. Results are
+  labels only; they never change a prediction input.
+- **CLV:** the closing price is the last observation of the same quote key before the
+  scheduled start, if it is open (`same-quote-key-last-open-before-start-v1`).
+- **Execution grade:** a run is execution-grade only when it has no assumptions. These
+  make a named assumption: reconstructed quote history, a research-only case, a struck bet
+  without an observed cap, and any stress setting. `ReplayRun.summary(...)` passes the
+  grade and the assumptions to `summarize`, so `net_economics_positive` stays `BLOCKED`
+  for a run that is not execution-grade.
+- **Ledger:** each run uses a fresh virtual ledger. `ReplayRun.reconciliation` is the F06
+  reconciliation at the end. Nothing places a bet.
+
 ## Promotion decision
 
 `decide_promotion` records these gates, and the worst status is the decision:
@@ -108,9 +146,9 @@ is `BLOCKED` until the thresholds are frozen on development data.
 
 ## Not implemented
 
-- F13.2 to F13.5 (execution replay): reconstructing quote, payout and risk state at each
-  cutoff, latency repricing, observed stake caps, and running the F06/F12 code in replay.
-  Until this exists, `net_economics_positive` is always `BLOCKED`.
+- An execution-grade replay on real data. It needs approved sources, recorded quote
+  history, observed stake caps and reviewed rules. Until then, `net_economics_positive`
+  is `BLOCKED` for every real candidate.
 - Market consensus as a harness candidate. It needs F05 quote history at each cutoff.
   Until then, `consensus_calibration_noninferior` is `BLOCKED`.
 - Segments by tournament level, odds bucket, bookmaker, market and data quality. They need

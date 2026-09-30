@@ -39,8 +39,9 @@ reservations, gates and publication recheck are implemented on synthetic inputs
 F11 symmetric Platt/isotonic calibration on a disjoint window feeds F12 calibrated input
 (`docs/models/README.md`); the F11 tabular model and stacker are not implemented. The F13
 walk-forward harness, metrics, block bootstrap, economic summary and gated promotion
-decision are implemented on synthetic data (`docs/backtesting/README.md`); its execution
-replay is pending. Later features
+decision are implemented on synthetic data (`docs/backtesting/README.md`). Its execution
+replay (F13.2 to F13.5) runs F05 quote history, F12 decisions and F06 settlement on
+synthetic history; no execution-grade replay on real data exists. Later features
 are not implemented. Current checks are `uv run pytest -q`,
 `uv run ruff check .`, `uv run ruff format --check .`, and `uv run mypy src`.
 External approvals and independent fixture review remain pending.
